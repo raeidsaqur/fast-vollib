@@ -313,6 +313,15 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     is_call = torch.as_tensor(flag == "c", device=dev)
 
     valid = tt > 0
+
+    # Below-intrinsic check — returns NaN for impossible prices (same as numpy backend)
+    discounted_spot = st * torch.exp(-qv * tt)
+    discounted_strike = kt * torch.exp(-rt * tt)
+    intrinsic = torch.where(is_call,
+                            torch.clamp(discounted_spot - discounted_strike, min=0.0),
+                            torch.clamp(discounted_strike - discounted_spot, min=0.0))
+    below_intrinsic = pt < intrinsic - 1e-10
+
     sigma = _initial_guess_t(pt, st, tt)
 
     # Halley's method (3rd order) — run via torch.compile-d kernel to fuse all
@@ -336,4 +345,5 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
         sigma = torch.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
 
     result = torch.where(valid, sigma, torch.zeros_like(sigma))
+    result = torch.where(below_intrinsic, torch.full_like(result, float("nan")), result)
     return result.cpu().numpy()
