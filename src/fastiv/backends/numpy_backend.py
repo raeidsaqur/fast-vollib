@@ -108,10 +108,17 @@ def _price_for_model(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np
 
 
 def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.ndarray:
-    """Brenner-Subrahmanyam ATM approximation as Newton seed."""
+    """Brenner-Subrahmanyam ATM approximation as Newton seed.
+
+    Floor is 0.30 (not 0.01): for OTM options the BS approximation underestimates
+    sigma severely, landing Newton in a near-zero-vega region where it stalls.
+    A floor of 0.30 eliminates bisection fallback for typical equity smile data
+    while still converging to any true sigma (Newton simply takes a few extra
+    steps from 0.30 toward lower values like 0.05).
+    """
     sqrt_t = np.sqrt(np.maximum(t, 1e-8))
     approx = price / np.maximum(s * sqrt_t, 1e-12) * np.sqrt(2.0 * np.pi)
-    return np.clip(approx, 0.01, 5.0)
+    return np.clip(approx, 0.30, 5.0)
 
 
 _NEWTON_ITERS = 20

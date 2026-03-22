@@ -201,8 +201,8 @@ def _price_for_model_t(model, flag, s, k, t, r, sigma, q):
 def _initial_guess_t(price, s, t):
     import torch
     sqrt_t = torch.sqrt(torch.clamp(t, min=1e-8))
-    approx = price / torch.clamp(s * sqrt_t, min=1e-12) * (2.0 * 3.141592653589793) ** 0.5
-    return torch.clamp(approx, 0.01, 5.0)
+    approx = price / torch.clamp(s * sqrt_t, min=1e-12) * _SQRT2PI
+    return torch.clamp(approx, 0.30, 5.0)
 
 
 def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, flag: np.ndarray, q: np.ndarray | None = None, on_error: str = "warn") -> np.ndarray:

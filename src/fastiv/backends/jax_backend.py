@@ -195,9 +195,9 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
 
     valid = tt > 0
 
-    # Brenner-Subrahmanyam initial guess
+    # Brenner-Subrahmanyam initial guess with floor=0.30
     sqrt_t = jnp.sqrt(jnp.maximum(tt, 1e-8))
-    sigma = jnp.clip(pt / jnp.maximum(st * sqrt_t, 1e-12) * _SQRT2PI, 0.01, 5.0)
+    sigma = jnp.clip(pt / jnp.maximum(st * sqrt_t, 1e-12) * _SQRT2PI, 0.30, 5.0)
 
     def _price(sig):
         return _bsm_price_j(is_call, st, kt, tt, rt, sig, qv)
