@@ -138,6 +138,50 @@ def price_black_scholes_merton(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t
 # Greeks
 # ---------------------------------------------------------------------------
 
+# One compiled core per model string (compile-time constant branch avoids graph breaks)
+_compiled_greeks_cores: "dict[str, object]" = {}
+
+
+def _get_compiled_greeks_core(model: str):
+    if model not in _compiled_greeks_cores:
+        import torch
+        _is_black = model == "black"
+
+        def _greeks_core(is_call, st, kt, tt, rt, sigt, qv):
+            d1, d2 = _d1_d2(st, kt, tt, rt, sigt, qv)
+            carry = torch.exp(-qv * tt)
+            disc = torch.exp(-rt * tt)
+            pdf = _normal_pdf(d1)
+            sqrt_t = torch.sqrt(torch.clamp(tt, min=1e-32))
+            safe_s = torch.clamp(st, min=1e-32)
+            safe_sig = torch.clamp(sigt, min=1e-32)
+            cdf_d1 = _normal_cdf(d1)
+            cdf_d2 = _normal_cdf(d2)
+
+            if _is_black:
+                delta = disc * torch.where(is_call, cdf_d1, cdf_d1 - 1.0)
+                gamma = disc * pdf / (safe_s * safe_sig * sqrt_t)
+            else:
+                delta = torch.where(is_call, carry * cdf_d1, carry * (cdf_d1 - 1.0))
+                gamma = carry * pdf / (safe_s * safe_sig * sqrt_t)
+
+            vega = st * carry * pdf * sqrt_t * 0.01
+            theta_call = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
+                          - rt * kt * disc * cdf_d2
+                          + qv * st * carry * cdf_d1) / 365.0
+            theta_put = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
+                         + rt * kt * disc * _normal_cdf(-d2)
+                         - qv * st * carry * _normal_cdf(-d1)) / 365.0
+            rho_call = kt * tt * disc * cdf_d2 * 0.01
+            rho_put = -kt * tt * disc * _normal_cdf(-d2) * 0.01
+            rho = torch.where(is_call, rho_call, rho_put)
+            theta = torch.where(is_call, theta_call, theta_put)
+            return delta, gamma, theta, rho, vega
+
+        _compiled_greeks_cores[model] = torch.compile(_greeks_core, dynamic=True)
+    return _compiled_greeks_cores[model]
+
+
 def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray | None = None) -> dict[str, np.ndarray]:
     import torch
     dev = _device()
@@ -147,37 +191,11 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     rt = _to_tensor(r, dev)
     sigt = _to_tensor(sigma, dev)
     qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
-
-    d1, d2 = _d1_d2(st, kt, tt, rt, sigt, qv)
-    carry = torch.exp(-qv * tt)
-    disc = torch.exp(-rt * tt)
-    pdf = _normal_pdf(d1)
-    sqrt_t = torch.sqrt(torch.clamp(tt, min=1e-32))
-    safe_s = torch.clamp(st, min=1e-32)
-    safe_sig = torch.clamp(sigt, min=1e-32)
-
     is_call = torch.as_tensor(flag == "c", device=dev)
 
-    delta = torch.where(is_call,
-                        carry * _normal_cdf(d1),
-                        carry * (_normal_cdf(d1) - 1.0))
-    gamma = carry * pdf / (safe_s * safe_sig * sqrt_t)
-    vega = st * carry * pdf * sqrt_t * 0.01
-    theta_call = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
-                  - rt * kt * disc * _normal_cdf(d2)
-                  + qv * st * carry * _normal_cdf(d1)) / 365.0
-    theta_put = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
-                 + rt * kt * disc * _normal_cdf(-d2)
-                 - qv * st * carry * _normal_cdf(-d1)) / 365.0
-    rho_call = kt * tt * disc * _normal_cdf(d2) * 0.01
-    rho_put = -kt * tt * disc * _normal_cdf(-d2) * 0.01
-    rho = torch.where(is_call, rho_call, rho_put)
-    theta = torch.where(is_call, theta_call, theta_put)
-
-    if model == "black":
-        delta = disc * torch.where(is_call, _normal_cdf(d1), _normal_cdf(d1) - 1.0)
-        gamma = disc * pdf / (safe_s * safe_sig * sqrt_t)
-
+    delta, gamma, theta, rho, vega = _get_compiled_greeks_core(model)(
+        is_call, st, kt, tt, rt, sigt, qv
+    )
     return {name: arr.cpu().numpy() for name, arr in {
         "delta": delta, "gamma": gamma, "theta": theta, "rho": rho, "vega": vega,
     }.items()}
