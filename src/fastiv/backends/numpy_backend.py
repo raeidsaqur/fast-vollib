@@ -52,8 +52,12 @@ def _bsm_price_full(
     discounted_strike = k * np.exp(-r * t)
     sqrt_t = np.sqrt(np.maximum(t, 1e-32))
 
-    call = discounted_spot * _norm_cdf(d1) - discounted_strike * _norm_cdf(d2)
-    put = discounted_strike * _norm_cdf(-d2) - discounted_spot * _norm_cdf(-d1)
+    # Compute only N(d1), N(d2); derive complements via N(-x) = 1 - N(x)
+    # — eliminates 2 of 4 ndtr calls per element (saves ~16 calls across 8 Halley iters)
+    cdf_d1 = _norm_cdf(d1)
+    cdf_d2 = _norm_cdf(d2)
+    call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
+    put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
     price = np.where(flag == "c", call, put)
     # raw vega (not scaled by 0.01)
     vega = discounted_spot * _norm_pdf(d1) * sqrt_t

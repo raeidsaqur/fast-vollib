@@ -238,8 +238,10 @@ def _get_compiled_halley():
             discounted_spot = st * torch.exp(-qv * tt)
             discounted_strike = kt * torch.exp(-rt * tt)
             sqrt_t_inner = torch.sqrt(torch.clamp(tt, min=1e-32))
-            call = discounted_spot * _normal_cdf(d1) - discounted_strike * _normal_cdf(d2)
-            put = discounted_strike * _normal_cdf(-d2) - discounted_spot * _normal_cdf(-d1)
+            cdf_d1 = _normal_cdf(d1)
+            cdf_d2 = _normal_cdf(d2)
+            call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
+            put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
             px = torch.where(is_call, call, put)
             vega = discounted_spot * _normal_pdf(d1) * sqrt_t_inner
             residual = px - pt
