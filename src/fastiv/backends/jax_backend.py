@@ -95,7 +95,7 @@ def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r
     import jax, jax.numpy as jnp
     is_call = _flag_to_bool(flag)
     ft, kt, tt, rt, st = (jnp.asarray(x, dtype=jnp.float64) for x in (f, k, t, r, sigma))
-    qt = jnp.zeros_like(rt)
+    qt = rt  # Black-76: q=r so carry=disc and d1 = [ln(F/K)+0.5σ²T]/(σ√T)
     out = jax.jit(_bsm_price_j)(is_call, ft, kt, tt, rt, st, qt)
     return np.asarray(out)
 
@@ -129,7 +129,10 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
 
     is_call = _flag_to_bool(flag)
     st, kt, tt, rt, sigt = (jnp.asarray(x, dtype=jnp.float64) for x in (s, k, t, r, sigma))
-    qv = jnp.zeros_like(rt) if q is None else jnp.asarray(q, dtype=jnp.float64)
+    if model == "black" and q is None:
+        qv = rt  # Black-76: q=r so carry=disc and d1 = [ln(F/K)+0.5σ²T]/(σ√T)
+    else:
+        qv = jnp.zeros_like(rt) if q is None else jnp.asarray(q, dtype=jnp.float64)
 
     @jax.jit
     def _greeks_jit(is_call, st, kt, tt, rt, sigt, qv):
@@ -191,7 +194,10 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     is_call = _flag_to_bool(flag)
     pt = jnp.asarray(price, dtype=jnp.float64)
     st, kt, tt, rt = (jnp.asarray(x, dtype=jnp.float64) for x in (s, k, t, r))
-    qv = jnp.zeros_like(rt) if q is None else jnp.asarray(q, dtype=jnp.float64)
+    if model == "black" and q is None:
+        qv = rt  # Black-76: q=r so carry=disc and d1 = [ln(F/K)+0.5σ²T]/(σ√T)
+    else:
+        qv = jnp.zeros_like(rt) if q is None else jnp.asarray(q, dtype=jnp.float64)
 
     valid = tt > 0
 

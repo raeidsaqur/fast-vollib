@@ -66,8 +66,8 @@ def _bsm_price(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r:
 
 
 def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
-    q = np.zeros_like(r)
-    return _bsm_price(flag, f, k, t, r, sigma, q)
+    # Black-76: q=r makes carry=disc so d1 = [ln(F/K)+0.5σ²T]/(σ√T) (correct)
+    return _bsm_price(flag, f, k, t, r, sigma, r)
 
 
 def price_black_scholes(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
@@ -85,7 +85,8 @@ def _vega_raw(s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma:
 
 
 def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray | None = None) -> dict[str, np.ndarray]:
-    qv = np.zeros_like(r) if q is None else q
+    # Black-76: q=r so carry=disc and d1 uses only the σ² drift term (no r-q)
+    qv = r if (model == "black" and q is None) else (np.zeros_like(r) if q is None else q)
     d1, d2 = _d1_d2(s, k, t, r, sigma, qv)
     carry = np.exp(-qv * t)
     disc = np.exp(-r * t)
@@ -159,7 +160,7 @@ def _price_for_model_full(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Return (price, raw_vega, d1, d2) for the chosen model in one pass."""
     if model == "black":
-        return _bsm_price_full(flag, s, k, t, r, sigma, np.zeros_like(r))
+        return _bsm_price_full(flag, s, k, t, r, sigma, r)  # q=r → Black-76
     if model == "black_scholes":
         return _bsm_price_full(flag, s, k, t, r, sigma, np.zeros_like(r))
     return _bsm_price_full(flag, s, k, t, r, sigma, q)
@@ -190,7 +191,8 @@ def implied_volatility(
     q: np.ndarray | None = None,
     on_error: str = "warn",
 ) -> np.ndarray:
-    qv = np.zeros_like(r) if q is None else q
+    # Black-76: q=r so carry=disc and d1 = [ln(F/K)+0.5σ²T]/(σ√T) (correct)
+    qv = r if (model == "black" and q is None) else (np.zeros_like(r) if q is None else q)
 
     # --- intrinsic check ---
     intrinsic = _intrinsic_vec(flag, s, k, t, r, qv, model)

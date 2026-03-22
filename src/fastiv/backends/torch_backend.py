@@ -104,7 +104,7 @@ def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r
     tt = _to_tensor(t, dev)
     rt = _to_tensor(r, dev)
     st = _to_tensor(sigma, dev)
-    qt = torch.zeros_like(rt)
+    qt = rt.clone()  # Black-76: q=r so carry=disc, d1 uses only σ² drift
     out = _bsm_price_t(flag, ft, kt, tt, rt, st, qt)
     return out.cpu().numpy()
 
@@ -190,7 +190,10 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     tt = _to_tensor(t, dev)
     rt = _to_tensor(r, dev)
     sigt = _to_tensor(sigma, dev)
-    qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
+    if model == "black" and q is None:
+        qv = rt.clone()
+    else:
+        qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
     is_call = torch.as_tensor(flag == "c", device=dev)
 
     delta, gamma, theta, rho, vega = _get_compiled_greeks_core(model)(
@@ -294,7 +297,11 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     kt = _to_tensor(k, dev)
     tt = _to_tensor(t, dev)
     rt = _to_tensor(r, dev)
-    qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
+    # Black-76: q=r so d1 uses only σ² drift (carry=disc eliminates r-q from d1)
+    if model == "black" and q is None:
+        qv = rt.clone()
+    else:
+        qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
 
     # Pre-compute boolean flag once — avoids re-running `flag == "c"` each Halley iter
     is_call = torch.as_tensor(flag == "c", device=dev)
