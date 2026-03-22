@@ -1,25 +1,26 @@
 from __future__ import annotations
 
-import math
-
 import numpy as np
-from scipy.optimize import brentq
 from scipy.stats import norm
 
 from ..types import ModelLiteral
 from ..utils.validation import handle_error
 
 
-def _intrinsic(flag: str, s: float, k: float, t: float, r: float, q: float, model: ModelLiteral) -> float:
+def _intrinsic_vec(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, q: np.ndarray, model: ModelLiteral) -> np.ndarray:
+    """Vectorized intrinsic value computation."""
+    disc = np.exp(-r * t)
+    carry = np.exp(-q * t)
     if model == "black":
-        return math.exp(-r * t) * max(0.0, s - k) if flag == "c" else math.exp(-r * t) * max(0.0, k - s)
-    forward = s * math.exp((r - q) * t)
-    call_intrinsic = max(0.0, s * math.exp(-q * t) - k * math.exp(-r * t))
-    put_intrinsic = max(0.0, k * math.exp(-r * t) - s * math.exp(-q * t))
-    if model == "black_scholes":
-        call_intrinsic = max(0.0, s - k * math.exp(-r * t))
-        put_intrinsic = max(0.0, k * math.exp(-r * t) - s)
-    return call_intrinsic if flag == "c" else put_intrinsic
+        call_iv = disc * np.maximum(0.0, s - k)
+        put_iv = disc * np.maximum(0.0, k - s)
+    elif model == "black_scholes":
+        call_iv = np.maximum(0.0, s - k * disc)
+        put_iv = np.maximum(0.0, k * disc - s)
+    else:  # black_scholes_merton
+        call_iv = np.maximum(0.0, s * carry - k * disc)
+        put_iv = np.maximum(0.0, k * disc - s * carry)
+    return np.where(flag == "c", call_iv, put_iv)
 
 
 def _d1_d2(s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -98,31 +99,66 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     }
 
 
+def _price_for_model(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
+    if model == "black":
+        return price_black(flag, s, k, t, r, sigma)
+    if model == "black_scholes":
+        return price_black_scholes(flag, s, k, t, r, sigma)
+    return price_black_scholes_merton(flag, s, k, t, r, sigma, q)
+
+
+def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.ndarray:
+    """Brenner-Subrahmanyam ATM approximation as Newton seed."""
+    sqrt_t = np.sqrt(np.maximum(t, 1e-8))
+    approx = price / np.maximum(s * sqrt_t, 1e-12) * np.sqrt(2.0 * np.pi)
+    return np.clip(approx, 0.01, 5.0)
+
+
+_NEWTON_ITERS = 20
+_BISECT_ITERS = 50
+_IV_LO = 1e-8
+_IV_HI = 10.0
+
+
 def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, flag: np.ndarray, q: np.ndarray | None = None, on_error: str = "warn") -> np.ndarray:
     qv = np.zeros_like(r) if q is None else q
 
-    def solve_one(px: float, ss: float, kk: float, tt: float, rr: float, ff: str, qq: float) -> float:
-        if tt <= 0:
-            return 0.0
-        intrinsic = _intrinsic(ff, ss, kk, tt, rr, qq, model)
-        if px < intrinsic - 1e-10:
-            handle_error("Option price is below intrinsic value.", on_error)
-            return math.nan
+    # --- intrinsic check (vectorized) ---
+    intrinsic = _intrinsic_vec(flag, s, k, t, r, qv, model)
+    below_intrinsic = price < intrinsic - 1e-10
+    if np.any(below_intrinsic):
+        handle_error("Option price is below intrinsic value.", on_error)
 
-        def objective(sig: float) -> float:
-            if model == "black":
-                val = price_black(np.asarray([ff]), np.asarray([ss]), np.asarray([kk]), np.asarray([tt]), np.asarray([rr]), np.asarray([sig]))[0]
-            elif model == "black_scholes":
-                val = price_black_scholes(np.asarray([ff]), np.asarray([ss]), np.asarray([kk]), np.asarray([tt]), np.asarray([rr]), np.asarray([sig]))[0]
-            else:
-                val = price_black_scholes_merton(np.asarray([ff]), np.asarray([ss]), np.asarray([kk]), np.asarray([tt]), np.asarray([rr]), np.asarray([sig]), np.asarray([qq]))[0]
-            return val - px
+    valid = t > 0
 
-        try:
-            return brentq(objective, 1e-12, 10.0, maxiter=200)
-        except ValueError:
-            handle_error("Implied volatility root was not bracketed.", on_error)
-            return math.nan
+    # --- Newton-Raphson ---
+    sigma = _iv_initial_guess(price, s, t)
+    for _ in range(_NEWTON_ITERS):
+        px = _price_for_model(model, flag, s, k, t, r, sigma, qv)
+        residual = px - price
+        v = _vega_raw(s, k, t, r, sigma, qv)
+        # Guard against near-zero vega (deep ITM/OTM); skip step where vega is tiny
+        safe_vega = np.where(v > 1e-14, v, np.inf)
+        sigma = np.clip(sigma - residual / safe_vega, _IV_LO, _IV_HI)
 
-    vectorized = np.vectorize(solve_one, otypes=[float])
-    return vectorized(price, s, k, t, r, flag, qv)
+    # --- Bisection fallback for poorly converged points ---
+    px_final = _price_for_model(model, flag, s, k, t, r, sigma, qv)
+    # Also catch underflow-stuck Newton: price_BS==0 but target price is nonzero.
+    # This happens for deep OTM options where many σ values give identical float64 prices.
+    underflow_stuck = (px_final == 0.0) & (price > 0.0)
+    not_converged = (np.abs(px_final - price) > 1e-6) | underflow_stuck
+
+    if np.any(not_converged):
+        sigma_lo = np.where(not_converged, _IV_LO, sigma)
+        sigma_hi = np.where(not_converged, _IV_HI, sigma)
+        for _ in range(_BISECT_ITERS):
+            sigma_mid = 0.5 * (sigma_lo + sigma_hi)
+            px_mid = _price_for_model(model, flag, s, k, t, r, sigma_mid, qv)
+            mid_res = px_mid - price
+            sigma_lo = np.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
+            sigma_hi = np.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
+        sigma = np.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
+
+    result = np.where(valid, sigma, 0.0)
+    result = np.where(below_intrinsic, np.nan, result)
+    return result
