@@ -187,15 +187,32 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
 # Implied volatility (vectorized Newton-Raphson on GPU tensors)
 # ---------------------------------------------------------------------------
 
-_NEWTON_ITERS = 20
+_HALLEY_ITERS = 8
 _BISECT_ITERS = 50
 _IV_LO = 1e-8
 _IV_HI = 10.0
 
 
+def _price_vega_d1d2_t(model, flag, s, k, t, r, sigma, q):
+    """Return (price, raw_vega, d1, d2) in a single pass."""
+    import torch
+    d1, d2 = _d1_d2(s, k, t, r, sigma, q)
+    discounted_spot = s * torch.exp(-q * t)
+    discounted_strike = k * torch.exp(-r * t)
+    sqrt_t = torch.sqrt(torch.clamp(t, min=1e-32))
+    call = discounted_spot * _normal_cdf(d1) - discounted_strike * _normal_cdf(d2)
+    put = discounted_strike * _normal_cdf(-d2) - discounted_spot * _normal_cdf(-d1)
+    is_call = torch.as_tensor(flag == "c", device=s.device)
+    price = torch.where(is_call, call, put)
+    vega = discounted_spot * _normal_pdf(d1) * sqrt_t
+    return price, vega, d1, d2
+
+
 def _price_for_model_t(model, flag, s, k, t, r, sigma, q):
-    qt = q if q is not None else __import__("torch").zeros_like(r)
-    return _bsm_price_t(flag, s, k, t, r, sigma, qt)
+    import torch
+    qt = q if q is not None else torch.zeros_like(r)
+    px, _, _, _ = _price_vega_d1d2_t(model, flag, s, k, t, r, sigma, qt)
+    return px
 
 
 def _initial_guess_t(price, s, t):
@@ -220,13 +237,16 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     valid = tt > 0
     sigma = _initial_guess_t(pt, st, tt)
 
-    # Newton-Raphson
-    for _ in range(_NEWTON_ITERS):
-        px = _price_for_model_t(model, flag, st, kt, tt, rt, sigma, qv)
+    # Halley's method (3rd order)
+    for _ in range(_HALLEY_ITERS):
+        px, vega, d1, d2 = _price_vega_d1d2_t(model, flag, st, kt, tt, rt, sigma, qv)
         residual = px - pt
-        v = _vega_raw_t(st, kt, tt, rt, sigma, qv)
-        safe_vega = torch.where(v > 1e-14, v, torch.full_like(v, float("inf")))
-        sigma = torch.clamp(sigma - residual / safe_vega, _IV_LO, _IV_HI)
+        safe_vega = torch.where(vega > 1e-14, vega, torch.full_like(vega, float("inf")))
+        newton_step = residual / safe_vega
+        safe_sigma = torch.where(sigma > 1e-8, sigma, torch.full_like(sigma, float("inf")))
+        halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
+        halley_denom = torch.where(halley_denom.abs() > 0.05, halley_denom, torch.sign(halley_denom + 1e-15) * 0.05)
+        sigma = torch.clamp(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
 
     px_final = _price_for_model_t(model, flag, st, kt, tt, rt, sigma, qv)
     underflow_stuck = (px_final == 0.0) & (pt > 0.0)

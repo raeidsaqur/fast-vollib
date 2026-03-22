@@ -177,7 +177,7 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
 # Implied volatility
 # ---------------------------------------------------------------------------
 
-_NEWTON_ITERS = 20
+_HALLEY_ITERS = 8
 _BISECT_ITERS = 50
 _IV_LO = 1e-8
 _IV_HI = 10.0
@@ -199,29 +199,40 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     sqrt_t = jnp.sqrt(jnp.maximum(tt, 1e-8))
     sigma = jnp.clip(pt / jnp.maximum(st * sqrt_t, 1e-12) * _SQRT2PI, 0.30, 5.0)
 
+    def _price_vega_d1d2(sig):
+        d1, d2 = _d1_d2(st, kt, tt, rt, sig, qv)
+        ds = st * jnp.exp(-qv * tt)
+        dk = kt * jnp.exp(-rt * tt)
+        sqrt_tt = jnp.sqrt(jnp.maximum(tt, 1e-32))
+        call = ds * _normal_cdf(d1) - dk * _normal_cdf(d2)
+        put = dk * _normal_cdf(-d2) - ds * _normal_cdf(-d1)
+        px = jnp.where(is_call, call, put)
+        vega = ds * _normal_pdf(d1) * sqrt_tt
+        return px, vega, d1, d2
+
+    # Halley's method (3rd order; 8 iters ≡ ~12 Newton iters in accuracy)
+    @jax.jit
+    def _halley_step(sigma):
+        px, vega, d1, d2 = _price_vega_d1d2(sigma)
+        residual = px - pt
+        safe_vega = jnp.where(vega > 1e-14, vega, jnp.full_like(vega, jnp.inf))
+        newton_step = residual / safe_vega
+        safe_sigma = jnp.where(sigma > 1e-8, sigma, jnp.full_like(sigma, jnp.inf))
+        halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
+        halley_denom = jnp.where(jnp.abs(halley_denom) > 0.05, halley_denom, jnp.sign(halley_denom + 1e-15) * 0.05)
+        return jnp.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
+
+    for _ in range(_HALLEY_ITERS):
+        sigma = _halley_step(sigma)
+
     def _price(sig):
         return _bsm_price_j(is_call, st, kt, tt, rt, sig, qv)
-
-    def _vega(sig):
-        return _vega_raw_j(st, kt, tt, rt, sig, qv)
-
-    # Newton-Raphson (not JIT-compiled due to Python loop; jit the inner step)
-    @jax.jit
-    def _newton_step(sigma):
-        px = _price(sigma)
-        v = _vega(sigma)
-        safe_vega = jnp.where(v > 1e-14, v, jnp.full_like(v, jnp.inf))
-        return jnp.clip(sigma - (px - pt) / safe_vega, _IV_LO, _IV_HI)
-
-    for _ in range(_NEWTON_ITERS):
-        sigma = _newton_step(sigma)
 
     px_final = _price(sigma)
     underflow_stuck = (px_final == 0.0) & (pt > 0.0)
     not_converged = (jnp.abs(px_final - pt) > 1e-6) | underflow_stuck
 
     if not_converged.any():
-        from ..utils.validation import handle_error as _he
         sigma_lo = jnp.where(not_converged, jnp.full_like(sigma, _IV_LO), sigma)
         sigma_hi = jnp.where(not_converged, jnp.full_like(sigma, _IV_HI), sigma)
 

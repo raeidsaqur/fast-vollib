@@ -1,10 +1,16 @@
 from __future__ import annotations
 
 import numpy as np
+from scipy.special import ndtr, log_ndtr
 from scipy.stats import norm
 
 from ..types import ModelLiteral
 from ..utils.validation import handle_error
+
+# Use scipy.special.ndtr for accurate extreme-tail CDF (matches erfc method).
+# norm.pdf is kept for convenience (no extreme-tail issues for PDF).
+_norm_cdf = ndtr
+_norm_pdf = norm.pdf
 
 
 def _intrinsic_vec(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, q: np.ndarray, model: ModelLiteral) -> np.ndarray:
@@ -31,19 +37,37 @@ def _d1_d2(s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np
     return d1, d2
 
 
-def _bsm_price(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
+def _bsm_price_full(
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    sigma: np.ndarray,
+    q: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Compute BSM price, raw vega, d1, and d2 in one pass (avoids double d1/d2 calls)."""
     d1, d2 = _d1_d2(s, k, t, r, sigma, q)
     discounted_spot = s * np.exp(-q * t)
     discounted_strike = k * np.exp(-r * t)
-    call = discounted_spot * norm.cdf(d1) - discounted_strike * norm.cdf(d2)
-    put = discounted_strike * norm.cdf(-d2) - discounted_spot * norm.cdf(-d1)
-    return np.where(flag == "c", call, put)
+    sqrt_t = np.sqrt(np.maximum(t, 1e-32))
+
+    call = discounted_spot * _norm_cdf(d1) - discounted_strike * _norm_cdf(d2)
+    put = discounted_strike * _norm_cdf(-d2) - discounted_spot * _norm_cdf(-d1)
+    price = np.where(flag == "c", call, put)
+    # raw vega (not scaled by 0.01)
+    vega = discounted_spot * _norm_pdf(d1) * sqrt_t
+    return price, vega, d1, d2
+
+
+def _bsm_price(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
+    price, _, _, _ = _bsm_price_full(flag, s, k, t, r, sigma, q)
+    return price
 
 
 def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
     q = np.zeros_like(r)
-    prices = _bsm_price(flag, f, k, t, r, sigma, q)
-    return prices
+    return _bsm_price(flag, f, k, t, r, sigma, q)
 
 
 def price_black_scholes(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
@@ -57,7 +81,7 @@ def price_black_scholes_merton(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t
 
 def _vega_raw(s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
     d1, _ = _d1_d2(s, k, t, r, sigma, q)
-    return s * np.exp(-q * t) * norm.pdf(d1) * np.sqrt(np.maximum(t, 1e-32))
+    return s * np.exp(-q * t) * _norm_pdf(d1) * np.sqrt(np.maximum(t, 1e-32))
 
 
 def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray | None = None) -> dict[str, np.ndarray]:
@@ -65,30 +89,31 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     d1, d2 = _d1_d2(s, k, t, r, sigma, qv)
     carry = np.exp(-qv * t)
     disc = np.exp(-r * t)
-    pdf = norm.pdf(d1)
-    sign = np.where(flag == "c", 1.0, -1.0)
+    pdf = _norm_pdf(d1)
+    sqrt_t = np.sqrt(np.maximum(t, 1e-32))
 
-    delta = np.where(flag == "c", carry * norm.cdf(d1), carry * (norm.cdf(d1) - 1.0))
-    gamma = carry * pdf / (np.maximum(s, 1e-32) * np.maximum(sigma, 1e-32) * np.sqrt(np.maximum(t, 1e-32)))
-    vega = _vega_raw(s, k, t, r, sigma, qv) * 0.01
+    delta = np.where(flag == "c", carry * _norm_cdf(d1), carry * (_norm_cdf(d1) - 1.0))
+    gamma = carry * pdf / (np.maximum(s, 1e-32) * np.maximum(sigma, 1e-32) * sqrt_t)
+    # vega scaled by 0.01 (1% move convention)
+    vega = s * carry * pdf * sqrt_t * 0.01
     theta_call = (
-        -(s * carry * pdf * sigma) / (2.0 * np.sqrt(np.maximum(t, 1e-32)))
-        - r * k * disc * norm.cdf(d2)
-        + qv * s * carry * norm.cdf(d1)
+        -(s * carry * pdf * sigma) / (2.0 * sqrt_t)
+        - r * k * disc * _norm_cdf(d2)
+        + qv * s * carry * _norm_cdf(d1)
     ) / 365.0
     theta_put = (
-        -(s * carry * pdf * sigma) / (2.0 * np.sqrt(np.maximum(t, 1e-32)))
-        + r * k * disc * norm.cdf(-d2)
-        - qv * s * carry * norm.cdf(-d1)
+        -(s * carry * pdf * sigma) / (2.0 * sqrt_t)
+        + r * k * disc * _norm_cdf(-d2)
+        - qv * s * carry * _norm_cdf(-d1)
     ) / 365.0
-    rho_call = k * t * disc * norm.cdf(d2) * 0.01
-    rho_put = -k * t * disc * norm.cdf(-d2) * 0.01
+    rho_call = k * t * disc * _norm_cdf(d2) * 0.01
+    rho_put = -k * t * disc * _norm_cdf(-d2) * 0.01
     rho = np.where(flag == "c", rho_call, rho_put)
     theta = np.where(flag == "c", theta_call, theta_put)
 
     if model == "black":
-        delta = disc * np.where(flag == "c", norm.cdf(d1), norm.cdf(d1) - 1.0)
-        gamma = disc * pdf / (np.maximum(s, 1e-32) * np.maximum(sigma, 1e-32) * np.sqrt(np.maximum(t, 1e-32)))
+        delta = disc * np.where(flag == "c", _norm_cdf(d1), _norm_cdf(d1) - 1.0)
+        gamma = disc * pdf / (np.maximum(s, 1e-32) * np.maximum(sigma, 1e-32) * sqrt_t)
 
     return {
         "delta": delta,
@@ -99,38 +124,75 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     }
 
 
-def _price_for_model(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
-    if model == "black":
-        return price_black(flag, s, k, t, r, sigma)
-    if model == "black_scholes":
-        return price_black_scholes(flag, s, k, t, r, sigma)
-    return price_black_scholes_merton(flag, s, k, t, r, sigma, q)
-
+# ---------------------------------------------------------------------------
+# Implied volatility — Halley's method (3rd-order) + bisection fallback
+# ---------------------------------------------------------------------------
 
 def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.ndarray:
-    """Brenner-Subrahmanyam ATM approximation as Newton seed.
+    """Brenner-Subrahmanyam ATM approximation as Halley seed.
 
-    Floor is 0.30 (not 0.01): for OTM options the BS approximation underestimates
-    sigma severely, landing Newton in a near-zero-vega region where it stalls.
+    Floor is 0.30: for OTM options the BS approximation underestimates sigma
+    severely, landing iteration in a near-zero-vega region where it stalls.
     A floor of 0.30 eliminates bisection fallback for typical equity smile data
-    while still converging to any true sigma (Newton simply takes a few extra
-    steps from 0.30 toward lower values like 0.05).
+    while still converging to any true sigma.
     """
     sqrt_t = np.sqrt(np.maximum(t, 1e-8))
     approx = price / np.maximum(s * sqrt_t, 1e-12) * np.sqrt(2.0 * np.pi)
     return np.clip(approx, 0.30, 5.0)
 
 
-_NEWTON_ITERS = 20
+_HALLEY_ITERS = 8   # 8 Halley steps ≡ ~12 Newton steps in accuracy
 _BISECT_ITERS = 50
 _IV_LO = 1e-8
 _IV_HI = 10.0
 
 
-def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, flag: np.ndarray, q: np.ndarray | None = None, on_error: str = "warn") -> np.ndarray:
+def _price_for_model_full(
+    model: ModelLiteral,
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    sigma: np.ndarray,
+    q: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return (price, raw_vega, d1, d2) for the chosen model in one pass."""
+    if model == "black":
+        return _bsm_price_full(flag, s, k, t, r, sigma, np.zeros_like(r))
+    if model == "black_scholes":
+        return _bsm_price_full(flag, s, k, t, r, sigma, np.zeros_like(r))
+    return _bsm_price_full(flag, s, k, t, r, sigma, q)
+
+
+def _price_for_model(
+    model: ModelLiteral,
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    sigma: np.ndarray,
+    q: np.ndarray,
+) -> np.ndarray:
+    px, _, _, _ = _price_for_model_full(model, flag, s, k, t, r, sigma, q)
+    return px
+
+
+def implied_volatility(
+    model: ModelLiteral,
+    price: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    flag: np.ndarray,
+    q: np.ndarray | None = None,
+    on_error: str = "warn",
+) -> np.ndarray:
     qv = np.zeros_like(r) if q is None else q
 
-    # --- intrinsic check (vectorized) ---
+    # --- intrinsic check ---
     intrinsic = _intrinsic_vec(flag, s, k, t, r, qv, model)
     below_intrinsic = price < intrinsic - 1e-10
     if np.any(below_intrinsic):
@@ -138,20 +200,23 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
 
     valid = t > 0
 
-    # --- Newton-Raphson ---
+    # --- Halley's method ---
     sigma = _iv_initial_guess(price, s, t)
-    for _ in range(_NEWTON_ITERS):
-        px = _price_for_model(model, flag, s, k, t, r, sigma, qv)
+    for _ in range(_HALLEY_ITERS):
+        px, vega, d1, d2 = _price_for_model_full(model, flag, s, k, t, r, sigma, qv)
         residual = px - price
-        v = _vega_raw(s, k, t, r, sigma, qv)
-        # Guard against near-zero vega (deep ITM/OTM); skip step where vega is tiny
-        safe_vega = np.where(v > 1e-14, v, np.inf)
-        sigma = np.clip(sigma - residual / safe_vega, _IV_LO, _IV_HI)
+        safe_vega = np.where(vega > 1e-14, vega, np.inf)
+        newton_step = residual / safe_vega
+        # Halley correction: dvega/dsigma = vega * d1 * d2 / sigma
+        # => sigma_new = sigma - step / (1 - step * d1 * d2 / sigma)
+        safe_sigma = np.where(sigma > 1e-8, sigma, np.inf)
+        halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
+        # Clamp denominator away from zero to prevent division issues
+        halley_denom = np.where(np.abs(halley_denom) > 0.05, halley_denom, np.sign(halley_denom + 1e-15) * 0.05)
+        sigma = np.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
 
     # --- Bisection fallback for poorly converged points ---
     px_final = _price_for_model(model, flag, s, k, t, r, sigma, qv)
-    # Also catch underflow-stuck Newton: price_BS==0 but target price is nonzero.
-    # This happens for deep OTM options where many σ values give identical float64 prices.
     underflow_stuck = (px_final == 0.0) & (price > 0.0)
     not_converged = (np.abs(px_final - price) > 1e-6) | underflow_stuck
 
