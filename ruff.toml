@@ -1,0 +1,72 @@
+# Ruff configuration for collaborators-nvs workspace
+# Applies to root projects (ai_models) and any subprojects that don't override
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[lint]
+# Rule codes:
+# E/F = pycodestyle + pyflakes
+# I = isort (import sorting)
+# B = bugbear (best practices)
+# UP = pyupgrade (Python syntax updates)
+# N = pep8-naming (naming conventions)
+# C4 = comprehensions
+# T20 = print statements (disallowed in libs)
+# Q = flake8-quotes
+# ANN201 = return type annotations
+# SIM = simplify (code clarity)
+# TID = tidy-imports
+# ARG = unused arguments
+select = [
+    "E",      # pycodestyle errors
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # bugbear
+    "UP",     # pyupgrade
+    "N",      # pep8-naming
+    "C4",     # comprehensions
+    "T20",    # flake8-print (no print statements in library code)
+    "Q",      # flake8-quotes
+    "ANN201", # return type annotations
+    "SIM",    # simplify
+    "TID",    # tidy-imports
+    "ARG",    # unused arguments
+]
+
+ignore = [
+    "E203",   # whitespace before ':' (Black compatibility)
+    "E266",   # too many leading '#' comments (optional)
+    "ANN101", # missing type annotation for `self`
+    "ANN102", # missing type annotation for `cls`
+]
+
+# Unfixable rules: Rules that should not be auto-fixed
+# (removing imports/vars or major code rewrites are too risky)
+unfixable = [
+    "F401",   # unused imports (may be part of public API)
+    "F841",   # unused local variables (may be intentional)
+    "ARG",    # unused function arguments (would rename to `_arg`)
+    "N",      # naming rules (would rename vars/funcs/classes)
+    "TID",    # tidy-imports (can remove imports)
+    "UP",     # pyupgrade (code rewrites)
+    "SIM",    # simplify (code rewrites)
+    "C4",     # comprehensions (code rewrites)
+    "B",      # bugbear fixes that may change logic
+]
+
+[lint.per-file-ignores]
+"tests/**" = [
+    "ANN",    # type annotations not required in tests
+    "T20",    # print statements allowed for debugging
+    "ARG",    # unused arguments common in fixtures
+]
+"scripts/**" = ["T20"]  # print statements allowed in scripts
+
+[lint.isort]
+known-first-party = []
+combine-as-imports = true
+force-sort-within-sections = true

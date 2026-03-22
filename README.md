@@ -23,8 +23,21 @@ Optional extras:
 ```bash
 uv sync --extra torch
 uv sync --extra jax
+uv sync --extra cuda
 uv sync --group docs --group bench
 ```
+
+Phoenix GPU install:
+
+```bash
+uv sync --extra cuda --group bench
+```
+
+On Linux/Phoenix, the `cuda` extra is the combined GPU path:
+
+- PyTorch from the CUDA 13.0 wheel index
+- JAX with CUDA 13 support
+- optional RAPIDS benchmarking packages
 
 ## Public API
 

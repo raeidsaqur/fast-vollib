@@ -4,17 +4,67 @@ version = "0.1.0"
 description = "Modern Black, Black-Scholes, and Black-Scholes-Merton pricing and implied volatility with NumPy, PyTorch, and JAX backends."
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Raeid Saqur" }]
+authors = [
+    { name = "Raeid Saqur", email = "raeid.saqur@maths.ox.ac.uk" }
+]
+maintainers = [
+    { name = "Raeid Saqur", email = "raeid.saqur@maths.ox.ac.uk" }
+]
+keywords = [
+    "options",
+    "volatility",
+    "black-scholes",
+    "neural-networks",
+    "finance",
+    "quantitative-finance",
+    "derivatives",
+    "implied-volatility",
+    "arbitrage-free",
+    "volatility-surface",
+]
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
     "scipy>=1.13",
-    "pandas>=2.1",
+    "pandas",
+    "joblib>=1.3.0",
+    "psutil>=7.1.3",
 ]
 
 [project.optional-dependencies]
-torch = ["torch>=2.2"]
-jax = ["jax>=0.4.30", "jaxlib>=0.4.30"]
+torch = ["torch==2.9.1"]
+jax = ["jax>=0.4.30"]
+
+# Numba-accelerated BS pricing
+numba = [
+    "numba>=0.60.0",
+]
+cuda = [
+    "torch==2.9.1; sys_platform == 'linux'",
+    "jax[cuda13]; sys_platform == 'linux'",
+    # RAPIDS — requires CUDA 13.0 and the nvidia PyPI index (see [tool.uv.sources])
+    "cudf-cu13; sys_platform == 'linux'",
+    "cuvs-cu13; sys_platform == 'linux'",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+index = [
+    { name = "pytorch-cu130", url = "https://download.pytorch.org/whl/cu130", explicit = true },
+    { name = "nvidia-pypi", url = "https://pypi.nvidia.com", explicit = true },
+]
+
+[tool.uv.sources]
+# PyTorch 2.9.1 + CUDA 13.0 wheels on Linux; CPU/MPS default index elsewhere.
+torch       = [{ index = "pytorch-cu130", marker = "sys_platform == 'linux'" }]
+# RAPIDS (cudf, cuvs): CUDA 13 wheels from nvidia PyPI, opt-in via --extra cuda.
+cudf-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extra == 'cuda'" }]
+cuvs-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extra == 'cuda'" }]
+
+# ---------------------------------------------------------------------------
+# Build system
+# Root publishes nothing itself; nbs/ publishes via its own pyproject.toml.
+# ---------------------------------------------------------------------------
 
 [build-system]
 requires = ["hatchling"]
@@ -23,14 +73,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/fastiv"]
 
-[tool.uv]
-default-groups = ["dev"]
-
 [dependency-groups]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
     "mypy>=1.10",
+    "pre-commit>=3.7.0",
 ]
 docs = [
     "mkdocs>=1.6",
@@ -43,6 +91,13 @@ bench = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+
+# --- Formatting and Linting Tools Configuration -- #
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
 [tool.ruff]
+# See ruff.toml for comprehensive linting and formatting rules.
 line-length = 100
 target-version = "py311"
