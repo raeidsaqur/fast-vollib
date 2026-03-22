@@ -1,0 +1,11 @@
+site_name = fastiv
+site_description = Modern implied volatility and Black-Scholes toolkit
+repo_name = fastiv
+theme:
+  name: material
+nav:
+  - Home: docs/index.md
+  - API: docs/api.md
+  - Compatibility: docs/compatibility.md
+  - Benchmarks: docs/benchmarks.md
+  - Phoenix: docs/phoenix.md
