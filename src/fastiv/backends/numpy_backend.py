@@ -93,27 +93,34 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     pdf = _norm_pdf(d1)
     sqrt_t = np.sqrt(np.maximum(t, 1e-32))
 
-    delta = np.where(flag == "c", carry * _norm_cdf(d1), carry * (_norm_cdf(d1) - 1.0))
+    # Pre-compute all four CDF values once (N(-x) = 1 - N(x) avoids 5 extra ndtr calls)
+    cdf_d1 = _norm_cdf(d1)
+    cdf_d2 = _norm_cdf(d2)
+    cdf_nd1 = 1.0 - cdf_d1
+    cdf_nd2 = 1.0 - cdf_d2
+
+    is_call = flag == "c"
+    delta = np.where(is_call, carry * cdf_d1, carry * (cdf_d1 - 1.0))
     gamma = carry * pdf / (np.maximum(s, 1e-32) * np.maximum(sigma, 1e-32) * sqrt_t)
     # vega scaled by 0.01 (1% move convention)
     vega = s * carry * pdf * sqrt_t * 0.01
     theta_call = (
         -(s * carry * pdf * sigma) / (2.0 * sqrt_t)
-        - r * k * disc * _norm_cdf(d2)
-        + qv * s * carry * _norm_cdf(d1)
+        - r * k * disc * cdf_d2
+        + qv * s * carry * cdf_d1
     ) / 365.0
     theta_put = (
         -(s * carry * pdf * sigma) / (2.0 * sqrt_t)
-        + r * k * disc * _norm_cdf(-d2)
-        - qv * s * carry * _norm_cdf(-d1)
+        + r * k * disc * cdf_nd2
+        - qv * s * carry * cdf_nd1
     ) / 365.0
-    rho_call = k * t * disc * _norm_cdf(d2) * 0.01
-    rho_put = -k * t * disc * _norm_cdf(-d2) * 0.01
-    rho = np.where(flag == "c", rho_call, rho_put)
-    theta = np.where(flag == "c", theta_call, theta_put)
+    rho_call = k * t * disc * cdf_d2 * 0.01
+    rho_put = -k * t * disc * cdf_nd2 * 0.01
+    rho = np.where(is_call, rho_call, rho_put)
+    theta = np.where(is_call, theta_call, theta_put)
 
     if model == "black":
-        delta = disc * np.where(flag == "c", _norm_cdf(d1), _norm_cdf(d1) - 1.0)
+        delta = disc * np.where(is_call, cdf_d1, cdf_d1 - 1.0)
         gamma = disc * pdf / (np.maximum(s, 1e-32) * np.maximum(sigma, 1e-32) * sqrt_t)
 
     return {

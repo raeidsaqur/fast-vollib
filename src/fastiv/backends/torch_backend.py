@@ -165,15 +165,19 @@ def _get_compiled_greeks_core(model: str):
                 delta = torch.where(is_call, carry * cdf_d1, carry * (cdf_d1 - 1.0))
                 gamma = carry * pdf / (safe_s * safe_sig * sqrt_t)
 
+            # N(-x) = 1-N(x) — avoids extra erfc calls for -d1, -d2
+            cdf_nd1 = 1.0 - cdf_d1
+            cdf_nd2 = 1.0 - cdf_d2
+
             vega = st * carry * pdf * sqrt_t * 0.01
             theta_call = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
                           - rt * kt * disc * cdf_d2
                           + qv * st * carry * cdf_d1) / 365.0
             theta_put = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
-                         + rt * kt * disc * _normal_cdf(-d2)
-                         - qv * st * carry * _normal_cdf(-d1)) / 365.0
+                         + rt * kt * disc * cdf_nd2
+                         - qv * st * carry * cdf_nd1) / 365.0
             rho_call = kt * tt * disc * cdf_d2 * 0.01
-            rho_put = -kt * tt * disc * _normal_cdf(-d2) * 0.01
+            rho_put = -kt * tt * disc * cdf_nd2 * 0.01
             rho = torch.where(is_call, rho_call, rho_put)
             theta = torch.where(is_call, theta_call, theta_put)
             return delta, gamma, theta, rho, vega
