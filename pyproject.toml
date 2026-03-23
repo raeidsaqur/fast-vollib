@@ -1,6 +1,6 @@
 [project]
 name = "fast-vollib"
-version = "0.1.0"
+version = "0.1.1"
 description = "Modern Black, Black-Scholes, and Black-Scholes-Merton pricing and implied volatility with NumPy, PyTorch, and JAX backends."
 readme = "README.md"
 license = { text = "MIT" }
