@@ -385,7 +385,8 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
         # hoists 5 loop-invariant ops (exp, exp, sqrt, log, mul) out of 8 Halley iters
         sigma, below_intrinsic_mask = tk.bsm_iv_triton(pt, st, kt, tt, rt, qv, is_call)
 
-        px_final = _price_for_model_t(is_call, st, kt, tt, rt, sigma, qv)
+        # Use Triton pricing for convergence check — avoids PyTorch op recompilation at new N
+        px_final = tk.bsm_price_triton(is_call, st, kt, tt, rt, sigma, qv)
         underflow_stuck = (px_final == 0.0) & (pt > 0.0)
         not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
         if not_converged.any():

@@ -90,13 +90,17 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
     r = np.full(n, _RISK_FREE_RATE, dtype=np.float64)
     wrds_iv = df["impl_volatility"].to_numpy(dtype=np.float64)
 
-    # Warmup: trigger all torch.compile compilations (Halley + bisection)
-    # before timing, so reported time reflects steady-state throughput.
-    warmup_n = min(n, 100_000)
-    print("warming up (triggering torch.compile) …", flush=True)
+    # Warmup: two passes to fully JIT-compile torch.compile / Triton kernels at
+    # the full dataset size.  First pass uses a 100k subset (fast compile trigger),
+    # second pass uses the full n to ensure no recompilation at inference time.
+    print("warming up (triggering JIT compilations at full scale) …", flush=True)
     tw = time.perf_counter()
     vectorized_implied_volatility(
-        mid_price[:warmup_n], F[:warmup_n], K[:warmup_n], T[:warmup_n], r[:warmup_n], flag[:warmup_n],
+        mid_price[:100_000], F[:100_000], K[:100_000], T[:100_000], r[:100_000], flag[:100_000],
+        model="black", return_as="numpy",
+    )
+    vectorized_implied_volatility(
+        mid_price, F, K, T, r, flag,
         model="black", return_as="numpy",
     )
     print(f"warmup_seconds={time.perf_counter()-tw:.2f}", flush=True)

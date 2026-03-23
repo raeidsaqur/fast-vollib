@@ -32,12 +32,16 @@ def to_numpy(value: object, dtype: np.dtype | type | None = None) -> np.ndarray:
 
 def preprocess_flags(flag: object) -> np.ndarray:
     arr = to_numpy(flag)
-    arr = np.asarray(arr, dtype=str)
-    arr = np.char.lower(arr.astype(str))
-    valid = np.isin(arr, ["c", "p"])
+    # Ensure single-character '<U1' array (4 bytes per element in UCS-4)
+    arr = np.asarray(arr, dtype="<U1")
+    # Fast vectorized lowercase via ASCII bit trick: OR 0x20 sets lowercase bit
+    # for A-Z ('C'=0x43→'c'=0x63, 'P'=0x50→'p'=0x70); idempotent for a-z.
+    # View as uint32 to operate on character code points directly.
+    arr_lower = (arr.view(np.uint32) | np.uint32(0x20)).view("<U1")
+    valid = (arr_lower == "c") | (arr_lower == "p")
     if not np.all(valid):
         raise ValueError("Flags must be 'c' or 'p'.")
-    return arr
+    return arr_lower
 
 
 def maybe_format_data_and_broadcast(*values: object, dtype: np.dtype | type = np.float64) -> tuple[np.ndarray, ...]:
