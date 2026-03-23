@@ -63,7 +63,6 @@ cuvs-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extr
 
 # ---------------------------------------------------------------------------
 # Build system
-# Root publishes nothing itself; nbs/ publishes via its own pyproject.toml.
 # ---------------------------------------------------------------------------
 
 [build-system]

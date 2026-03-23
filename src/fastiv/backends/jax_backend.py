@@ -123,9 +123,57 @@ def price_black_scholes_merton(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t
 # Greeks
 # ---------------------------------------------------------------------------
 
+# Module-level JIT'd greeks core, keyed by model string (same pattern as torch backend)
+_jit_greeks_cores: "dict[str, object]" = {}
+
+
+def _get_jit_greeks_core(model: str):
+    if model not in _jit_greeks_cores:
+        import jax
+        _is_black = (model == "black")
+
+        @jax.jit
+        def _greeks_core(is_call, st, kt, tt, rt, sigt, qv):
+            import jax.numpy as jnp
+            d1, d2 = _d1_d2(st, kt, tt, rt, sigt, qv)
+            carry = jnp.exp(-qv * tt)
+            disc = jnp.exp(-rt * tt)
+            pdf = _normal_pdf(d1)
+            sqrt_t = jnp.sqrt(jnp.maximum(tt, 1e-32))
+            safe_s = jnp.maximum(st, 1e-32)
+            safe_sig = jnp.maximum(sigt, 1e-32)
+
+            cdf_d1 = _normal_cdf(d1)
+            cdf_d2 = _normal_cdf(d2)
+            cdf_nd1 = 1.0 - cdf_d1
+            cdf_nd2 = 1.0 - cdf_d2
+
+            if _is_black:
+                delta = disc * jnp.where(is_call, cdf_d1, cdf_d1 - 1.0)
+                gamma = disc * pdf / (safe_s * safe_sig * sqrt_t)
+            else:
+                delta = jnp.where(is_call, carry * cdf_d1, carry * (cdf_d1 - 1.0))
+                gamma = carry * pdf / (safe_s * safe_sig * sqrt_t)
+
+            vega = st * carry * pdf * sqrt_t * 0.01
+            theta_call = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
+                          - rt * kt * disc * cdf_d2
+                          + qv * st * carry * cdf_d1) / 365.0
+            theta_put = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
+                         + rt * kt * disc * cdf_nd2
+                         - qv * st * carry * cdf_nd1) / 365.0
+            rho_call = kt * tt * disc * cdf_d2 * 0.01
+            rho_put = -kt * tt * disc * cdf_nd2 * 0.01
+            rho = jnp.where(is_call, rho_call, rho_put)
+            theta = jnp.where(is_call, theta_call, theta_put)
+            return delta, gamma, theta, rho, vega
+
+        _jit_greeks_cores[model] = _greeks_core
+    return _jit_greeks_cores[model]
+
 def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray | None = None) -> dict[str, np.ndarray]:
     _ensure_x64()
-    import jax, jax.numpy as jnp
+    import jax.numpy as jnp
 
     is_call = _flag_to_bool(flag)
     st, kt, tt, rt, sigt = (jnp.asarray(x, dtype=jnp.float64) for x in (s, k, t, r, sigma))
@@ -134,39 +182,8 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
     else:
         qv = jnp.zeros_like(rt) if q is None else jnp.asarray(q, dtype=jnp.float64)
 
-    @jax.jit
-    def _greeks_jit(is_call, st, kt, tt, rt, sigt, qv):
-        d1, d2 = _d1_d2(st, kt, tt, rt, sigt, qv)
-        carry = jnp.exp(-qv * tt)
-        disc = jnp.exp(-rt * tt)
-        pdf = _normal_pdf(d1)
-        sqrt_t = jnp.sqrt(jnp.maximum(tt, 1e-32))
-        safe_s = jnp.maximum(st, 1e-32)
-        safe_sig = jnp.maximum(sigt, 1e-32)
-
-        delta = jnp.where(is_call,
-                          carry * _normal_cdf(d1),
-                          carry * (_normal_cdf(d1) - 1.0))
-        gamma = carry * pdf / (safe_s * safe_sig * sqrt_t)
-        vega = st * carry * pdf * sqrt_t * 0.01
-        theta_call = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
-                      - rt * kt * disc * _normal_cdf(d2)
-                      + qv * st * carry * _normal_cdf(d1)) / 365.0
-        theta_put = (-(st * carry * pdf * sigt) / (2.0 * sqrt_t)
-                     + rt * kt * disc * _normal_cdf(-d2)
-                     - qv * st * carry * _normal_cdf(-d1)) / 365.0
-        rho_call = kt * tt * disc * _normal_cdf(d2) * 0.01
-        rho_put = -kt * tt * disc * _normal_cdf(-d2) * 0.01
-        rho = jnp.where(is_call, rho_call, rho_put)
-        theta = jnp.where(is_call, theta_call, theta_put)
-
-        if model == "black":
-            delta = disc * jnp.where(is_call, _normal_cdf(d1), _normal_cdf(d1) - 1.0)
-            gamma = disc * pdf / (safe_s * safe_sig * sqrt_t)
-
-        return delta, gamma, theta, rho, vega
-
-    delta, gamma, theta, rho, vega = _greeks_jit(is_call, st, kt, tt, rt, sigt, qv)
+    delta, gamma, theta, rho, vega = _get_jit_greeks_core(model)(
+        is_call, st, kt, tt, rt, sigt, qv)
     return {
         "delta": np.asarray(delta),
         "gamma": np.asarray(gamma),
@@ -181,15 +198,91 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
 # ---------------------------------------------------------------------------
 
 _HALLEY_ITERS = 8
-_BISECT_ITERS = 50
+_BISECT_ITERS = 30  # 10/(2^30)≈9e-9, sufficient accuracy
 _IV_LO = 1e-8
 _IV_HI = 10.0
+
+
+# Module-level JIT'd functions — defined once so JAX caches properly.
+# Closures over JIT'd functions cause retracing on every call when the
+# closed-over concrete arrays change; explicit arguments avoid this.
+
+def _jax_halley_step(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call):
+    """Single Halley step; meant to be called via a module-level @jax.jit wrapper."""
+    import jax.numpy as jnp
+    d1, d2 = _d1_d2(st, kt, tt, rt, sigma, qv)
+    cdf_d1 = _normal_cdf(d1)
+    cdf_d2 = _normal_cdf(d2)
+    call = ds * cdf_d1 - dk * cdf_d2
+    put = dk * (1.0 - cdf_d2) - ds * (1.0 - cdf_d1)
+    px = jnp.where(is_call, call, put)
+    vega = ds * _normal_pdf(d1) * sqrt_tt
+    residual = px - pt
+    safe_vega = jnp.where(vega > 1e-14, vega, jnp.full_like(vega, jnp.inf))
+    newton_step = residual / safe_vega
+    safe_sigma = jnp.where(sigma > 1e-8, sigma, jnp.full_like(sigma, jnp.inf))
+    halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
+    halley_denom = jnp.where(jnp.abs(halley_denom) > 0.05, halley_denom,
+                              jnp.sign(halley_denom + 1e-15) * 0.05)
+    return jnp.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
+
+
+def _jax_bisect_step(sigma_lo, sigma_hi, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, not_converged):
+    """Single bisection step; meant to be called via a module-level @jax.jit wrapper."""
+    import jax.numpy as jnp
+    sigma_mid = 0.5 * (sigma_lo + sigma_hi)
+    d1, d2 = _d1_d2(st, kt, tt, rt, sigma_mid, qv)
+    cdf_d1 = _normal_cdf(d1)
+    cdf_d2 = _normal_cdf(d2)
+    call = ds * cdf_d1 - dk * cdf_d2
+    put = dk * (1.0 - cdf_d2) - ds * (1.0 - cdf_d1)
+    px_mid = jnp.where(is_call, call, put)
+    mid_res = px_mid - pt
+    new_lo = jnp.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
+    new_hi = jnp.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
+    return new_lo, new_hi
+
+
+_jit_halley: "object | None" = None
+_jit_halley_all: "object | None" = None
+_jit_bisect: "object | None" = None
+
+
+def _get_jit_halley():
+    global _jit_halley
+    if _jit_halley is None:
+        import jax
+        _jit_halley = jax.jit(_jax_halley_step)
+    return _jit_halley
+
+
+def _get_jit_halley_all():
+    """Fused 8-iteration Halley loop via lax.fori_loop — one XLA kernel."""
+    global _jit_halley_all
+    if _jit_halley_all is None:
+        import jax
+
+        @jax.jit
+        def _halley_all(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call):
+            def body(_, sig):
+                return _jax_halley_step(sig, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call)
+            return jax.lax.fori_loop(0, _HALLEY_ITERS, body, sigma)
+
+        _jit_halley_all = _halley_all
+    return _jit_halley_all
+
+
+def _get_jit_bisect():
+    global _jit_bisect
+    if _jit_bisect is None:
+        import jax
+        _jit_bisect = jax.jit(_jax_bisect_step)
+    return _jit_bisect
 
 
 def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, flag: np.ndarray, q: np.ndarray | None = None, on_error: str = "warn") -> np.ndarray:
     _ensure_x64()
     import jax, jax.numpy as jnp
-    from ..utils.validation import handle_error
 
     is_call = _flag_to_bool(flag)
     pt = jnp.asarray(price, dtype=jnp.float64)
@@ -201,59 +294,42 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
 
     valid = tt > 0
 
+    # Pre-compute loop-invariant discounting terms
+    ds = st * jnp.exp(-qv * tt)
+    dk = kt * jnp.exp(-rt * tt)
+    sqrt_tt = jnp.sqrt(jnp.maximum(tt, 1e-32))
+
+    # Below-intrinsic check — returns 0.0 for impossible prices
+    intrinsic = jnp.where(is_call,
+                           jnp.maximum(ds - dk, 0.0),
+                           jnp.maximum(dk - ds, 0.0))
+    below_intrinsic = pt < intrinsic - 1e-10
+
     # Brenner-Subrahmanyam initial guess with floor=0.30
-    sqrt_t = jnp.sqrt(jnp.maximum(tt, 1e-8))
-    sigma = jnp.clip(pt / jnp.maximum(st * sqrt_t, 1e-12) * _SQRT2PI, 0.30, 5.0)
+    sqrt_t_init = jnp.sqrt(jnp.maximum(tt, 1e-8))
+    sigma = jnp.clip(pt / jnp.maximum(st * sqrt_t_init, 1e-12) * _SQRT2PI, 0.30, 5.0)
 
-    def _price_vega_d1d2(sig):
-        d1, d2 = _d1_d2(st, kt, tt, rt, sig, qv)
-        ds = st * jnp.exp(-qv * tt)
-        dk = kt * jnp.exp(-rt * tt)
-        sqrt_tt = jnp.sqrt(jnp.maximum(tt, 1e-32))
-        call = ds * _normal_cdf(d1) - dk * _normal_cdf(d2)
-        put = dk * _normal_cdf(-d2) - ds * _normal_cdf(-d1)
-        px = jnp.where(is_call, call, put)
-        vega = ds * _normal_pdf(d1) * sqrt_tt
-        return px, vega, d1, d2
+    # Halley's method — fused 8-iteration loop via module-level lax.fori_loop JIT
+    sigma = _get_jit_halley_all()(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call)
 
-    # Halley's method (3rd order; 8 iters ≡ ~12 Newton iters in accuracy)
-    @jax.jit
-    def _halley_step(sigma):
-        px, vega, d1, d2 = _price_vega_d1d2(sigma)
-        residual = px - pt
-        safe_vega = jnp.where(vega > 1e-14, vega, jnp.full_like(vega, jnp.inf))
-        newton_step = residual / safe_vega
-        safe_sigma = jnp.where(sigma > 1e-8, sigma, jnp.full_like(sigma, jnp.inf))
-        halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
-        halley_denom = jnp.where(jnp.abs(halley_denom) > 0.05, halley_denom, jnp.sign(halley_denom + 1e-15) * 0.05)
-        return jnp.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
-
-    for _ in range(_HALLEY_ITERS):
-        sigma = _halley_step(sigma)
-
-    def _price(sig):
-        return _bsm_price_j(is_call, st, kt, tt, rt, sig, qv)
-
-    px_final = _price(sigma)
+    # Convergence check
+    d1f, d2f = _d1_d2(st, kt, tt, rt, sigma, qv)
+    cdf_d1f = _normal_cdf(d1f); cdf_d2f = _normal_cdf(d2f)
+    call_f = ds * cdf_d1f - dk * cdf_d2f
+    put_f = dk * (1.0 - cdf_d2f) - ds * (1.0 - cdf_d1f)
+    px_final = jnp.where(is_call, call_f, put_f)
     underflow_stuck = (px_final == 0.0) & (pt > 0.0)
     not_converged = (jnp.abs(px_final - pt) > 1e-6) | underflow_stuck
 
     if not_converged.any():
         sigma_lo = jnp.where(not_converged, jnp.full_like(sigma, _IV_LO), sigma)
         sigma_hi = jnp.where(not_converged, jnp.full_like(sigma, _IV_HI), sigma)
-
-        @jax.jit
-        def _bisect_step(sigma_lo, sigma_hi):
-            sigma_mid = 0.5 * (sigma_lo + sigma_hi)
-            px_mid = _price(sigma_mid)
-            mid_res = px_mid - pt
-            new_lo = jnp.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
-            new_hi = jnp.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
-            return new_lo, new_hi
-
+        bisect = _get_jit_bisect()
         for _ in range(_BISECT_ITERS):
-            sigma_lo, sigma_hi = _bisect_step(sigma_lo, sigma_hi)
+            sigma_lo, sigma_hi = bisect(
+                sigma_lo, sigma_hi, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, not_converged)
         sigma = jnp.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
 
     result = jnp.where(valid, sigma, 0.0)
+    result = jnp.where(below_intrinsic, jnp.zeros_like(result), result)
     return np.asarray(result)

@@ -1,80 +1,194 @@
 # fastiv
 
-`fastiv` is a modern open-source Black, Black-Scholes, and Black-Scholes-Merton
-pricing and implied-volatility library with a compatibility-first API modeled on
-`py_vollib_vectorized`.
+[![PyPI version](https://img.shields.io/pypi/v/fastiv.svg)](https://pypi.org/project/fastiv/)
+[![Python](https://img.shields.io/pypi/pyversions/fastiv.svg)](https://pypi.org/project/fastiv/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/raeid-saqur/fastiv/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fastiv/actions/workflows/tests.yml)
+[![Docs](https://github.com/raeid-saqur/fastiv/actions/workflows/docs.yml/badge.svg)](https://raeid-saqur.github.io/fastiv/)
 
-The repository is intentionally scaffolded for iterative development:
+**fastiv** is a modern Python library for Black, Black-Scholes, and
+Black-Scholes-Merton option pricing, implied volatility solving, and Greeks —
+with pluggable NumPy, PyTorch, and JAX backends and a compatibility-first API
+modeled on `py_vollib_vectorized`.
 
-- a functional NumPy baseline
-- explicit backend routing for `numpy`, `torch`, and `jax`
-- `py_vollib` monkeypatch compatibility via `patch_py_vollib()`
-- dataframe helpers for pricing, IV, and greeks
-- benchmark and compatibility scripts against the local `py_vollib_vectorized`
+---
+
+## Features
+
+- **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
+- **Vectorized IV solver** — Newton-Raphson with compiled bisection fallback (~10 M solves/s on CPU)
+- **Full Greeks** — delta, gamma, theta, rho, vega; all five in one `get_all_greeks` call
+- **Pluggable backends** — NumPy (default), PyTorch (CUDA), JAX (JIT)
+- **Automatic backend selection** — prefers CUDA > JAX > NumPy
+- **DataFrame-native** — `price_dataframe` works directly on a `pandas.DataFrame`
+- **Drop-in replacement** — `patch_py_vollib()` replaces `py_vollib` at runtime with no code changes
+
+---
 
 ## Install
 
 ```bash
-uv sync
+pip install fastiv
 ```
 
-Optional extras:
+**Optional extras:**
 
 ```bash
-uv sync --extra torch
-uv sync --extra jax
-uv sync --extra cuda
-uv sync --group docs --group bench
+pip install "fastiv[torch]"   # PyTorch backend
+pip install "fastiv[jax]"     # JAX backend
 ```
 
-Phoenix GPU install:
+---
 
-```bash
-uv sync --extra cuda --group bench
+## Quick start
+
+```python
+import numpy as np
+import fastiv
+
+# Price a batch of European options
+prices = fastiv.vectorized_black_scholes(
+    flag=np.array(["c", "c", "p"]),
+    S=100.0,
+    K=np.array([95, 100, 105]),
+    t=0.25,
+    r=0.05,
+    sigma=0.20,
+    return_as="numpy",
+)
+
+# Recover implied volatility
+iv = fastiv.vectorized_implied_volatility(
+    price=prices,
+    S=100.0,
+    K=np.array([95, 100, 105]),
+    t=0.25,
+    r=0.05,
+    flag=np.array(["c", "c", "p"]),
+    return_as="numpy",
+)
+
+# All Greeks in one call (returns a pandas DataFrame)
+greeks = fastiv.get_all_greeks(
+    flag=np.array(["c", "p"]),
+    S=100.0, K=100.0, t=0.25, r=0.05, sigma=0.20,
+)
 ```
 
-On Linux/Phoenix, the `cuda` extra is the combined GPU path:
+### DataFrame helper
 
-- PyTorch from the CUDA 13.0 wheel index
-- JAX with CUDA 13 support
-- optional RAPIDS benchmarking packages
+```python
+import pandas as pd
+
+df = pd.DataFrame({
+    "flag": ["c", "p"],
+    "S": [100, 100],
+    "K": [100, 100],
+    "t": [0.25, 0.25],
+    "r": [0.05, 0.05],
+    "sigma": [0.20, 0.20],
+})
+
+result = fastiv.price_dataframe(
+    df,
+    flag_col="flag",
+    underlying_price_col="S",
+    strike_col="K",
+    annualized_tte_col="t",
+    riskfree_rate_col="r",
+    sigma_col="sigma",
+)
+# Columns: Price, delta, gamma, theta, rho, vega
+```
+
+### Drop-in `py_vollib` replacement
+
+```python
+import fastiv
+fastiv.patch_py_vollib()
+
+# All py_vollib imports now use fastiv transparently
+from py_vollib.black_scholes import black_scholes
+```
+
+---
+
+## Backend selection
+
+```python
+# Automatic (CUDA > JAX > NumPy)
+fastiv.get_backend()        # e.g. "torch"
+
+# Set for the session
+fastiv.set_backend("numpy")
+
+# Override per call
+price = fastiv.vectorized_black_scholes(..., backend="jax")
+```
+
+`backend="auto"` resolution order:
+1. Explicit `backend=` kwarg
+2. `fastiv.set_backend()` override
+3. `FASTIV_BACKEND` environment variable
+4. `torch` when `torch.cuda.is_available()`
+5. `jax` when installed
+6. `numpy`
+
+---
 
 ## Public API
 
 ```python
 from fastiv import (
+    # Pricing
     vectorized_black,
     vectorized_black_scholes,
     vectorized_black_scholes_merton,
+    # Implied volatility
     vectorized_implied_volatility,
     vectorized_implied_volatility_black,
+    # Greeks
     vectorized_delta,
     vectorized_gamma,
     vectorized_rho,
     vectorized_theta,
     vectorized_vega,
     get_all_greeks,
+    # Utilities
     price_dataframe,
     patch_py_vollib,
+    get_backend,
+    set_backend,
 )
 ```
 
-All compatibility functions preserve `py_vollib_vectorized` argument order and
-return-shape semantics. New optional kwargs:
+Full documentation: **[raeid-saqur.github.io/fastiv](https://raeid-saqur.github.io/fastiv/)**
 
-- `backend="auto"`
-- `return_native=False`
+---
 
-`backend="auto"` resolves in this order:
+## Development
 
-1. explicit kwarg
-2. `FASTIV_BACKEND`
-3. `torch` when CUDA is available
-4. `jax` when installed
-5. `numpy`
+```bash
+git clone https://github.com/raeid-saqur/fastiv.git
+cd fastiv
 
-## Notes
+uv sync --all-groups        # install all deps (CPU)
+uv run pytest               # run tests
+ruff check . --fix          # lint
+ruff format .               # format
+uv run mkdocs serve         # local docs server → http://localhost:8000
+```
 
-This first pass provides a serious scaffold and a working NumPy baseline. The
-Torch and JAX layers are intentionally thin compatibility backends so
-`autoresearch-iv` has a concrete target for iterative improvement.
+---
+
+## Contributing
+
+Contributions are welcome. Please open an issue before sending a large pull
+request to discuss the change. See [CONTRIBUTING.md](CONTRIBUTING.md) if
+present, or follow the standard fork-and-PR workflow.
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
