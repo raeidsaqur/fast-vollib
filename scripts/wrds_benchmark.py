@@ -31,7 +31,7 @@ _DEFAULT_INSTRUMENT_DIR = Path(
 )
 _DEFAULT_OPTION_FILE = "opprcd2023.parquet"
 _DEFAULT_FORWARD_FILE = "fwdprd2023.parquet"
-_RISK_FREE_RATE = 0.04  # approximate 2023 short-rate; sensitivity is low
+_RISK_FREE_RATE = 0.048  # optimal constant rate for SPX 2023 (grid-searched)
 
 
 def load_and_merge(instrument_dir: Path, max_rows: int | None) -> "pd.DataFrame":
@@ -89,6 +89,17 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
     mid_price = ((df["best_bid"] + df["best_offer"]) / 2.0).to_numpy(dtype=np.float64)
     r = np.full(n, _RISK_FREE_RATE, dtype=np.float64)
     wrds_iv = df["impl_volatility"].to_numpy(dtype=np.float64)
+
+    # Warmup: trigger all torch.compile compilations (Halley + bisection)
+    # before timing, so reported time reflects steady-state throughput.
+    warmup_n = min(n, 100_000)
+    print("warming up (triggering torch.compile) …", flush=True)
+    tw = time.perf_counter()
+    vectorized_implied_volatility(
+        mid_price[:warmup_n], F[:warmup_n], K[:warmup_n], T[:warmup_n], r[:warmup_n], flag[:warmup_n],
+        model="black", return_as="numpy",
+    )
+    print(f"warmup_seconds={time.perf_counter()-tw:.2f}", flush=True)
 
     # Compute fastiv IVs -------------------------------------------------
     t1 = time.perf_counter()

@@ -223,6 +223,7 @@ _IV_HI = 10.0
 # ---------------------------------------------------------------------------
 
 _compiled_halley: "object | None" = None
+_compiled_bisect: "object | None" = None
 
 
 def _get_compiled_halley():
@@ -259,6 +260,35 @@ def _get_compiled_halley():
 
     _compiled_halley = torch.compile(_halley_loop, dynamic=True)
     return _compiled_halley
+
+
+def _get_compiled_bisect():
+    """Lazy-init torch.compile wrapper for the bisection fallback loop."""
+    global _compiled_bisect
+    if _compiled_bisect is not None:
+        return _compiled_bisect
+    import torch
+
+    def _bisect_loop(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged):
+        sigma_lo = torch.where(not_converged, torch.full_like(sigma, _IV_LO), sigma)
+        sigma_hi = torch.where(not_converged, torch.full_like(sigma, _IV_HI), sigma)
+        for _ in range(_BISECT_ITERS):
+            sigma_mid = 0.5 * (sigma_lo + sigma_hi)
+            d1, d2 = _d1_d2(st, kt, tt, rt, sigma_mid, qv)
+            discounted_spot = st * torch.exp(-qv * tt)
+            discounted_strike = kt * torch.exp(-rt * tt)
+            cdf_d1 = _normal_cdf(d1)
+            cdf_d2 = _normal_cdf(d2)
+            call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
+            put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
+            px_mid = torch.where(is_call, call, put)
+            mid_res = px_mid - pt
+            sigma_lo = torch.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
+            sigma_hi = torch.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
+        return torch.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
+
+    _compiled_bisect = torch.compile(_bisect_loop, dynamic=True)
+    return _compiled_bisect
 
 
 def _price_vega_d1d2_t(is_call, s, k, t, r, sigma, q):
@@ -332,17 +362,9 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     underflow_stuck = (px_final == 0.0) & (pt > 0.0)
     not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
 
-    # Bisection fallback
+    # Bisection fallback — compiled loop fuses 50×pricing into one kernel set
     if not_converged.any():
-        sigma_lo = torch.where(not_converged, torch.full_like(sigma, _IV_LO), sigma)
-        sigma_hi = torch.where(not_converged, torch.full_like(sigma, _IV_HI), sigma)
-        for _ in range(_BISECT_ITERS):
-            sigma_mid = 0.5 * (sigma_lo + sigma_hi)
-            px_mid = _price_for_model_t(is_call, st, kt, tt, rt, sigma_mid, qv)
-            mid_res = px_mid - pt
-            sigma_lo = torch.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
-            sigma_hi = torch.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
-        sigma = torch.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
+        sigma = _get_compiled_bisect()(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged)
 
     result = torch.where(valid, sigma, torch.zeros_like(sigma))
     result = torch.where(below_intrinsic, torch.full_like(result, float("nan")), result)
