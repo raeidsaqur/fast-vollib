@@ -1,23 +1,35 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
-from .greeks import delta, gamma, rho, theta, vega
+from . import backends
+from .config import get_backend
+from .greeks import delta, gamma, rho, theta, vega, _backend_module
 from .implied_volatility import vectorized_implied_volatility, vectorized_implied_volatility_black
 from .models import vectorized_black, vectorized_black_scholes, vectorized_black_scholes_merton
+from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
 from .utils.formatting import format_greeks_output
+from .utils.validation import validate_data
 
 
 def get_all_greeks(flag, S, K, t, r, sigma, q=None, *, model="black_scholes", return_as="dataframe", dtype=None, backend="auto", return_native=False):
-    data = {
-        "delta": delta(flag, S, K, t, r, sigma, q=q, model=model, return_as="numpy", dtype=dtype, backend=backend, return_native=False),
-        "gamma": gamma(flag, S, K, t, r, sigma, q=q, model=model, return_as="numpy", dtype=dtype, backend=backend, return_native=False),
-        "theta": theta(flag, S, K, t, r, sigma, q=q, model=model, return_as="numpy", dtype=dtype, backend=backend, return_native=False),
-        "rho": rho(flag, S, K, t, r, sigma, q=q, model=model, return_as="numpy", dtype=dtype, backend=backend, return_native=False),
-        "vega": vega(flag, S, K, t, r, sigma, q=q, model=model, return_as="numpy", dtype=dtype, backend=backend, return_native=False),
-    }
-    if return_native:
-        return data
+    # Single-pass: preprocess once, call backend greeks() once (avoids 5x redundant d1/d2/exp/ndtr)
+    _dtype = dtype if dtype is not None else np.float64
+    flag = preprocess_flags(flag)
+    if model == "black_scholes_merton":
+        if q is None:
+            raise ValueError("Must pass a `q` to black scholes merton model (annualized continuous dividend yield).")
+        S, K, t, r, sigma, q, flag = maybe_format_data_and_broadcast(S, K, t, r, sigma, q, flag, dtype=_dtype)
+        validate_data(S, K, t, r, sigma, q)
+    else:
+        S, K, t, r, sigma, flag = maybe_format_data_and_broadcast(S, K, t, r, sigma, flag, dtype=_dtype)
+        validate_data(S, K, t, r, sigma)
+    backend_name = get_backend(backend)
+    bmod = _backend_module(backend_name)
+    data = bmod.greeks(model, flag, S, K, t, r, sigma, q=q)
+    if return_native and backend_name in {"torch", "jax"}:
+        data = {k: bmod.to_native(v) for k, v in data.items()}
     return format_greeks_output(data, return_as)
 
 
