@@ -417,21 +417,20 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
                             torch.clamp(discounted_strike - discounted_spot, min=0.0))
     below_intrinsic = pt < intrinsic - 1e-10
 
+    zero_price = (pt <= 0.0) & valid  # undetermined sigma for zero-price OTM options
+
     if _check_triton():
         from . import triton_kernels as tk
-        # Triton path: full Halley loop + below-intrinsic in a single fused kernel;
-        # hoists 5 loop-invariant ops (exp, exp, sqrt, log, mul) out of 8 Halley iters
-        sigma, below_intrinsic_mask = tk.bsm_iv_triton(pt, st, kt, tt, rt, qv, is_call)
+        # Triton path: Halley loop + below-intrinsic + convergence check in one kernel;
+        # hoists 5 loop-invariant ops out of 8 Halley iters, and fuses the convergence
+        # check to save one separate bsm_price kernel call.
+        sigma, below_intrinsic_mask, not_converged = tk.bsm_iv_triton(pt, st, kt, tt, rt, qv, is_call)
 
-        # Use Triton pricing for convergence check — avoids PyTorch op recompilation at new N
-        px_final = tk.bsm_price_triton(is_call, st, kt, tt, rt, sigma, qv)
-        underflow_stuck = (px_final == 0.0) & (pt > 0.0)
-        not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
         if not_converged.any():
             sigma = tk.bsm_iv_bisect_triton(pt, st, kt, tt, rt, qv, is_call, not_converged, sigma)
 
         result = torch.where(valid, sigma, torch.zeros_like(sigma))
-        result = torch.where(below_intrinsic_mask, torch.full_like(result, float("nan")), result)
+        result = torch.where(below_intrinsic_mask | zero_price, torch.full_like(result, float("nan")), result)
     else:
         sigma = _initial_guess_t(pt, st, tt)
         # Halley's method (3rd order) — torch.compile fuses 8 iters
@@ -444,6 +443,6 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
             sigma = _get_compiled_bisect()(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged)
 
         result = torch.where(valid, sigma, torch.zeros_like(sigma))
-        result = torch.where(below_intrinsic, torch.full_like(result, float("nan")), result)
+        result = torch.where(below_intrinsic | zero_price, torch.full_like(result, float("nan")), result)
 
     return result.cpu().numpy()

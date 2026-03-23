@@ -162,6 +162,40 @@ _IV_LO = 1e-8
 _IV_HI = 10.0
 
 
+def _halley_step_precomputed(
+    sigma: np.ndarray,
+    price: np.ndarray,
+    is_call: np.ndarray,
+    discounted_spot: np.ndarray,
+    discounted_strike: np.ndarray,
+    sqrt_t: np.ndarray,
+    log_sk: np.ndarray,
+    carry_drift_t: np.ndarray,
+    t: np.ndarray,
+) -> np.ndarray:
+    """Single Halley step using pre-computed loop-invariant quantities.
+
+    Avoids recomputing exp(-q*t), exp(-r*t), sqrt(t), log(s/k), and (r-q)*t
+    on every iteration — those are hoisted once before the Halley loop.
+    """
+    vol_term = np.maximum(sigma * sqrt_t, 1e-32)
+    d1 = (log_sk + carry_drift_t + 0.5 * sigma * sigma * t) / vol_term
+    d2 = d1 - sigma * sqrt_t
+    cdf_d1 = _norm_cdf(d1)
+    cdf_d2 = _norm_cdf(d2)
+    call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
+    put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
+    px = np.where(is_call, call, put)
+    vega = discounted_spot * _norm_pdf(d1) * sqrt_t
+    residual = px - price
+    safe_vega = np.where(vega > 1e-14, vega, np.inf)
+    newton_step = residual / safe_vega
+    safe_sigma = np.where(sigma > 1e-8, sigma, np.inf)
+    halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
+    halley_denom = np.where(np.abs(halley_denom) > 0.05, halley_denom, np.sign(halley_denom + 1e-15) * 0.05)
+    return np.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
+
+
 def _price_for_model_full(
     model: ModelLiteral,
     flag: np.ndarray,
@@ -215,21 +249,28 @@ def implied_volatility(
         handle_error("Option price is below intrinsic value.", on_error)
 
     valid = t > 0
+    is_call = flag == "c"
 
-    # --- Halley's method ---
+    # Pre-compute loop-invariant quantities — hoisted out of 8 Halley iterations
+    # (saves 5 array ops × 8 iters = 40 redundant passes over the data)
+    if model == "black":
+        discounted_spot = s * np.exp(-qv * t)
+        discounted_strike = k * np.exp(-r * t)
+        carry_drift_t = 0.5 * t  # (r - r) * t + 0.5*sigma^2*t → only σ² term left; (r-q)=0
+        # actually carry_drift_t captures (r-q)*t; for black q=r so carry_drift_t=0
+        carry_drift_t = np.zeros_like(t)
+    else:
+        carry_val = qv if model == "black_scholes_merton" else np.zeros_like(r)
+        discounted_spot = s * np.exp(-carry_val * t)
+        discounted_strike = k * np.exp(-r * t)
+        carry_drift_t = (r - carry_val) * t
+    sqrt_t = np.sqrt(np.maximum(t, 1e-32))
+    log_sk = np.log(np.maximum(s, 1e-32) / np.maximum(k, 1e-32))
+
+    # --- Halley's method (using pre-computed invariants) ---
     sigma = _iv_initial_guess(price, s, t)
     for _ in range(_HALLEY_ITERS):
-        px, vega, d1, d2 = _price_for_model_full(model, flag, s, k, t, r, sigma, qv)
-        residual = px - price
-        safe_vega = np.where(vega > 1e-14, vega, np.inf)
-        newton_step = residual / safe_vega
-        # Halley correction: dvega/dsigma = vega * d1 * d2 / sigma
-        # => sigma_new = sigma - step / (1 - step * d1 * d2 / sigma)
-        safe_sigma = np.where(sigma > 1e-8, sigma, np.inf)
-        halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
-        # Clamp denominator away from zero to prevent division issues
-        halley_denom = np.where(np.abs(halley_denom) > 0.05, halley_denom, np.sign(halley_denom + 1e-15) * 0.05)
-        sigma = np.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
+        sigma = _halley_step_precomputed(sigma, price, is_call, discounted_spot, discounted_strike, sqrt_t, log_sk, carry_drift_t, t)
 
     # --- Bisection fallback for poorly converged points ---
     px_final = _price_for_model(model, flag, s, k, t, r, sigma, qv)
@@ -248,5 +289,7 @@ def implied_volatility(
         sigma = np.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
 
     result = np.where(valid, sigma, 0.0)
-    result = np.where(below_intrinsic, np.nan, result)
+    # Zero-price OTM options: sigma is undetermined (any σ gives price≈0) → NaN
+    zero_price = (price <= 0.0) & valid
+    result = np.where(below_intrinsic | zero_price, np.nan, result)
     return result

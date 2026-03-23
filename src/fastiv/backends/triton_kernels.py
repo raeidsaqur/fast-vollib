@@ -162,8 +162,9 @@ def bsm_greeks_kernel(
 @triton.jit
 def bsm_iv_halley_kernel(
     price_ptr, s_ptr, k_ptr, t_ptr, r_ptr, q_ptr, is_call_ptr,
-    sigma_ptr,          # input: initial guess;  output: Halley result
+    sigma_ptr,            # input: initial guess;  output: Halley result
     below_intrinsic_ptr,  # output: int8 flag  (1 = price below intrinsic)
+    not_converged_ptr,    # output: int8 flag  (1 = needs bisection)
     n,
     BLOCK_SIZE: tl.constexpr,
 ):
@@ -219,7 +220,18 @@ def bsm_iv_halley_kernel(
         )
         sigma = tl.maximum(tl.minimum(sigma - newton_step / h_denom, _IV_HI_C), _IV_LO_C)
 
+    # Convergence check — fused here to avoid a separate bsm_price kernel call
+    vol_term_f = tl.maximum(sigma * sqrt_t, 1e-32)
+    d1_f = (log_sk + carry_dt + 0.5 * sigma * sigma * t) / vol_term_f
+    d2_f = d1_f - sigma * sqrt_t
+    cdf1_f = _norm_cdf_tl(d1_f); cdf2_f = _norm_cdf_tl(d2_f)
+    call_f = disc_s * cdf1_f - disc_k * cdf2_f
+    put_f = disc_k * (1.0 - cdf2_f) - disc_s * (1.0 - cdf1_f)
+    px_f = tl.where(is_call, call_f, put_f)
+    not_conv = ((tl.abs(px_f - price) > 1e-6) | ((px_f == 0.0) & (price > 0.0))).to(tl.int8)
+
     tl.store(sigma_ptr + offs, sigma, mask=mask)
+    tl.store(not_converged_ptr + offs, not_conv, mask=mask)
 
 
 # ---------------------------------------------------------------------------
@@ -386,19 +398,24 @@ def bsm_iv_triton(
     s: torch.Tensor, k: torch.Tensor, t: torch.Tensor,
     r: torch.Tensor, q: torch.Tensor,
     is_call: torch.Tensor,  # bool GPU tensor
-) -> tuple[torch.Tensor, torch.Tensor]:
-    """Run Halley IV solver.  Returns (sigma, below_intrinsic_mask)."""
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Run Halley IV solver.  Returns (sigma, below_intrinsic_mask, not_converged_mask).
+
+    Fuses the convergence check into the Halley kernel to save one extra
+    bsm_price kernel call in the caller's convergence check step.
+    """
     n = s.numel()
     sigma = _initial_guess_gpu(price, s, t)
     below_int = torch.empty(n, dtype=torch.int8, device=s.device)
+    not_conv = torch.empty(n, dtype=torch.int8, device=s.device)
     is_call_i8 = is_call.to(torch.int8)
     bs = 256
     bsm_iv_halley_kernel[_grid(n, bs)](
         price, s, k, t, r, q, is_call_i8,
-        sigma, below_int,
+        sigma, below_int, not_conv,
         n, BLOCK_SIZE=bs,
     )
-    return sigma, below_int.bool()
+    return sigma, below_int.bool(), not_conv.bool()
 
 
 def bsm_iv_bisect_triton(
