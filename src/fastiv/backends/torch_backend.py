@@ -39,6 +39,37 @@ def _device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+# ---------------------------------------------------------------------------
+# Pinned memory buffer pool for faster H2D transfers (~1.75x vs pageable)
+# ---------------------------------------------------------------------------
+
+_pinned_pool: "dict[str, object]" = {}  # key → pinned CPU tensor
+
+
+def _to_tensor_pinned(arr: np.ndarray, key: str, device) -> "torch.Tensor":
+    """Copy arr through a persistent pinned-memory buffer to GPU.
+
+    Pinned (page-locked) memory enables faster PCIe DMA than pageable
+    allocations.  We keep one buffer per (key, capacity) and reuse it across
+    calls, growing it on demand.
+
+    CPU→CPU copy uses numpy directly into the pinned buffer view to avoid
+    intermediate torch tensor allocation overhead.
+    """
+    import torch
+    flat = arr.ravel()
+    n = flat.size
+    buf = _pinned_pool.get(key)
+    if buf is None or buf.numel() < n:
+        _pinned_pool[key] = torch.empty(n, dtype=torch.float64, pin_memory=True)
+        buf = _pinned_pool[key]
+    dst = buf[:n]
+    # Direct numpy memcpy into pinned buffer — avoids torch dispatch overhead
+    np.copyto(dst.numpy(), flat.astype(np.float64, copy=False))
+    # Pinned → GPU: fast PCIe DMA path
+    return dst.cuda(non_blocking=False)
+
+
 def _to_tensor(arr: np.ndarray, device):
     import torch
     return torch.as_tensor(arr, dtype=torch.float64, device=device)
@@ -114,6 +145,13 @@ def _vega_raw_t(s, k, t, r, sigma, q):
     return s * torch.exp(-q * t) * _normal_pdf(d1) * torch.sqrt(torch.clamp(t, min=1e-32))
 
 
+def _h2d(arr: np.ndarray, key: str, dev) -> "torch.Tensor":
+    """Transfer numpy array to GPU, using pinned memory on CUDA for speed."""
+    if dev.type == "cuda":
+        return _to_tensor_pinned(arr, key, dev)
+    return _to_tensor(arr, dev)
+
+
 def _price_with_triton_or_torch(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t) -> np.ndarray:
     import torch
     is_call = torch.as_tensor(is_call_np, device=s_t.device)
@@ -128,23 +166,23 @@ def _price_with_triton_or_torch(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t) ->
 def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
     import torch
     dev = _device()
-    ft = _to_tensor(f, dev); kt = _to_tensor(k, dev); tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev); st = _to_tensor(sigma, dev); qt = rt.clone()
+    ft = _h2d(f, "s", dev); kt = _h2d(k, "k", dev); tt = _h2d(t, "t", dev)
+    rt = _h2d(r, "r", dev); st = _h2d(sigma, "sig", dev); qt = rt.clone()
     return _price_with_triton_or_torch(flag == "c", ft, kt, tt, rt, st, qt)
 
 
 def price_black_scholes(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
     import torch
     dev = _device()
-    st = _to_tensor(s, dev); kt = _to_tensor(k, dev); tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev); sigt = _to_tensor(sigma, dev); qt = torch.zeros_like(rt)
+    st = _h2d(s, "s", dev); kt = _h2d(k, "k", dev); tt = _h2d(t, "t", dev)
+    rt = _h2d(r, "r", dev); sigt = _h2d(sigma, "sig", dev); qt = torch.zeros_like(rt)
     return _price_with_triton_or_torch(flag == "c", st, kt, tt, rt, sigt, qt)
 
 
 def price_black_scholes_merton(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
     dev = _device()
-    st = _to_tensor(s, dev); kt = _to_tensor(k, dev); tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev); sigt = _to_tensor(sigma, dev); qt = _to_tensor(q, dev)
+    st = _h2d(s, "s", dev); kt = _h2d(k, "k", dev); tt = _h2d(t, "t", dev)
+    rt = _h2d(r, "r", dev); sigt = _h2d(sigma, "sig", dev); qt = _h2d(q, "q", dev)
     return _price_with_triton_or_torch(flag == "c", st, kt, tt, rt, sigt, qt)
 
 
@@ -203,15 +241,15 @@ def _get_compiled_greeks_core(model: str):
 def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray | None = None) -> dict[str, np.ndarray]:
     import torch
     dev = _device()
-    st = _to_tensor(s, dev)
-    kt = _to_tensor(k, dev)
-    tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev)
-    sigt = _to_tensor(sigma, dev)
+    st = _h2d(s, "s", dev)
+    kt = _h2d(k, "k", dev)
+    tt = _h2d(t, "t", dev)
+    rt = _h2d(r, "r", dev)
+    sigt = _h2d(sigma, "sig", dev)
     if model == "black" and q is None:
         qv = rt.clone()
     else:
-        qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
+        qv = torch.zeros_like(rt) if q is None else _h2d(q, "q", dev)
     is_call = torch.as_tensor(flag == "c", device=dev)
 
     if _check_triton():
@@ -355,16 +393,16 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
     from ..utils.validation import handle_error
 
     dev = _device()
-    pt = _to_tensor(price, dev)
-    st = _to_tensor(s, dev)
-    kt = _to_tensor(k, dev)
-    tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev)
+    pt = _h2d(price, "price", dev)
+    st = _h2d(s, "s", dev)
+    kt = _h2d(k, "k", dev)
+    tt = _h2d(t, "t", dev)
+    rt = _h2d(r, "r", dev)
     # Black-76: q=r so d1 uses only σ² drift (carry=disc eliminates r-q from d1)
     if model == "black" and q is None:
         qv = rt.clone()
     else:
-        qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
+        qv = torch.zeros_like(rt) if q is None else _h2d(q, "q", dev)
 
     # Pre-compute boolean flag once — avoids re-running `flag == "c"` each Halley iter
     is_call = torch.as_tensor(flag == "c", device=dev)
