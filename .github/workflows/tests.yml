@@ -37,7 +37,7 @@ jobs:
         run: uv run ruff check .
 
       - name: Type-check (mypy)
-        run: uv run mypy src/fastiv --ignore-missing-imports
+        run: uv run mypy src/fast_vollib --ignore-missing-imports
         continue-on-error: true   # non-blocking until type coverage is complete
 
       - name: Run tests
@@ -62,7 +62,7 @@ jobs:
       - name: Run tests with torch backend
         run: uv run pytest tests/ -v --tb=short
         env:
-          FASTIV_BACKEND: torch
+          FAST_VOLLIB_BACKEND: torch
 
   test-jax:
     name: pytest / JAX backend
@@ -83,4 +83,4 @@ jobs:
       - name: Run tests with jax backend
         run: uv run pytest tests/ -v --tb=short
         env:
-          FASTIV_BACKEND: jax
+          FAST_VOLLIB_BACKEND: jax

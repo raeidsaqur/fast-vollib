@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose
 
-from fastiv.models import vectorized_black_scholes, vectorized_black_scholes_merton
+from fast_vollib.models import vectorized_black_scholes, vectorized_black_scholes_merton
 
 
 def _load_fixture() -> pd.DataFrame:

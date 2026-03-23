@@ -32,7 +32,10 @@ def set_backend(name: BackendLiteral) -> None:
 
 
 def get_backend(explicit: BackendLiteral | None = None) -> BackendLiteral:
-    choice = explicit or _BACKEND_OVERRIDE or os.getenv("FASTIV_BACKEND", "auto")
+    choice = explicit or _BACKEND_OVERRIDE or os.getenv(
+        "FAST_VOLLIB_BACKEND",
+        os.getenv("FASTIV_BACKEND", "auto"),
+    )
     if choice != "auto":
         return choice
     if _torch_cuda_available():

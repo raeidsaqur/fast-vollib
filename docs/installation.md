@@ -10,35 +10,35 @@
 ## pip
 
 ```bash
-pip install fastiv
+pip install fast-vollib
 ```
 
 ## uv
 
 ```bash
-uv add fastiv
+uv add fast-vollib
 ```
 
 ---
 
 ## Optional extras
 
-fastiv ships optional extras for GPU and alternate numeric backends.
+fast-vollib ships optional extras for GPU and alternate numeric backends.
 
 ### PyTorch backend
 
 ```bash
-pip install "fastiv[torch]"
+pip install "fast-vollib[torch]"
 # or
-uv add "fastiv[torch]"
+uv add "fast-vollib[torch]"
 ```
 
 ### JAX backend
 
 ```bash
-pip install "fastiv[jax]"
+pip install "fast-vollib[jax]"
 # or
-uv add "fastiv[jax]"
+uv add "fast-vollib[jax]"
 ```
 
 ### GPU (Linux only — CUDA 13)
@@ -58,8 +58,8 @@ uv sync --extra cuda
 Clone the repository and install with all optional groups:
 
 ```bash
-git clone https://github.com/raeid-saqur/fastiv.git
-cd fastiv
+git clone https://github.com/raeid-saqur/fast-vollib.git
+cd fast-vollib
 
 # CPU-only (default)
 uv sync --all-groups
@@ -85,7 +85,7 @@ uv sync --group bench  # benchmarks only
 ## Verifying the install
 
 ```python
-import fastiv
-print(fastiv.__version__)   # e.g. "0.1.0"
-print(fastiv.get_backend()) # "numpy", "torch", or "jax"
+import fast_vollib
+print(fast_vollib.__version__)   # e.g. "0.1.0"
+print(fast_vollib.get_backend()) # "numpy", "torch", or "jax"
 ```

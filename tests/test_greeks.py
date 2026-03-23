@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from numpy.testing import assert_allclose
 
-from fastiv.api import get_all_greeks
+from fast_vollib.api import get_all_greeks
 
 
 def _load_fixture() -> pd.DataFrame:

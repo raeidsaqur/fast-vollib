@@ -1,6 +1,6 @@
 # Compatibility
 
-fastiv is designed as a drop-in replacement for
+fast-vollib is designed as a drop-in replacement for
 [`py_vollib`](https://github.com/vollib/py_vollib) and
 [`py_vollib_vectorized`](https://github.com/marcdemers/py_vollib_vectorized).
 
@@ -20,7 +20,7 @@ fastiv is designed as a drop-in replacement for
 
 ## New kwargs (additive only)
 
-fastiv adds two optional keyword-only arguments to every function. They are
+fast-vollib adds two optional keyword-only arguments to every function. They are
 silently consumed when not provided, so existing call sites continue to work
 without changes.
 
@@ -39,10 +39,10 @@ directly and cannot be changed.
 
 ```python
 # At program startup, before any py_vollib imports are used:
-import fastiv
-fastiv.patch_py_vollib()
+import fast_vollib
+fast_vollib.patch_py_vollib()
 
-# Now these transparently use fastiv under the hood:
+# Now these transparently use fast-vollib under the hood:
 from py_vollib.black_scholes import black_scholes
 from py_vollib.black_scholes.implied_volatility import implied_volatility
 from py_vollib.black_scholes.greeks.numerical import delta
@@ -61,7 +61,7 @@ from py_vollib.black_scholes.greeks.numerical import delta
 
 ## Known differences
 
-| Behaviour | `py_vollib_vectorized` | fastiv |
+| Behaviour | `py_vollib_vectorized` | fast-vollib |
 |---|---|---|
 | Below-intrinsic IV | Returns `NaN` silently | Controlled by `on_error=` (`"warn"` / `"raise"` / `"ignore"`) |
 | Backend | NumPy only | NumPy, PyTorch, JAX |

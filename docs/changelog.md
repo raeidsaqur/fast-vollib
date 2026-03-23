@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Greeks** — `vectorized_delta`, `vectorized_gamma`, `vectorized_theta`,
   `vectorized_rho`, `vectorized_vega`, and `get_all_greeks`.
 - **Backend routing** — pluggable NumPy, PyTorch, and JAX backends with
-  automatic resolution (`FASTIV_BACKEND` env var, `set_backend()`,
+  automatic resolution (`FAST_VOLLIB_BACKEND` env var, `set_backend()`,
   per-call `backend=` kwarg).
 - **DataFrame helper** — `price_dataframe` for end-to-end pricing, IV
   solving, and Greek computation on a `pandas.DataFrame`.
@@ -43,5 +43,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
-[Unreleased]: https://github.com/raeid-saqur/fastiv/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/raeid-saqur/fastiv/releases/tag/v0.1.0
+[Unreleased]: https://github.com/raeid-saqur/fast-vollib/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/raeid-saqur/fast-vollib/releases/tag/v0.1.0

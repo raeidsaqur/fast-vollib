@@ -5,10 +5,10 @@
 ### Black-Scholes (equity options)
 
 ```python
-import fastiv
+import fast_vollib
 
 # Single option
-price = fastiv.vectorized_black_scholes(
+price = fast_vollib.vectorized_black_scholes(
     flag="c",      # "c" = call, "p" = put
     S=100.0,       # underlying price
     K=100.0,       # strike price
@@ -21,7 +21,7 @@ price = fastiv.vectorized_black_scholes(
 # Vectorized batch — mix scalars and arrays freely
 import numpy as np
 
-prices = fastiv.vectorized_black_scholes(
+prices = fast_vollib.vectorized_black_scholes(
     flag=np.array(["c", "c", "p", "p"]),
     S=100.0,                              # scalar broadcasts
     K=np.array([95, 100, 100, 105]),
@@ -35,7 +35,7 @@ prices = fastiv.vectorized_black_scholes(
 ### Black-76 (futures options)
 
 ```python
-price = fastiv.vectorized_black(
+price = fast_vollib.vectorized_black(
     flag="c",
     F=100.0,   # forward price
     K=100.0,
@@ -49,7 +49,7 @@ price = fastiv.vectorized_black(
 ### Black-Scholes-Merton (continuous dividends)
 
 ```python
-price = fastiv.vectorized_black_scholes_merton(
+price = fast_vollib.vectorized_black_scholes_merton(
     flag="c",
     S=100.0,
     K=100.0,
@@ -67,7 +67,7 @@ price = fastiv.vectorized_black_scholes_merton(
 
 ```python
 # Recover IV from market prices
-iv = fastiv.vectorized_implied_volatility(
+iv = fast_vollib.vectorized_implied_volatility(
     price=np.array([3.63, 6.04, 4.27]),
     S=100.0,
     K=np.array([100, 95, 105]),
@@ -78,7 +78,7 @@ iv = fastiv.vectorized_implied_volatility(
 )
 
 # Black-76 IV
-iv_black = fastiv.vectorized_implied_volatility_black(
+iv_black = fast_vollib.vectorized_implied_volatility_black(
     price=3.5,
     F=100.0,
     K=100.0,
@@ -96,12 +96,12 @@ iv_black = fastiv.vectorized_implied_volatility_black(
 ### Individual Greeks
 
 ```python
-delta = fastiv.vectorized_delta(
+delta = fast_vollib.vectorized_delta(
     flag="c", S=100, K=100, t=0.25, r=0.05, sigma=0.20,
     return_as="numpy",
 )
 
-gamma = fastiv.vectorized_gamma(
+gamma = fast_vollib.vectorized_gamma(
     flag="c", S=100, K=100, t=0.25, r=0.05, sigma=0.20,
     return_as="numpy",
 )
@@ -110,7 +110,7 @@ gamma = fastiv.vectorized_gamma(
 ### All Greeks at once
 
 ```python
-greeks_df = fastiv.get_all_greeks(
+greeks_df = fast_vollib.get_all_greeks(
     flag=["c", "p"],
     S=100.0,
     K=100.0,
@@ -144,7 +144,7 @@ df = pd.DataFrame({
     "sigma":  [0.20, 0.20, 0.18],
 })
 
-result = fastiv.price_dataframe(
+result = fast_vollib.price_dataframe(
     df,
     flag_col="flag",
     underlying_price_col="S",
@@ -177,10 +177,10 @@ Pass `return_native=True` to get the backend's native tensor/array type (e.g.
 
 ```python
 # Use a specific backend for all calls in this session
-fastiv.set_backend("torch")
+fast_vollib.set_backend("torch")
 
 # Override per-call
-price = fastiv.vectorized_black_scholes(
+price = fast_vollib.vectorized_black_scholes(
     ...,
     backend="jax",
 )
