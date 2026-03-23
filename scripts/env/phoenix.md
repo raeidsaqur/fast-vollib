@@ -11,4 +11,4 @@ export TRITON_CACHE_DIR="${XDG_CACHE_HOME}/triton"
 export CUDA_CACHE_PATH="${XDG_CACHE_HOME}/cuda"
 ```
 
-The same exports are captured in [`scripts/env/phoenix.sh`](../scripts/env/phoenix.sh).
+The same exports are captured in [`phoenix.sh`](phoenix.sh).

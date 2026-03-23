@@ -246,6 +246,8 @@ def _jax_bisect_step(sigma_lo, sigma_hi, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv
 _jit_halley: "object | None" = None
 _jit_halley_all: "object | None" = None
 _jit_bisect: "object | None" = None
+_jit_iv_pre: "object | None" = None
+_jit_iv_post: "object | None" = None
 
 
 def _get_jit_halley():
@@ -280,6 +282,55 @@ def _get_jit_bisect():
     return _jit_bisect
 
 
+def _get_jit_iv_pre():
+    """JIT'd pre-computation: ds, dk, sqrt_tt, below_intrinsic, sigma_init."""
+    global _jit_iv_pre
+    if _jit_iv_pre is None:
+        import jax, jax.numpy as jnp
+
+        @jax.jit
+        def _iv_pre(pt, st, kt, tt, rt, qv, is_call):
+            ds = st * jnp.exp(-qv * tt)
+            dk = kt * jnp.exp(-rt * tt)
+            sqrt_tt = jnp.sqrt(jnp.maximum(tt, 1e-32))
+            intrinsic = jnp.where(is_call,
+                                   jnp.maximum(ds - dk, 0.0),
+                                   jnp.maximum(dk - ds, 0.0))
+            below_intrinsic = pt < intrinsic - 1e-10
+            sqrt_t_init = jnp.sqrt(jnp.maximum(tt, 1e-8))
+            sigma_init = jnp.clip(pt / jnp.maximum(st * sqrt_t_init, 1e-12) * _SQRT2PI,
+                                   0.30, 5.0)
+            return ds, dk, sqrt_tt, below_intrinsic, sigma_init
+
+        _jit_iv_pre = _iv_pre
+    return _jit_iv_pre
+
+
+def _get_jit_iv_post():
+    """JIT'd post-computation: convergence check and result masking."""
+    global _jit_iv_post
+    if _jit_iv_post is None:
+        import jax, jax.numpy as jnp
+
+        @jax.jit
+        def _iv_post(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, valid,
+                     below_intrinsic):
+            d1, d2 = _d1_d2(st, kt, tt, rt, sigma, qv)
+            cdf_d1 = _normal_cdf(d1)
+            cdf_d2 = _normal_cdf(d2)
+            call = ds * cdf_d1 - dk * cdf_d2
+            put = dk * (1.0 - cdf_d2) - ds * (1.0 - cdf_d1)
+            px_final = jnp.where(is_call, call, put)
+            underflow_stuck = (px_final == 0.0) & (pt > 0.0)
+            not_converged = (jnp.abs(px_final - pt) > 1e-6) | underflow_stuck
+            result = jnp.where(valid, sigma, 0.0)
+            result = jnp.where(below_intrinsic, jnp.zeros_like(result), result)
+            return result, not_converged
+
+        _jit_iv_post = _iv_post
+    return _jit_iv_post
+
+
 def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, flag: np.ndarray, q: np.ndarray | None = None, on_error: str = "warn") -> np.ndarray:
     _ensure_x64()
     import jax, jax.numpy as jnp
@@ -294,32 +345,16 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
 
     valid = tt > 0
 
-    # Pre-compute loop-invariant discounting terms
-    ds = st * jnp.exp(-qv * tt)
-    dk = kt * jnp.exp(-rt * tt)
-    sqrt_tt = jnp.sqrt(jnp.maximum(tt, 1e-32))
-
-    # Below-intrinsic check — returns 0.0 for impossible prices
-    intrinsic = jnp.where(is_call,
-                           jnp.maximum(ds - dk, 0.0),
-                           jnp.maximum(dk - ds, 0.0))
-    below_intrinsic = pt < intrinsic - 1e-10
-
-    # Brenner-Subrahmanyam initial guess with floor=0.30
-    sqrt_t_init = jnp.sqrt(jnp.maximum(tt, 1e-8))
-    sigma = jnp.clip(pt / jnp.maximum(st * sqrt_t_init, 1e-12) * _SQRT2PI, 0.30, 5.0)
+    # JIT'd pre-computation: ds, dk, sqrt_tt, below_intrinsic, sigma_init
+    ds, dk, sqrt_tt, below_intrinsic, sigma = _get_jit_iv_pre()(
+        pt, st, kt, tt, rt, qv, is_call)
 
     # Halley's method — fused 8-iteration loop via module-level lax.fori_loop JIT
     sigma = _get_jit_halley_all()(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call)
 
-    # Convergence check
-    d1f, d2f = _d1_d2(st, kt, tt, rt, sigma, qv)
-    cdf_d1f = _normal_cdf(d1f); cdf_d2f = _normal_cdf(d2f)
-    call_f = ds * cdf_d1f - dk * cdf_d2f
-    put_f = dk * (1.0 - cdf_d2f) - ds * (1.0 - cdf_d1f)
-    px_final = jnp.where(is_call, call_f, put_f)
-    underflow_stuck = (px_final == 0.0) & (pt > 0.0)
-    not_converged = (jnp.abs(px_final - pt) > 1e-6) | underflow_stuck
+    # JIT'd convergence check and result masking
+    result, not_converged = _get_jit_iv_post()(
+        sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, valid, below_intrinsic)
 
     if not_converged.any():
         sigma_lo = jnp.where(not_converged, jnp.full_like(sigma, _IV_LO), sigma)
@@ -329,7 +364,7 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
             sigma_lo, sigma_hi = bisect(
                 sigma_lo, sigma_hi, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, not_converged)
         sigma = jnp.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
+        result = jnp.where(valid, sigma, 0.0)
+        result = jnp.where(below_intrinsic, jnp.zeros_like(result), result)
 
-    result = jnp.where(valid, sigma, 0.0)
-    result = jnp.where(below_intrinsic, jnp.zeros_like(result), result)
     return np.asarray(result)
