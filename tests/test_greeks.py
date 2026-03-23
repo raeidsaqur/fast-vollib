@@ -4,8 +4,8 @@ import json
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from numpy.testing import assert_allclose
+import pandas as pd
 
 from fast_vollib.api import get_all_greeks
 

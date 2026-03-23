@@ -5,7 +5,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![Python](https://img.shields.io/pypi/pyversions/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml)
+[![Tests](https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml)
+[![Docs](https://github.com/raeidsaqur/fast-vollib/actions/workflows/docs.yml/badge.svg)](https://raeidsaqur.github.io/fast-vollib/)
 
 ---
 

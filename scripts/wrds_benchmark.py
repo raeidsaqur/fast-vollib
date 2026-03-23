@@ -10,12 +10,13 @@ and never prints, logs, or returns raw data values.
 Usage:
     python scripts/wrds_benchmark.py [--instrument-dir PATH] [--sample N]
 """
+
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 import sys
 import time
-from pathlib import Path
 
 import numpy as np
 
@@ -26,9 +27,7 @@ if str(SRC_ROOT) not in sys.path:
 
 from fast_vollib import vectorized_implied_volatility
 
-_DEFAULT_INSTRUMENT_DIR = Path(
-    "/home/saqur/rfs/data/raw/wrds_optionm_all/SPX_108105"
-)
+_DEFAULT_INSTRUMENT_DIR = Path("/home/saqur/rfs/data/raw/wrds_optionm_all/SPX_108105")
 _DEFAULT_OPTION_FILE = "opprcd2023.parquet"
 _DEFAULT_FORWARD_FILE = "fwdprd2023.parquet"
 _RISK_FREE_RATE = 0.048  # optimal constant rate for SPX 2023 (grid-searched)
@@ -40,8 +39,14 @@ def load_and_merge(instrument_dir: Path, max_rows: int | None) -> "pd.DataFrame"
     opt = pd.read_parquet(
         instrument_dir / _DEFAULT_OPTION_FILE,
         columns=[
-            "secid", "date", "exdate", "cp_flag",
-            "strike_price", "best_bid", "best_offer", "impl_volatility",
+            "secid",
+            "date",
+            "exdate",
+            "cp_flag",
+            "strike_price",
+            "best_bid",
+            "best_offer",
+            "impl_volatility",
         ],
     )
     fwd = pd.read_parquet(
@@ -96,19 +101,36 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
     print("warming up (triggering JIT compilations at full scale) …", flush=True)
     tw = time.perf_counter()
     vectorized_implied_volatility(
-        mid_price[:100_000], F[:100_000], K[:100_000], T[:100_000], r[:100_000], flag[:100_000],
-        model="black", return_as="numpy",
+        mid_price[:100_000],
+        F[:100_000],
+        K[:100_000],
+        T[:100_000],
+        r[:100_000],
+        flag[:100_000],
+        model="black",
+        return_as="numpy",
     )
     vectorized_implied_volatility(
-        mid_price, F, K, T, r, flag,
-        model="black", return_as="numpy",
+        mid_price,
+        F,
+        K,
+        T,
+        r,
+        flag,
+        model="black",
+        return_as="numpy",
     )
-    print(f"warmup_seconds={time.perf_counter()-tw:.2f}", flush=True)
+    print(f"warmup_seconds={time.perf_counter() - tw:.2f}", flush=True)
 
     # Compute fast_vollib IVs -------------------------------------------------
     t1 = time.perf_counter()
     fast_vollib_iv = vectorized_implied_volatility(
-        mid_price, F, K, T, r, flag,
+        mid_price,
+        F,
+        K,
+        T,
+        r,
+        flag,
         model="black",
         return_as="numpy",
     )
@@ -133,8 +155,9 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--instrument-dir", default=str(_DEFAULT_INSTRUMENT_DIR))
-    parser.add_argument("--sample", type=int, default=None,
-                        help="random subsample size (default: all valid rows)")
+    parser.add_argument(
+        "--sample", type=int, default=None, help="random subsample size (default: all valid rows)"
+    )
     args = parser.parse_args()
     run_benchmark(Path(args.instrument_dir), args.sample)
 

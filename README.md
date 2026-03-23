@@ -3,8 +3,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![Python](https://img.shields.io/pypi/pyversions/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml)
-[![Docs](https://github.com/raeid-saqur/fast-vollib/actions/workflows/docs.yml/badge.svg)](https://raeid-saqur.github.io/fast-vollib/)
+[![Tests](https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml)
+[![Docs](https://github.com/raeidsaqur/fast-vollib/actions/workflows/docs.yml/badge.svg)](https://raeidsaqur.github.io/fast-vollib/)
 
 **fast-vollib** is a modern Python library for Black, Black-Scholes, and
 Black-Scholes-Merton option pricing, implied volatility solving, and Greeks —
@@ -162,14 +162,14 @@ from fast_vollib import (
 )
 ```
 
-Full documentation: **[raeid-saqur.github.io/fast-vollib](https://raeid-saqur.github.io/fast-vollib/)**
+Full documentation: **[raeidsaqur.github.io/fast-vollib](https://raeidsaqur.github.io/fast-vollib/)**
 
 ---
 
 ## Development
 
 ```bash
-git clone https://github.com/raeid-saqur/fast-vollib.git
+git clone https://github.com/raeidsaqur/fast-vollib.git
 cd fast-vollib
 
 uv sync --all-groups        # install all deps (CPU)

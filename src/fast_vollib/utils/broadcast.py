@@ -44,7 +44,9 @@ def preprocess_flags(flag: object) -> np.ndarray:
     return arr_lower
 
 
-def maybe_format_data_and_broadcast(*values: object, dtype: np.dtype | type = np.float64) -> tuple[np.ndarray, ...]:
+def maybe_format_data_and_broadcast(
+    *values: object, dtype: np.dtype | type = np.float64
+) -> tuple[np.ndarray, ...]:
     prepared: list[np.ndarray] = []
     for value in values:
         if isinstance(value, np.ndarray) and value.dtype.kind in {"U", "S", "O"}:

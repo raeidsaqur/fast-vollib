@@ -5,7 +5,7 @@ import pandas as pd
 
 from . import backends
 from .config import get_backend
-from .greeks import delta, gamma, rho, theta, vega, _backend_module
+from .greeks import _backend_module, delta, gamma, rho, theta, vega
 from .implied_volatility import vectorized_implied_volatility, vectorized_implied_volatility_black
 from .models import vectorized_black, vectorized_black_scholes, vectorized_black_scholes_merton
 from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
@@ -13,17 +13,37 @@ from .utils.formatting import format_greeks_output
 from .utils.validation import validate_data
 
 
-def get_all_greeks(flag, S, K, t, r, sigma, q=None, *, model="black_scholes", return_as="dataframe", dtype=None, backend="auto", return_native=False):
+def get_all_greeks(
+    flag,
+    S,
+    K,
+    t,
+    r,
+    sigma,
+    q=None,
+    *,
+    model="black_scholes",
+    return_as="dataframe",
+    dtype=None,
+    backend="auto",
+    return_native=False,
+):
     # Single-pass: preprocess once, call backend greeks() once (avoids 5x redundant d1/d2/exp/ndtr)
     _dtype = dtype if dtype is not None else np.float64
     flag = preprocess_flags(flag)
     if model == "black_scholes_merton":
         if q is None:
-            raise ValueError("Must pass a `q` to black scholes merton model (annualized continuous dividend yield).")
-        S, K, t, r, sigma, q, flag = maybe_format_data_and_broadcast(S, K, t, r, sigma, q, flag, dtype=_dtype)
+            raise ValueError(
+                "Must pass a `q` to black scholes merton model (annualized continuous dividend yield)."
+            )
+        S, K, t, r, sigma, q, flag = maybe_format_data_and_broadcast(
+            S, K, t, r, sigma, q, flag, dtype=_dtype
+        )
         validate_data(S, K, t, r, sigma, q)
     else:
-        S, K, t, r, sigma, flag = maybe_format_data_and_broadcast(S, K, t, r, sigma, flag, dtype=_dtype)
+        S, K, t, r, sigma, flag = maybe_format_data_and_broadcast(
+            S, K, t, r, sigma, flag, dtype=_dtype
+        )
         validate_data(S, K, t, r, sigma)
     backend_name = get_backend(backend)
     bmod = _backend_module(backend_name)
@@ -33,7 +53,23 @@ def get_all_greeks(flag, S, K, t, r, sigma, q=None, *, model="black_scholes", re
     return format_greeks_output(data, return_as)
 
 
-def price_dataframe(df: pd.DataFrame, *, flag_col=None, underlying_price_col=None, strike_col=None, annualized_tte_col=None, riskfree_rate_col=None, sigma_col=None, price_col=None, dividend_col=None, model="black_scholes", inplace=False, dtype=None, backend="auto", return_native=False):
+def price_dataframe(
+    df: pd.DataFrame,
+    *,
+    flag_col=None,
+    underlying_price_col=None,
+    strike_col=None,
+    annualized_tte_col=None,
+    riskfree_rate_col=None,
+    sigma_col=None,
+    price_col=None,
+    dividend_col=None,
+    model="black_scholes",
+    inplace=False,
+    dtype=None,
+    backend="auto",
+    return_native=False,
+):
     assert flag_col is not None, "You must specify a `flag_col` argument!"
     assert underlying_price_col is not None, "You must specify a `underlying_price_col` argument!"
     assert strike_col is not None, "You must specify a `strike_col` argument!"
@@ -54,26 +90,97 @@ def price_dataframe(df: pd.DataFrame, *, flag_col=None, underlying_price_col=Non
 
     if sigma is not None and price is None:
         if model == "black":
-            priced = vectorized_black(flag, S, K, t, r, sigma, return_as="numpy", dtype=dtype, backend=backend, return_native=return_native)
+            priced = vectorized_black(
+                flag,
+                S,
+                K,
+                t,
+                r,
+                sigma,
+                return_as="numpy",
+                dtype=dtype,
+                backend=backend,
+                return_native=return_native,
+            )
         elif model == "black_scholes":
-            priced = vectorized_black_scholes(flag, S, K, t, r, sigma, return_as="numpy", dtype=dtype, backend=backend, return_native=return_native)
+            priced = vectorized_black_scholes(
+                flag,
+                S,
+                K,
+                t,
+                r,
+                sigma,
+                return_as="numpy",
+                dtype=dtype,
+                backend=backend,
+                return_native=return_native,
+            )
         else:
-            priced = vectorized_black_scholes_merton(flag, S, K, t, r, sigma, q, return_as="numpy", dtype=dtype, backend=backend, return_native=return_native)
+            priced = vectorized_black_scholes_merton(
+                flag,
+                S,
+                K,
+                t,
+                r,
+                sigma,
+                q,
+                return_as="numpy",
+                dtype=dtype,
+                backend=backend,
+                return_native=return_native,
+            )
         output["Price"] = priced
         price = priced
 
     if price is not None and sigma is None:
         if model == "black":
-            implied = vectorized_implied_volatility_black(price, S, K, r, t, flag, return_as="numpy", dtype=dtype, backend=backend, return_native=return_native)
+            implied = vectorized_implied_volatility_black(
+                price,
+                S,
+                K,
+                r,
+                t,
+                flag,
+                return_as="numpy",
+                dtype=dtype,
+                backend=backend,
+                return_native=return_native,
+            )
         else:
-            implied = vectorized_implied_volatility(price, S, K, t, r, flag, q=q, model=model, return_as="numpy", dtype=dtype, backend=backend, return_native=return_native)
+            implied = vectorized_implied_volatility(
+                price,
+                S,
+                K,
+                t,
+                r,
+                flag,
+                q=q,
+                model=model,
+                return_as="numpy",
+                dtype=dtype,
+                backend=backend,
+                return_native=return_native,
+            )
         output["IV"] = implied
         sigma = implied
 
     if sigma is None and price is None:
         raise ValueError("You must specify either `sigma_col`, `price_col`, or both!")
 
-    greeks = get_all_greeks(flag, S, K, t, r, sigma, q=q, model=model, return_as="dataframe", dtype=dtype, backend=backend, return_native=False)
+    greeks = get_all_greeks(
+        flag,
+        S,
+        K,
+        t,
+        r,
+        sigma,
+        q=q,
+        model=model,
+        return_as="dataframe",
+        dtype=dtype,
+        backend=backend,
+        return_native=False,
+    )
     for column in greeks.columns:
         output[column] = greeks[column].to_numpy()
 

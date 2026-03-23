@@ -11,6 +11,7 @@ tl.math.erf, which maps to CUDA libm __erf (< 1 ULP for float64).
 All kernels are element-wise and fully independent across lanes, so the
 grid is simply ceil(n / BLOCK_SIZE) with 1D blocks.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -21,9 +22,9 @@ import triton.language as tl
 # ---------------------------------------------------------------------------
 # Constants (tl.constexpr so they can be referenced inside @triton.jit kernels)
 # ---------------------------------------------------------------------------
-_INV_SQRT2 = tl.constexpr(0.7071067811865476)    # 1 / sqrt(2)
+_INV_SQRT2 = tl.constexpr(0.7071067811865476)  # 1 / sqrt(2)
 _INV_SQRT2PI = tl.constexpr(0.3989422804014327)  # 1 / sqrt(2π)
-_SQRT2PI = 2.5066282746310002                     # Python-side only
+_SQRT2PI = 2.5066282746310002  # Python-side only
 _IV_LO_C = tl.constexpr(1e-8)
 _IV_HI_C = tl.constexpr(10.0)
 # Python-side copies for use outside kernels
@@ -36,6 +37,7 @@ _BISECT_ITERS = tl.constexpr(30)
 # ---------------------------------------------------------------------------
 # Helper: N(x) = 0.5*(1+erf(x/√2))  —  inline in kernels for register fusion
 # ---------------------------------------------------------------------------
+
 
 @triton.jit
 def _norm_cdf_tl(x):
@@ -51,9 +53,16 @@ def _norm_pdf_tl(x):
 # 1.  BSM pricing kernel  (single-pass: read 6 inputs, write 1 output)
 # ---------------------------------------------------------------------------
 
+
 @triton.jit
 def bsm_price_kernel(
-    s_ptr, k_ptr, t_ptr, r_ptr, sigma_ptr, q_ptr, is_call_ptr,
+    s_ptr,
+    k_ptr,
+    t_ptr,
+    r_ptr,
+    sigma_ptr,
+    q_ptr,
+    is_call_ptr,
     out_ptr,
     n,
     BLOCK_SIZE: tl.constexpr,
@@ -91,10 +100,21 @@ def bsm_price_kernel(
 # 2.  BSM Greeks kernel  (single-pass: read 7 inputs, write 5 outputs)
 # ---------------------------------------------------------------------------
 
+
 @triton.jit
 def bsm_greeks_kernel(
-    s_ptr, k_ptr, t_ptr, r_ptr, sigma_ptr, q_ptr, is_call_ptr,
-    delta_ptr, gamma_ptr, theta_ptr, rho_ptr, vega_ptr,
+    s_ptr,
+    k_ptr,
+    t_ptr,
+    r_ptr,
+    sigma_ptr,
+    q_ptr,
+    is_call_ptr,
+    delta_ptr,
+    gamma_ptr,
+    theta_ptr,
+    rho_ptr,
+    vega_ptr,
     n,
     is_black: tl.constexpr,
     BLOCK_SIZE: tl.constexpr,
@@ -136,12 +156,14 @@ def bsm_greeks_kernel(
         gamma = carry * pdf / (safe_s * safe_sig * sqrt_t)
 
     vega = s * carry * pdf * sqrt_t * 0.01
-    theta_call = (-(s * carry * pdf * sigma) / (2.0 * sqrt_t)
-                  - r * k * disc * cdf_d2
-                  + q * s * carry * cdf_d1) / 365.0
-    theta_put = (-(s * carry * pdf * sigma) / (2.0 * sqrt_t)
-                 + r * k * disc * cdf_nd2
-                 - q * s * carry * cdf_nd1) / 365.0
+    theta_call = (
+        -(s * carry * pdf * sigma) / (2.0 * sqrt_t) - r * k * disc * cdf_d2 + q * s * carry * cdf_d1
+    ) / 365.0
+    theta_put = (
+        -(s * carry * pdf * sigma) / (2.0 * sqrt_t)
+        + r * k * disc * cdf_nd2
+        - q * s * carry * cdf_nd1
+    ) / 365.0
     theta = tl.where(is_call, theta_call, theta_put)
 
     rho_call = k * t * disc * cdf_d2 * 0.01
@@ -159,12 +181,19 @@ def bsm_greeks_kernel(
 # 3a. IV Halley kernel  (8 Halley iters; loop-invariants hoisted to registers)
 # ---------------------------------------------------------------------------
 
+
 @triton.jit
 def bsm_iv_halley_kernel(
-    price_ptr, s_ptr, k_ptr, t_ptr, r_ptr, q_ptr, is_call_ptr,
-    sigma_ptr,            # input: initial guess;  output: Halley result
+    price_ptr,
+    s_ptr,
+    k_ptr,
+    t_ptr,
+    r_ptr,
+    q_ptr,
+    is_call_ptr,
+    sigma_ptr,  # input: initial guess;  output: Halley result
     below_intrinsic_ptr,  # output: int8 flag  (1 = price below intrinsic)
-    not_converged_ptr,    # output: int8 flag  (1 = needs bisection)
+    not_converged_ptr,  # output: int8 flag  (1 = needs bisection)
     n,
     BLOCK_SIZE: tl.constexpr,
 ):
@@ -186,7 +215,7 @@ def bsm_iv_halley_kernel(
     disc_k = k * tl.exp(-r * t)
     sqrt_t = tl.sqrt(tl.maximum(t, 1e-32))
     log_sk = tl.log(tl.maximum(s, 1e-32) / tl.maximum(k, 1e-32))
-    carry_dt = (r - q) * t   # (r-q)*t part of d1 numerator
+    carry_dt = (r - q) * t  # (r-q)*t part of d1 numerator
 
     # Below-intrinsic check (store result for post-processing in Python)
     intrinsic_call = tl.maximum(disc_s - disc_k, 0.0)
@@ -224,7 +253,8 @@ def bsm_iv_halley_kernel(
     vol_term_f = tl.maximum(sigma * sqrt_t, 1e-32)
     d1_f = (log_sk + carry_dt + 0.5 * sigma * sigma * t) / vol_term_f
     d2_f = d1_f - sigma * sqrt_t
-    cdf1_f = _norm_cdf_tl(d1_f); cdf2_f = _norm_cdf_tl(d2_f)
+    cdf1_f = _norm_cdf_tl(d1_f)
+    cdf2_f = _norm_cdf_tl(d2_f)
     call_f = disc_s * cdf1_f - disc_k * cdf2_f
     put_f = disc_k * (1.0 - cdf2_f) - disc_s * (1.0 - cdf1_f)
     px_f = tl.where(is_call, call_f, put_f)
@@ -238,11 +268,18 @@ def bsm_iv_halley_kernel(
 # 3b. IV Bisection kernel  (30-iter fallback; only updates non-converged lanes)
 # ---------------------------------------------------------------------------
 
+
 @triton.jit
 def bsm_iv_bisect_kernel(
-    price_ptr, s_ptr, k_ptr, t_ptr, r_ptr, q_ptr, is_call_ptr,
+    price_ptr,
+    s_ptr,
+    k_ptr,
+    t_ptr,
+    r_ptr,
+    q_ptr,
+    is_call_ptr,
     not_converged_ptr,  # int8 mask: 1 = needs bisection
-    sigma_ptr,          # in/out
+    sigma_ptr,  # in/out
     n,
     BLOCK_SIZE: tl.constexpr,
 ):
@@ -294,9 +331,7 @@ def bsm_iv_bisect_kernel(
 
 # Auto-tune BLOCK_SIZE for the H100: 128 / 256 / 512 for float64 element-wise kernels
 _CONFIGS = [
-    triton.Config({"BLOCK_SIZE": bs}, num_warps=nw)
-    for bs in (128, 256, 512)
-    for nw in (4, 8)
+    triton.Config({"BLOCK_SIZE": bs}, num_warps=nw) for bs in (128, 256, 512) for nw in (4, 8)
 ]
 
 
@@ -344,6 +379,7 @@ def _get_compiled_iv_bisect():
 
 # --------------- initial guess (fast, stays on GPU) -----------------------
 
+
 def _initial_guess_gpu(price: torch.Tensor, s: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
     sqrt_t = torch.sqrt(torch.clamp(t, min=1e-8))
     approx = price / torch.clamp(s * sqrt_t, min=1e-12) * _SQRT2PI
@@ -352,10 +388,15 @@ def _initial_guess_gpu(price: torch.Tensor, s: torch.Tensor, t: torch.Tensor) ->
 
 # --------------- public wrappers ------------------------------------------
 
+
 def bsm_price_triton(
     is_call: torch.Tensor,  # bool GPU tensor
-    s: torch.Tensor, k: torch.Tensor, t: torch.Tensor,
-    r: torch.Tensor, sigma: torch.Tensor, q: torch.Tensor,
+    s: torch.Tensor,
+    k: torch.Tensor,
+    t: torch.Tensor,
+    r: torch.Tensor,
+    sigma: torch.Tensor,
+    q: torch.Tensor,
 ) -> torch.Tensor:
     n = s.numel()
     out = torch.empty(n, dtype=torch.float64, device=s.device)
@@ -364,8 +405,16 @@ def bsm_price_triton(
     bs = 256  # use fixed size; autotune would add first-call overhead
     _grid_fn = _grid(n, bs)
     bsm_price_kernel[_grid_fn](
-        s, k, t, r, sigma, q, is_call_i8,
-        out, n, BLOCK_SIZE=bs,
+        s,
+        k,
+        t,
+        r,
+        sigma,
+        q,
+        is_call_i8,
+        out,
+        n,
+        BLOCK_SIZE=bs,
     )
     return out
 
@@ -373,8 +422,12 @@ def bsm_price_triton(
 def bsm_greeks_triton(
     model: str,
     is_call: torch.Tensor,
-    s: torch.Tensor, k: torch.Tensor, t: torch.Tensor,
-    r: torch.Tensor, sigma: torch.Tensor, q: torch.Tensor,
+    s: torch.Tensor,
+    k: torch.Tensor,
+    t: torch.Tensor,
+    r: torch.Tensor,
+    sigma: torch.Tensor,
+    q: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     n = s.numel()
     delta = torch.empty(n, dtype=torch.float64, device=s.device)
@@ -386,17 +439,32 @@ def bsm_greeks_triton(
     is_black = model == "black"
     bs = 256
     bsm_greeks_kernel[_grid(n, bs)](
-        s, k, t, r, sigma, q, is_call_i8,
-        delta, gamma, theta, rho, vega,
-        n, is_black=is_black, BLOCK_SIZE=bs,
+        s,
+        k,
+        t,
+        r,
+        sigma,
+        q,
+        is_call_i8,
+        delta,
+        gamma,
+        theta,
+        rho,
+        vega,
+        n,
+        is_black=is_black,
+        BLOCK_SIZE=bs,
     )
     return delta, gamma, theta, rho, vega
 
 
 def bsm_iv_triton(
     price: torch.Tensor,
-    s: torch.Tensor, k: torch.Tensor, t: torch.Tensor,
-    r: torch.Tensor, q: torch.Tensor,
+    s: torch.Tensor,
+    k: torch.Tensor,
+    t: torch.Tensor,
+    r: torch.Tensor,
+    q: torch.Tensor,
     is_call: torch.Tensor,  # bool GPU tensor
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     """Run Halley IV solver.  Returns (sigma, below_intrinsic_mask, not_converged_mask).
@@ -411,20 +479,32 @@ def bsm_iv_triton(
     is_call_i8 = is_call.to(torch.int8)
     bs = 256
     bsm_iv_halley_kernel[_grid(n, bs)](
-        price, s, k, t, r, q, is_call_i8,
-        sigma, below_int, not_conv,
-        n, BLOCK_SIZE=bs,
+        price,
+        s,
+        k,
+        t,
+        r,
+        q,
+        is_call_i8,
+        sigma,
+        below_int,
+        not_conv,
+        n,
+        BLOCK_SIZE=bs,
     )
     return sigma, below_int.bool(), not_conv.bool()
 
 
 def bsm_iv_bisect_triton(
     price: torch.Tensor,
-    s: torch.Tensor, k: torch.Tensor, t: torch.Tensor,
-    r: torch.Tensor, q: torch.Tensor,
+    s: torch.Tensor,
+    k: torch.Tensor,
+    t: torch.Tensor,
+    r: torch.Tensor,
+    q: torch.Tensor,
     is_call: torch.Tensor,
     not_converged: torch.Tensor,  # bool GPU tensor
-    sigma: torch.Tensor,          # in/out
+    sigma: torch.Tensor,  # in/out
 ) -> torch.Tensor:
     """Run bisection fallback in-place on not_converged lanes."""
     n = s.numel()
@@ -432,8 +512,16 @@ def bsm_iv_bisect_triton(
     nc_i8 = not_converged.to(torch.int8)
     bs = 256
     bsm_iv_bisect_kernel[_grid(n, bs)](
-        price, s, k, t, r, q, is_call_i8,
-        nc_i8, sigma,
-        n, BLOCK_SIZE=bs,
+        price,
+        s,
+        k,
+        t,
+        r,
+        q,
+        is_call_i8,
+        nc_i8,
+        sigma,
+        n,
+        BLOCK_SIZE=bs,
     )
     return sigma

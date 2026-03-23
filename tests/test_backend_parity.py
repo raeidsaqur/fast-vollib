@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import numpy as np
+from numpy.testing import assert_allclose
 import pandas as pd
 import pytest
-from numpy.testing import assert_allclose
 
-import fast_vollib.config as config_module
 from fast_vollib import (
     get_all_greeks,
     price_dataframe,
@@ -13,6 +12,7 @@ from fast_vollib import (
     vectorized_implied_volatility,
 )
 from fast_vollib.backends import available_backends
+import fast_vollib.config as config_module
 from fast_vollib.config import get_backend
 
 
@@ -125,8 +125,12 @@ def test_jax_pricing_backend_matches_numpy() -> None:
 def test_torch_iv_backend_matches_numpy() -> None:
     flag, s, k, t, r, sigma = _inputs()
     prices = vectorized_black_scholes(flag, s, k, t, r, sigma, backend="numpy", return_as="numpy")
-    base = vectorized_implied_volatility(prices, s, k, t, r, flag, backend="numpy", return_as="numpy")
-    trial = vectorized_implied_volatility(prices, s, k, t, r, flag, backend="torch", return_as="numpy")
+    base = vectorized_implied_volatility(
+        prices, s, k, t, r, flag, backend="numpy", return_as="numpy"
+    )
+    trial = vectorized_implied_volatility(
+        prices, s, k, t, r, flag, backend="torch", return_as="numpy"
+    )
     assert_allclose(base, trial, atol=1e-6)
 
 
@@ -134,8 +138,12 @@ def test_torch_iv_backend_matches_numpy() -> None:
 def test_jax_iv_backend_matches_numpy() -> None:
     flag, s, k, t, r, sigma = _inputs()
     prices = vectorized_black_scholes(flag, s, k, t, r, sigma, backend="numpy", return_as="numpy")
-    base = vectorized_implied_volatility(prices, s, k, t, r, flag, backend="numpy", return_as="numpy")
-    trial = vectorized_implied_volatility(prices, s, k, t, r, flag, backend="jax", return_as="numpy")
+    base = vectorized_implied_volatility(
+        prices, s, k, t, r, flag, backend="numpy", return_as="numpy"
+    )
+    trial = vectorized_implied_volatility(
+        prices, s, k, t, r, flag, backend="jax", return_as="numpy"
+    )
     assert_allclose(base, trial, atol=1e-6)
 
 

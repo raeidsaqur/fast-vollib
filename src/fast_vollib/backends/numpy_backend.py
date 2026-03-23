@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from scipy.special import ndtr, log_ndtr
+from scipy.special import log_ndtr, ndtr
 
 from ..types import ModelLiteral
 from ..utils.validation import handle_error
@@ -16,7 +16,15 @@ def _norm_pdf(x: np.ndarray) -> np.ndarray:
     return np.exp(-0.5 * x * x) * _SQRT2PI_INV
 
 
-def _intrinsic_vec(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, q: np.ndarray, model: ModelLiteral) -> np.ndarray:
+def _intrinsic_vec(
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    q: np.ndarray,
+    model: ModelLiteral,
+) -> np.ndarray:
     """Vectorized intrinsic value computation."""
     disc = np.exp(-r * t)
     carry = np.exp(-q * t)
@@ -32,10 +40,14 @@ def _intrinsic_vec(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray
     return np.where(flag == "c", call_iv, put_iv)
 
 
-def _d1_d2(s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _d1_d2(
+    s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     sqrt_t = np.sqrt(np.maximum(t, 1e-32))
     vol_term = np.maximum(sigma * sqrt_t, 1e-32)
-    d1 = (np.log(np.maximum(s, 1e-32) / np.maximum(k, 1e-32)) + (r - q + 0.5 * sigma**2) * t) / vol_term
+    d1 = (
+        np.log(np.maximum(s, 1e-32) / np.maximum(k, 1e-32)) + (r - q + 0.5 * sigma**2) * t
+    ) / vol_term
     d2 = d1 - sigma * sqrt_t
     return d1, d2
 
@@ -67,31 +79,62 @@ def _bsm_price_full(
     return price, vega, d1, d2
 
 
-def _bsm_price(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
+def _bsm_price(
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    sigma: np.ndarray,
+    q: np.ndarray,
+) -> np.ndarray:
     price, _, _, _ = _bsm_price_full(flag, s, k, t, r, sigma, q)
     return price
 
 
-def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
+def price_black(
+    flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray
+) -> np.ndarray:
     # Black-76: q=r makes carry=disc so d1 = [ln(F/K)+0.5σ²T]/(σ√T) (correct)
     return _bsm_price(flag, f, k, t, r, sigma, r)
 
 
-def price_black_scholes(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
+def price_black_scholes(
+    flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray
+) -> np.ndarray:
     q = np.zeros_like(r)
     return _bsm_price(flag, s, k, t, r, sigma, q)
 
 
-def price_black_scholes_merton(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
+def price_black_scholes_merton(
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    sigma: np.ndarray,
+    q: np.ndarray,
+) -> np.ndarray:
     return _bsm_price(flag, s, k, t, r, sigma, q)
 
 
-def _vega_raw(s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
+def _vega_raw(
+    s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray
+) -> np.ndarray:
     d1, _ = _d1_d2(s, k, t, r, sigma, q)
     return s * np.exp(-q * t) * _norm_pdf(d1) * np.sqrt(np.maximum(t, 1e-32))
 
 
-def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray | None = None) -> dict[str, np.ndarray]:
+def greeks(
+    model: ModelLiteral,
+    flag: np.ndarray,
+    s: np.ndarray,
+    k: np.ndarray,
+    t: np.ndarray,
+    r: np.ndarray,
+    sigma: np.ndarray,
+    q: np.ndarray | None = None,
+) -> dict[str, np.ndarray]:
     # Black-76: q=r so carry=disc and d1 uses only the σ² drift term (no r-q)
     qv = r if (model == "black" and q is None) else (np.zeros_like(r) if q is None else q)
     d1, d2 = _d1_d2(s, k, t, r, sigma, qv)
@@ -143,6 +186,7 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
 # Implied volatility — Halley's method (3rd-order) + bisection fallback
 # ---------------------------------------------------------------------------
 
+
 def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.ndarray:
     """Brenner-Subrahmanyam ATM approximation as Halley seed.
 
@@ -156,7 +200,7 @@ def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.nda
     return np.clip(approx, 0.30, 5.0)
 
 
-_HALLEY_ITERS = 8   # 8 Halley steps ≡ ~12 Newton steps in accuracy
+_HALLEY_ITERS = 8  # 8 Halley steps ≡ ~12 Newton steps in accuracy
 _BISECT_ITERS = 30  # 10/(2^30)≈9e-9 < _IV_LO → sufficient accuracy
 _IV_LO = 1e-8
 _IV_HI = 10.0
@@ -192,7 +236,9 @@ def _halley_step_precomputed(
     newton_step = residual / safe_vega
     safe_sigma = np.where(sigma > 1e-8, sigma, np.inf)
     halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
-    halley_denom = np.where(np.abs(halley_denom) > 0.05, halley_denom, np.sign(halley_denom + 1e-15) * 0.05)
+    halley_denom = np.where(
+        np.abs(halley_denom) > 0.05, halley_denom, np.sign(halley_denom + 1e-15) * 0.05
+    )
     return np.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
 
 
@@ -270,7 +316,17 @@ def implied_volatility(
     # --- Halley's method (using pre-computed invariants) ---
     sigma = _iv_initial_guess(price, s, t)
     for _ in range(_HALLEY_ITERS):
-        sigma = _halley_step_precomputed(sigma, price, is_call, discounted_spot, discounted_strike, sqrt_t, log_sk, carry_drift_t, t)
+        sigma = _halley_step_precomputed(
+            sigma,
+            price,
+            is_call,
+            discounted_spot,
+            discounted_strike,
+            sqrt_t,
+            log_sk,
+            carry_drift_t,
+            t,
+        )
 
     # --- Bisection fallback for poorly converged points ---
     px_final = _price_for_model(model, flag, s, k, t, r, sigma, qv)

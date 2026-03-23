@@ -4,7 +4,7 @@ site_description: >-
   implied-volatility library with NumPy, PyTorch, and JAX backends.
 site_author: Raeid Saqur
 repo_name: fast-vollib
-repo_url: https://github.com/raeid-saqur/fast-vollib
+repo_url: https://github.com/raeidsaqur/fast-vollib
 edit_uri: edit/main/docs/
 
 docs_dir: docs

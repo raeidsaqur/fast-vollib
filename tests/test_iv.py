@@ -20,8 +20,12 @@ def _load_fixture() -> pd.DataFrame:
 def test_implied_volatility_recovers_sigma() -> None:
     df = _load_fixture()
     flags = np.full(len(df), "c")
-    prices = vectorized_black_scholes(flags, df["S"], df["K"], df["t"], df["R"], df["v"], return_as="numpy")
-    ivs = vectorized_implied_volatility(prices, df["S"], df["K"], df["t"], df["R"], flags, return_as="numpy")
+    prices = vectorized_black_scholes(
+        flags, df["S"], df["K"], df["t"], df["R"], df["v"], return_as="numpy"
+    )
+    ivs = vectorized_implied_volatility(
+        prices, df["S"], df["K"], df["t"], df["R"], flags, return_as="numpy"
+    )
     # Skip cases where the option price underflows to ~0 in float64 (deep OTM, tiny T):
     # sigma is undetermined from a zero price, so IVs are NaN — not testable.
     solvable = np.abs(prices) > 1e-8

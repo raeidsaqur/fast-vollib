@@ -58,7 +58,7 @@ uv sync --extra cuda
 Clone the repository and install with all optional groups:
 
 ```bash
-git clone https://github.com/raeid-saqur/fast-vollib.git
+git clone https://github.com/raeidsaqur/fast-vollib.git
 cd fast-vollib
 
 # CPU-only (default)

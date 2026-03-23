@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from pathlib import Path
 import sys
 import time
-from pathlib import Path
 
 import numpy as np
 
@@ -21,6 +21,7 @@ def _sync():
     if backend == "torch":
         try:
             import torch
+
             if torch.cuda.is_available():
                 torch.cuda.synchronize()
         except ImportError:
@@ -28,6 +29,7 @@ def _sync():
     elif backend == "jax":
         try:
             import jax
+
             jax.effects_barrier()
         except (ImportError, AttributeError):
             pass
@@ -81,12 +83,16 @@ def main() -> None:
 
     # --- numpy reference (always runs) ---
     flag2, s2, k2, t2, r2, sigma2 = _make_inputs(n)
-    prices_np = vectorized_black_scholes(flag2, s2, k2, t2, r2, sigma2, backend="numpy", return_as="numpy")
+    prices_np = vectorized_black_scholes(
+        flag2, s2, k2, t2, r2, sigma2, backend="numpy", return_as="numpy"
+    )
     start = time.perf_counter()
     vectorized_black_scholes(flag2, s2, k2, t2, r2, sigma2, backend="numpy", return_as="numpy")
     numpy_price_seconds = time.perf_counter() - start
     start = time.perf_counter()
-    vectorized_implied_volatility(prices_np, s2, k2, t2, r2, flag2, backend="numpy", return_as="numpy")
+    vectorized_implied_volatility(
+        prices_np, s2, k2, t2, r2, flag2, backend="numpy", return_as="numpy"
+    )
     numpy_iv_seconds = time.perf_counter() - start
     start = time.perf_counter()
     get_all_greeks(flag2, s2, k2, t2, r2, sigma2, backend="numpy", return_as="dict")
@@ -109,7 +115,9 @@ def main() -> None:
     vectorized_implied_volatility(prices_l, s_l, k_l, t_l, r_l, flag_l, return_as="numpy")
     _sync()
     large_iv_seconds = time.perf_counter() - start
-    print(f"large_n={n_large},pricing_seconds={large_price_seconds:.6f},iv_seconds={large_iv_seconds:.6f}")
+    print(
+        f"large_n={n_large},pricing_seconds={large_price_seconds:.6f},iv_seconds={large_iv_seconds:.6f}"
+    )
 
 
 if __name__ == "__main__":

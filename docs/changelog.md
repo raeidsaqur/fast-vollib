@@ -43,5 +43,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
-[Unreleased]: https://github.com/raeid-saqur/fast-vollib/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/raeid-saqur/fast-vollib/releases/tag/v0.1.0
+[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/raeidsaqur/fast-vollib/releases/tag/v0.1.0

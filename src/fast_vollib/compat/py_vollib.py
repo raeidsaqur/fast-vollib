@@ -22,12 +22,22 @@ def patch_py_vollib() -> None:
         raise ImportError("You must have py_vollib installed to use patch_py_vollib().") from exc
 
     py_vollib.black.black = update_wrapper(vectorized_black, vectorized_black)
-    py_vollib.black_scholes.black_scholes = update_wrapper(vectorized_black_scholes, vectorized_black_scholes)
-    py_vollib.black_scholes_merton.black_scholes_merton = update_wrapper(vectorized_black_scholes_merton, vectorized_black_scholes_merton)
+    py_vollib.black_scholes.black_scholes = update_wrapper(
+        vectorized_black_scholes, vectorized_black_scholes
+    )
+    py_vollib.black_scholes_merton.black_scholes_merton = update_wrapper(
+        vectorized_black_scholes_merton, vectorized_black_scholes_merton
+    )
 
-    py_vollib.black.implied_volatility.implied_volatility = update_wrapper(vectorized_implied_volatility_black, vectorized_implied_volatility_black)
-    py_vollib.black_scholes.implied_volatility.implied_volatility = update_wrapper(vectorized_implied_volatility, vectorized_implied_volatility)
-    py_vollib.black_scholes_merton.implied_volatility.implied_volatility = update_wrapper(vectorized_implied_volatility, vectorized_implied_volatility)
+    py_vollib.black.implied_volatility.implied_volatility = update_wrapper(
+        vectorized_implied_volatility_black, vectorized_implied_volatility_black
+    )
+    py_vollib.black_scholes.implied_volatility.implied_volatility = update_wrapper(
+        vectorized_implied_volatility, vectorized_implied_volatility
+    )
+    py_vollib.black_scholes_merton.implied_volatility.implied_volatility = update_wrapper(
+        vectorized_implied_volatility, vectorized_implied_volatility
+    )
 
     py_vollib.black.greeks.numerical.delta = update_wrapper(delta, delta)
     py_vollib.black.greeks.numerical.gamma = update_wrapper(gamma, gamma)

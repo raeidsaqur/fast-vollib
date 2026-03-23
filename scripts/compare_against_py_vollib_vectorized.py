@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import sys
 from pathlib import Path
+import sys
 
 import numpy as np
 
@@ -18,7 +18,9 @@ from fast_vollib import vectorized_black_scholes, vectorized_implied_volatility
 
 def main() -> None:
     try:
-        from py_vollib_vectorized.implied_volatility import vectorized_implied_volatility as upstream_iv
+        from py_vollib_vectorized.implied_volatility import (
+            vectorized_implied_volatility as upstream_iv,
+        )
         from py_vollib_vectorized.models import vectorized_black_scholes as upstream_bs
     except Exception as exc:
         print(f"upstream_import_error={type(exc).__name__}: {exc}")

@@ -44,11 +44,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://raeid-saqur.github.io/fast-vollib/"
-Documentation = "https://raeid-saqur.github.io/fast-vollib/"
-Repository = "https://github.com/raeid-saqur/fast-vollib"
-Issues = "https://github.com/raeid-saqur/fast-vollib/issues"
-Changelog = "https://github.com/raeid-saqur/fast-vollib/blob/main/docs/changelog.md"
+Homepage = "https://raeidsaqur.github.io/fast-vollib/"
+Documentation = "https://raeidsaqur.github.io/fast-vollib/"
+Repository = "https://github.com/raeidsaqur/fast-vollib"
+Issues = "https://github.com/raeidsaqur/fast-vollib/issues"
+Changelog = "https://github.com/raeidsaqur/fast-vollib/blob/main/docs/changelog.md"
 
 [project.optional-dependencies]
 torch = ["torch==2.9.1"]
