@@ -154,7 +154,7 @@ def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.nda
 
 
 _HALLEY_ITERS = 8   # 8 Halley steps ≡ ~12 Newton steps in accuracy
-_BISECT_ITERS = 50
+_BISECT_ITERS = 30  # 10/(2^30)≈9e-9 < _IV_LO → sufficient accuracy
 _IV_LO = 1e-8
 _IV_HI = 10.0
 

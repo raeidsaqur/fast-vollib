@@ -213,7 +213,7 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
 # ---------------------------------------------------------------------------
 
 _HALLEY_ITERS = 8
-_BISECT_ITERS = 50
+_BISECT_ITERS = 30  # 10/(2^30)≈9e-9, narrower than _IV_LO → sufficient accuracy
 _IV_LO = 1e-8
 _IV_HI = 10.0
 
@@ -270,13 +270,19 @@ def _get_compiled_bisect():
     import torch
 
     def _bisect_loop(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged):
+        # Hoist all loop-invariant terms outside the 30-iteration body
+        discounted_spot = st * torch.exp(-qv * tt)
+        discounted_strike = kt * torch.exp(-rt * tt)
+        sqrt_t = torch.sqrt(torch.clamp(tt, min=1e-32))
+        log_fk = torch.log(torch.clamp(st, min=1e-32) / torch.clamp(kt, min=1e-32))
+        carry_drift = (rt - qv) * tt  # the r-q part of the d1 numerator
         sigma_lo = torch.where(not_converged, torch.full_like(sigma, _IV_LO), sigma)
         sigma_hi = torch.where(not_converged, torch.full_like(sigma, _IV_HI), sigma)
         for _ in range(_BISECT_ITERS):
             sigma_mid = 0.5 * (sigma_lo + sigma_hi)
-            d1, d2 = _d1_d2(st, kt, tt, rt, sigma_mid, qv)
-            discounted_spot = st * torch.exp(-qv * tt)
-            discounted_strike = kt * torch.exp(-rt * tt)
+            vol_term = torch.clamp(sigma_mid * sqrt_t, min=1e-32)
+            d1 = (log_fk + carry_drift + 0.5 * sigma_mid ** 2 * tt) / vol_term
+            d2 = d1 - sigma_mid * sqrt_t
             cdf_d1 = _normal_cdf(d1)
             cdf_d2 = _normal_cdf(d2)
             call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
