@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from fastiv.api import price_dataframe
+from fast_vollib.api import price_dataframe
 
 
 def _load_fixture() -> pd.DataFrame:

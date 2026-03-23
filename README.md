@@ -1,12 +1,12 @@
-# fastiv
+# fast-vollib
 
-[![PyPI version](https://img.shields.io/pypi/v/fastiv.svg)](https://pypi.org/project/fastiv/)
-[![Python](https://img.shields.io/pypi/pyversions/fastiv.svg)](https://pypi.org/project/fastiv/)
+[![PyPI version](https://img.shields.io/pypi/v/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
+[![Python](https://img.shields.io/pypi/pyversions/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/raeid-saqur/fastiv/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fastiv/actions/workflows/tests.yml)
-[![Docs](https://github.com/raeid-saqur/fastiv/actions/workflows/docs.yml/badge.svg)](https://raeid-saqur.github.io/fastiv/)
+[![Tests](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml)
+[![Docs](https://github.com/raeid-saqur/fast-vollib/actions/workflows/docs.yml/badge.svg)](https://raeid-saqur.github.io/fast-vollib/)
 
-**fastiv** is a modern Python library for Black, Black-Scholes, and
+**fast-vollib** is a modern Python library for Black, Black-Scholes, and
 Black-Scholes-Merton option pricing, implied volatility solving, and Greeks —
 with pluggable NumPy, PyTorch, and JAX backends and a compatibility-first API
 modeled on `py_vollib_vectorized`.
@@ -28,14 +28,14 @@ modeled on `py_vollib_vectorized`.
 ## Install
 
 ```bash
-pip install fastiv
+pip install fast-vollib
 ```
 
 **Optional extras:**
 
 ```bash
-pip install "fastiv[torch]"   # PyTorch backend
-pip install "fastiv[jax]"     # JAX backend
+pip install "fast-vollib[torch]"   # PyTorch backend
+pip install "fast-vollib[jax]"     # JAX backend
 ```
 
 ---
@@ -44,10 +44,10 @@ pip install "fastiv[jax]"     # JAX backend
 
 ```python
 import numpy as np
-import fastiv
+import fast_vollib
 
 # Price a batch of European options
-prices = fastiv.vectorized_black_scholes(
+prices = fast_vollib.vectorized_black_scholes(
     flag=np.array(["c", "c", "p"]),
     S=100.0,
     K=np.array([95, 100, 105]),
@@ -58,7 +58,7 @@ prices = fastiv.vectorized_black_scholes(
 )
 
 # Recover implied volatility
-iv = fastiv.vectorized_implied_volatility(
+iv = fast_vollib.vectorized_implied_volatility(
     price=prices,
     S=100.0,
     K=np.array([95, 100, 105]),
@@ -69,7 +69,7 @@ iv = fastiv.vectorized_implied_volatility(
 )
 
 # All Greeks in one call (returns a pandas DataFrame)
-greeks = fastiv.get_all_greeks(
+greeks = fast_vollib.get_all_greeks(
     flag=np.array(["c", "p"]),
     S=100.0, K=100.0, t=0.25, r=0.05, sigma=0.20,
 )
@@ -89,7 +89,7 @@ df = pd.DataFrame({
     "sigma": [0.20, 0.20],
 })
 
-result = fastiv.price_dataframe(
+result = fast_vollib.price_dataframe(
     df,
     flag_col="flag",
     underlying_price_col="S",
@@ -104,10 +104,10 @@ result = fastiv.price_dataframe(
 ### Drop-in `py_vollib` replacement
 
 ```python
-import fastiv
-fastiv.patch_py_vollib()
+import fast_vollib
+fast_vollib.patch_py_vollib()
 
-# All py_vollib imports now use fastiv transparently
+# All py_vollib imports now use fast_vollib transparently
 from py_vollib.black_scholes import black_scholes
 ```
 
@@ -117,19 +117,19 @@ from py_vollib.black_scholes import black_scholes
 
 ```python
 # Automatic (CUDA > JAX > NumPy)
-fastiv.get_backend()        # e.g. "torch"
+fast_vollib.get_backend()        # e.g. "torch"
 
 # Set for the session
-fastiv.set_backend("numpy")
+fast_vollib.set_backend("numpy")
 
 # Override per call
-price = fastiv.vectorized_black_scholes(..., backend="jax")
+price = fast_vollib.vectorized_black_scholes(..., backend="jax")
 ```
 
 `backend="auto"` resolution order:
 1. Explicit `backend=` kwarg
-2. `fastiv.set_backend()` override
-3. `FASTIV_BACKEND` environment variable
+2. `fast_vollib.set_backend()` override
+3. `FAST_VOLLIB_BACKEND` environment variable
 4. `torch` when `torch.cuda.is_available()`
 5. `jax` when installed
 6. `numpy`
@@ -139,7 +139,7 @@ price = fastiv.vectorized_black_scholes(..., backend="jax")
 ## Public API
 
 ```python
-from fastiv import (
+from fast_vollib import (
     # Pricing
     vectorized_black,
     vectorized_black_scholes,
@@ -162,15 +162,15 @@ from fastiv import (
 )
 ```
 
-Full documentation: **[raeid-saqur.github.io/fastiv](https://raeid-saqur.github.io/fastiv/)**
+Full documentation: **[raeid-saqur.github.io/fast-vollib](https://raeid-saqur.github.io/fast-vollib/)**
 
 ---
 
 ## Development
 
 ```bash
-git clone https://github.com/raeid-saqur/fastiv.git
-cd fastiv
+git clone https://github.com/raeid-saqur/fast-vollib.git
+cd fast-vollib
 
 uv sync --all-groups        # install all deps (CPU)
 uv run pytest               # run tests

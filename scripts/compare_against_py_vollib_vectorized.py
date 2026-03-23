@@ -13,7 +13,7 @@ if str(SRC_ROOT) not in sys.path:
 if str(UPSTREAM_ROOT) not in sys.path:
     sys.path.insert(0, str(UPSTREAM_ROOT))
 
-from fastiv import vectorized_black_scholes, vectorized_implied_volatility
+from fast_vollib import vectorized_black_scholes, vectorized_implied_volatility
 
 
 def main() -> None:

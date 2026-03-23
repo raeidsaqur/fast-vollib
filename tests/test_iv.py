@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from fastiv.implied_volatility import vectorized_implied_volatility
-from fastiv.models import vectorized_black_scholes
+from fast_vollib.implied_volatility import vectorized_implied_volatility
+from fast_vollib.models import vectorized_black_scholes
 
 
 def _load_fixture() -> pd.DataFrame:

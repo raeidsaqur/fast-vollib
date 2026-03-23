@@ -1,7 +1,7 @@
-"""WRDS OptionMetrics accuracy benchmark for fastiv.
+"""WRDS OptionMetrics accuracy benchmark for fast_vollib.
 
 Loads SPX 2023 OptionMetrics data, computes implied volatility via
-fastiv using the WRDS forward prices, and reports MAE vs the WRDS
+fast_vollib using the WRDS forward prices, and reports MAE vs the WRDS
 impl_volatility column.
 
 WRDS data is internal-only; this script only reads from local rfs paths
@@ -24,7 +24,7 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from fastiv import vectorized_implied_volatility
+from fast_vollib import vectorized_implied_volatility
 
 _DEFAULT_INSTRUMENT_DIR = Path(
     "/home/saqur/rfs/data/raw/wrds_optionm_all/SPX_108105"
@@ -105,9 +105,9 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
     )
     print(f"warmup_seconds={time.perf_counter()-tw:.2f}", flush=True)
 
-    # Compute fastiv IVs -------------------------------------------------
+    # Compute fast_vollib IVs -------------------------------------------------
     t1 = time.perf_counter()
-    fastiv_iv = vectorized_implied_volatility(
+    fast_vollib_iv = vectorized_implied_volatility(
         mid_price, F, K, T, r, flag,
         model="black",
         return_as="numpy",
@@ -115,12 +115,12 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
     iv_seconds = time.perf_counter() - t1
 
     # Compare against WRDS IV (exclude NaN / failed convergence) ---------
-    valid = np.isfinite(fastiv_iv) & np.isfinite(wrds_iv) & (wrds_iv > 0)
-    mae = float(np.mean(np.abs(fastiv_iv[valid] - wrds_iv[valid])))
-    rmse = float(np.sqrt(np.mean((fastiv_iv[valid] - wrds_iv[valid]) ** 2)))
+    valid = np.isfinite(fast_vollib_iv) & np.isfinite(wrds_iv) & (wrds_iv > 0)
+    mae = float(np.mean(np.abs(fast_vollib_iv[valid] - wrds_iv[valid])))
+    rmse = float(np.sqrt(np.mean((fast_vollib_iv[valid] - wrds_iv[valid]) ** 2)))
     pct_valid = 100.0 * valid.sum() / n
-    pct_within_1bp = float(np.mean(np.abs(fastiv_iv[valid] - wrds_iv[valid]) < 1e-4) * 100)
-    pct_within_1vp = float(np.mean(np.abs(fastiv_iv[valid] - wrds_iv[valid]) < 0.01) * 100)
+    pct_within_1bp = float(np.mean(np.abs(fast_vollib_iv[valid] - wrds_iv[valid]) < 1e-4) * 100)
+    pct_within_1vp = float(np.mean(np.abs(fast_vollib_iv[valid] - wrds_iv[valid]) < 0.01) * 100)
 
     print(f"iv_seconds={iv_seconds:.3f}")
     print(f"n_valid={valid.sum()} pct_valid={pct_valid:.1f}%")

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from fastiv import patch_py_vollib
+from fast_vollib import patch_py_vollib
 
 
 def test_patch_py_vollib_smoke() -> None:

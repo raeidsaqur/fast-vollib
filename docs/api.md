@@ -1,9 +1,9 @@
 # API Reference
 
-All public symbols are importable directly from `fastiv`:
+All public symbols are importable directly from `fast_vollib`:
 
 ```python
-from fastiv import vectorized_black_scholes, vectorized_implied_volatility, ...
+from fast_vollib import vectorized_black_scholes, vectorized_implied_volatility, ...
 ```
 
 ---
@@ -40,7 +40,7 @@ broadcasting rules.
 Black-76 model for options on futures.
 
 ```python
-fastiv.vectorized_black(
+fast_vollib.vectorized_black(
     flag,
     F,        # forward price
     K,
@@ -64,7 +64,7 @@ fastiv.vectorized_black(
 Black-Scholes model for European equity options (no dividends).
 
 ```python
-fastiv.vectorized_black_scholes(
+fast_vollib.vectorized_black_scholes(
     flag,
     S,        # spot price
     K,
@@ -88,7 +88,7 @@ fastiv.vectorized_black_scholes(
 Black-Scholes-Merton model with a continuous dividend yield.
 
 ```python
-fastiv.vectorized_black_scholes_merton(
+fast_vollib.vectorized_black_scholes_merton(
     flag,
     S,
     K,
@@ -115,7 +115,7 @@ fastiv.vectorized_black_scholes_merton(
 Solve for implied volatility given a market price.
 
 ```python
-fastiv.vectorized_implied_volatility(
+fast_vollib.vectorized_implied_volatility(
     price,    # observed market price
     S,
     K,
@@ -150,7 +150,7 @@ Convenience wrapper: solves IV under the Black-76 model.
 Argument order matches `py_vollib` (`price, F, K, r, t, flag`).
 
 ```python
-fastiv.vectorized_implied_volatility_black(
+fast_vollib.vectorized_implied_volatility_black(
     price,
     F,        # forward price
     K,
@@ -175,7 +175,7 @@ fastiv.vectorized_implied_volatility_black(
 All Greek functions share the same signature:
 
 ```python
-fastiv.vectorized_<greek>(
+fast_vollib.vectorized_<greek>(
     flag,
     S,
     K,
@@ -221,7 +221,7 @@ Sensitivity to implied volatility (∂V/∂σ). Expressed per 1% move in vol
 Compute all five Greeks in a single vectorized call.
 
 ```python
-fastiv.get_all_greeks(
+fast_vollib.get_all_greeks(
     flag,
     S,
     K,
@@ -253,7 +253,7 @@ call. Supply `sigma_col` to price options; supply `price_col` to solve IV;
 supply both to use the provided values as-is for Greeks.
 
 ```python
-fastiv.price_dataframe(
+fast_vollib.price_dataframe(
     df,                           # pandas.DataFrame
     *,
     flag_col,                     # required
@@ -284,7 +284,7 @@ given), `"IV"` (if `price_col` was given), plus `delta`, `gamma`, `theta`,
 ### `get_backend`
 
 ```python
-fastiv.get_backend(explicit=None) -> str
+fast_vollib.get_backend(explicit=None) -> str
 ```
 
 Return the backend that would be used for a given `explicit` value (or the
@@ -293,7 +293,7 @@ auto-resolved backend when called with no arguments).
 ### `set_backend`
 
 ```python
-fastiv.set_backend(name: str) -> None
+fast_vollib.set_backend(name: str) -> None
 ```
 
 Set a process-level backend override. Valid values: `"auto"`, `"numpy"`,
@@ -306,12 +306,12 @@ Set a process-level backend override. Valid values: `"auto"`, `"numpy"`,
 ### `patch_py_vollib`
 
 ```python
-fastiv.patch_py_vollib() -> None
+fast_vollib.patch_py_vollib() -> None
 ```
 
 Monkey-patch the `py_vollib` and `py_vollib_vectorized` namespaces with
-fastiv's implementations. After this call, any code that imports from
-`py_vollib` will transparently use fastiv. Requires `py_vollib` to be
+fast-vollib's implementations. After this call, any code that imports from
+`py_vollib` will transparently use fast_vollib. Requires `py_vollib` to be
 installed.
 
 See [Compatibility](compatibility.md) for details.

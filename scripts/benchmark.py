@@ -11,8 +11,8 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from fastiv import get_all_greeks, vectorized_black_scholes, vectorized_implied_volatility
-from fastiv.config import get_backend
+from fast_vollib import get_all_greeks, vectorized_black_scholes, vectorized_implied_volatility
+from fast_vollib.config import get_backend
 
 
 def _sync():

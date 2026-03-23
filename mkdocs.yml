@@ -1,10 +1,10 @@
-site_name: fastiv
+site_name: fast-vollib
 site_description: >-
   Modern Black, Black-Scholes, and Black-Scholes-Merton pricing and
   implied-volatility library with NumPy, PyTorch, and JAX backends.
 site_author: Raeid Saqur
-repo_name: fastiv
-repo_url: https://github.com/raeid-saqur/fastiv
+repo_name: fast-vollib
+repo_url: https://github.com/raeid-saqur/fast-vollib
 edit_uri: edit/main/docs/
 
 docs_dir: docs

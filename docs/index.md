@@ -1,11 +1,11 @@
-# fastiv
+# fast-vollib
 
-**fastiv** is a fast, modern Python library for Black, Black-Scholes, and Black-Scholes-Merton option pricing, implied volatility solving, and Greeks — with pluggable NumPy, PyTorch, and JAX backends.
+**fast-vollib** is a fast, modern Python library for Black, Black-Scholes, and Black-Scholes-Merton option pricing, implied volatility solving, and Greeks — with pluggable NumPy, PyTorch, and JAX backends.
 
-[![PyPI version](https://img.shields.io/pypi/v/fastiv.svg)](https://pypi.org/project/fastiv/)
-[![Python](https://img.shields.io/pypi/pyversions/fastiv.svg)](https://pypi.org/project/fastiv/)
+[![PyPI version](https://img.shields.io/pypi/v/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
+[![Python](https://img.shields.io/pypi/pyversions/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/raeid-saqur/fastiv/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fastiv/actions/workflows/tests.yml)
+[![Tests](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeid-saqur/fast-vollib/actions/workflows/tests.yml)
 
 ---
 
@@ -25,10 +25,10 @@
 
 ```python
 import numpy as np
-import fastiv
+import fast_vollib
 
 # Price a batch of European calls with Black-Scholes
-prices = fastiv.vectorized_black_scholes(
+prices = fast_vollib.vectorized_black_scholes(
     flag=["c", "c", "p"],
     S=[100, 105, 95],
     K=[100, 100, 100],
@@ -39,7 +39,7 @@ prices = fastiv.vectorized_black_scholes(
 )
 
 # Recover implied volatility
-iv = fastiv.vectorized_implied_volatility(
+iv = fast_vollib.vectorized_implied_volatility(
     price=prices,
     S=[100, 105, 95],
     K=[100, 100, 100],
@@ -50,7 +50,7 @@ iv = fastiv.vectorized_implied_volatility(
 )
 
 # Compute all Greeks at once
-greeks = fastiv.get_all_greeks(
+greeks = fast_vollib.get_all_greeks(
     flag=["c", "c", "p"],
     S=[100, 105, 95],
     K=[100, 100, 100],
@@ -67,7 +67,7 @@ greeks = fastiv.get_all_greeks(
 
 | Section | Description |
 |---|---|
-| [Installation](installation.md) | Install fastiv with pip, uv, or conda |
+| [Installation](installation.md) | Install fast-vollib with pip, uv, or conda |
 | [Quick Start](quickstart.md) | More complete worked examples |
 | [Backend Selection](backends.md) | How to choose between NumPy, PyTorch, and JAX |
 | [Compatibility](compatibility.md) | Drop-in `py_vollib` replacement guide |

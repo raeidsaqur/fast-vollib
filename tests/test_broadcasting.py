@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from fastiv.api import get_all_greeks
-from fastiv.implied_volatility import vectorized_implied_volatility
+from fast_vollib.api import get_all_greeks
+from fast_vollib.implied_volatility import vectorized_implied_volatility
 
 
 def test_iv_broadcasting() -> None:
