@@ -5,6 +5,24 @@ import numpy as np
 from ..types import ModelLiteral
 
 # ---------------------------------------------------------------------------
+# Triton kernel availability flag (set True when CUDA + Triton are present)
+# ---------------------------------------------------------------------------
+_TRITON_AVAILABLE: bool | None = None  # None = not yet checked
+
+
+def _check_triton() -> bool:
+    global _TRITON_AVAILABLE
+    if _TRITON_AVAILABLE is None:
+        try:
+            import triton  # noqa: F401
+            import torch
+            _TRITON_AVAILABLE = torch.cuda.is_available()
+        except ImportError:
+            _TRITON_AVAILABLE = False
+    return _TRITON_AVAILABLE
+
+
+# ---------------------------------------------------------------------------
 # Device helpers
 # ---------------------------------------------------------------------------
 
@@ -96,42 +114,38 @@ def _vega_raw_t(s, k, t, r, sigma, q):
     return s * torch.exp(-q * t) * _normal_pdf(d1) * torch.sqrt(torch.clamp(t, min=1e-32))
 
 
+def _price_with_triton_or_torch(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t) -> np.ndarray:
+    import torch
+    is_call = torch.as_tensor(is_call_np, device=s_t.device)
+    if _check_triton():
+        from . import triton_kernels as tk
+        out = tk.bsm_price_triton(is_call, s_t, k_t, t_t, r_t, sigma_t, q_t)
+    else:
+        out = _bsm_price_t(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t)
+    return out.cpu().numpy()
+
+
 def price_black(flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
     import torch
     dev = _device()
-    ft = _to_tensor(f, dev)
-    kt = _to_tensor(k, dev)
-    tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev)
-    st = _to_tensor(sigma, dev)
-    qt = rt.clone()  # Black-76: q=r so carry=disc, d1 uses only σ² drift
-    out = _bsm_price_t(flag, ft, kt, tt, rt, st, qt)
-    return out.cpu().numpy()
+    ft = _to_tensor(f, dev); kt = _to_tensor(k, dev); tt = _to_tensor(t, dev)
+    rt = _to_tensor(r, dev); st = _to_tensor(sigma, dev); qt = rt.clone()
+    return _price_with_triton_or_torch(flag == "c", ft, kt, tt, rt, st, qt)
 
 
 def price_black_scholes(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray) -> np.ndarray:
     import torch
     dev = _device()
-    st = _to_tensor(s, dev)
-    kt = _to_tensor(k, dev)
-    tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev)
-    sigt = _to_tensor(sigma, dev)
-    qt = torch.zeros_like(rt)
-    out = _bsm_price_t(flag, st, kt, tt, rt, sigt, qt)
-    return out.cpu().numpy()
+    st = _to_tensor(s, dev); kt = _to_tensor(k, dev); tt = _to_tensor(t, dev)
+    rt = _to_tensor(r, dev); sigt = _to_tensor(sigma, dev); qt = torch.zeros_like(rt)
+    return _price_with_triton_or_torch(flag == "c", st, kt, tt, rt, sigt, qt)
 
 
 def price_black_scholes_merton(flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray, q: np.ndarray) -> np.ndarray:
     dev = _device()
-    st = _to_tensor(s, dev)
-    kt = _to_tensor(k, dev)
-    tt = _to_tensor(t, dev)
-    rt = _to_tensor(r, dev)
-    sigt = _to_tensor(sigma, dev)
-    qt = _to_tensor(q, dev)
-    out = _bsm_price_t(flag, st, kt, tt, rt, sigt, qt)
-    return out.cpu().numpy()
+    st = _to_tensor(s, dev); kt = _to_tensor(k, dev); tt = _to_tensor(t, dev)
+    rt = _to_tensor(r, dev); sigt = _to_tensor(sigma, dev); qt = _to_tensor(q, dev)
+    return _price_with_triton_or_torch(flag == "c", st, kt, tt, rt, sigt, qt)
 
 
 # ---------------------------------------------------------------------------
@@ -200,9 +214,16 @@ def greeks(model: ModelLiteral, flag: np.ndarray, s: np.ndarray, k: np.ndarray, 
         qv = torch.zeros_like(rt) if q is None else _to_tensor(q, dev)
     is_call = torch.as_tensor(flag == "c", device=dev)
 
-    delta, gamma, theta, rho, vega = _get_compiled_greeks_core(model)(
-        is_call, st, kt, tt, rt, sigt, qv
-    )
+    if _check_triton():
+        from . import triton_kernels as tk
+        delta, gamma, theta, rho, vega = tk.bsm_greeks_triton(
+            model, is_call, st, kt, tt, rt, sigt, qv
+        )
+    else:
+        delta, gamma, theta, rho, vega = _get_compiled_greeks_core(model)(
+            is_call, st, kt, tt, rt, sigt, qv
+        )
+
     return {name: arr.cpu().numpy() for name, arr in {
         "delta": delta, "gamma": gamma, "theta": theta, "rho": rho, "vega": vega,
     }.items()}
@@ -358,20 +379,32 @@ def implied_volatility(model: ModelLiteral, price: np.ndarray, s: np.ndarray, k:
                             torch.clamp(discounted_strike - discounted_spot, min=0.0))
     below_intrinsic = pt < intrinsic - 1e-10
 
-    sigma = _initial_guess_t(pt, st, tt)
+    if _check_triton():
+        from . import triton_kernels as tk
+        # Triton path: full Halley loop + below-intrinsic in a single fused kernel;
+        # hoists 5 loop-invariant ops (exp, exp, sqrt, log, mul) out of 8 Halley iters
+        sigma, below_intrinsic_mask = tk.bsm_iv_triton(pt, st, kt, tt, rt, qv, is_call)
 
-    # Halley's method (3rd order) — run via torch.compile-d kernel to fuse all
-    # 8 iterations into a single CUDA graph, eliminating ~96 kernel launches.
-    sigma = _get_compiled_halley()(sigma, pt, st, kt, tt, rt, qv, is_call)
+        px_final = _price_for_model_t(is_call, st, kt, tt, rt, sigma, qv)
+        underflow_stuck = (px_final == 0.0) & (pt > 0.0)
+        not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
+        if not_converged.any():
+            sigma = tk.bsm_iv_bisect_triton(pt, st, kt, tt, rt, qv, is_call, not_converged, sigma)
 
-    px_final = _price_for_model_t(is_call, st, kt, tt, rt, sigma, qv)
-    underflow_stuck = (px_final == 0.0) & (pt > 0.0)
-    not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
+        result = torch.where(valid, sigma, torch.zeros_like(sigma))
+        result = torch.where(below_intrinsic_mask, torch.full_like(result, float("nan")), result)
+    else:
+        sigma = _initial_guess_t(pt, st, tt)
+        # Halley's method (3rd order) — torch.compile fuses 8 iters
+        sigma = _get_compiled_halley()(sigma, pt, st, kt, tt, rt, qv, is_call)
 
-    # Bisection fallback — compiled loop fuses 50×pricing into one kernel set
-    if not_converged.any():
-        sigma = _get_compiled_bisect()(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged)
+        px_final = _price_for_model_t(is_call, st, kt, tt, rt, sigma, qv)
+        underflow_stuck = (px_final == 0.0) & (pt > 0.0)
+        not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
+        if not_converged.any():
+            sigma = _get_compiled_bisect()(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged)
 
-    result = torch.where(valid, sigma, torch.zeros_like(sigma))
-    result = torch.where(below_intrinsic, torch.full_like(result, float("nan")), result)
+        result = torch.where(valid, sigma, torch.zeros_like(sigma))
+        result = torch.where(below_intrinsic, torch.full_like(result, float("nan")), result)
+
     return result.cpu().numpy()

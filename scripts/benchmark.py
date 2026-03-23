@@ -50,11 +50,12 @@ def main() -> None:
     n = 10_000
     flag, s, k, t, r, sigma = _make_inputs(n)
 
-    # --- warmup (GPU backends need kernel compilation on first call) ---
-    prices_warm = vectorized_black_scholes(flag, s, k, t, r, sigma, return_as="numpy")
-    _ = vectorized_implied_volatility(prices_warm, s, k, t, r, flag, return_as="numpy")
-    _ = get_all_greeks(flag, s, k, t, r, sigma, return_as="dict")
-    _sync()
+    # --- warmup (3 iterations to fully JIT-compile torch.compile / Triton kernels) ---
+    for _ in range(3):
+        prices_warm = vectorized_black_scholes(flag, s, k, t, r, sigma, return_as="numpy")
+        _ = vectorized_implied_volatility(prices_warm, s, k, t, r, flag, return_as="numpy")
+        _ = get_all_greeks(flag, s, k, t, r, sigma, return_as="dict")
+        _sync()
 
     # --- timed runs (n=10k) ---
     start = time.perf_counter()
