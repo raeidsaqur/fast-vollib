@@ -138,7 +138,7 @@ def _d1_d2(s, k, t, r, sigma, q):
     return d1, d2
 
 
-def _bsm_price_t(flag, s, k, t, r, sigma, q):
+def _bsm_price_t(is_call, s, k, t, r, sigma, q):
     import torch
 
     d1, d2 = _d1_d2(s, k, t, r, sigma, q)
@@ -146,10 +146,7 @@ def _bsm_price_t(flag, s, k, t, r, sigma, q):
     discounted_strike = k * torch.exp(-r * t)
     call = discounted_spot * _normal_cdf(d1) - discounted_strike * _normal_cdf(d2)
     put = discounted_strike * _normal_cdf(-d2) - discounted_spot * _normal_cdf(-d1)
-    is_call = flag == "c"
     if isinstance(is_call, np.ndarray):
-        import torch
-
         is_call = torch.as_tensor(is_call, device=s.device)
     return torch.where(is_call, call, put)
 
@@ -177,7 +174,7 @@ def _price_with_triton_or_torch(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t) ->
 
         out = tk.bsm_price_triton(is_call, s_t, k_t, t_t, r_t, sigma_t, q_t)
     else:
-        out = _bsm_price_t(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t)
+        out = _bsm_price_t(is_call, s_t, k_t, t_t, r_t, sigma_t, q_t)
     return out.cpu().numpy()
 
 
