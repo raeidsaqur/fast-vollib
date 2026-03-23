@@ -10,3 +10,4 @@ build/
 .venv/
 site/
 benchmark-results/
+scripts/env/phoenix.md
