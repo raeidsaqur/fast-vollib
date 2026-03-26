@@ -11,6 +11,28 @@ separate changelog entries.
 
 ---
 
+## [0.1.2] — 2026-03-26
+
+Release focused on packaging automation, public release channels, and broader
+compatibility coverage.
+
+### Added
+
+- Development and nightly-style build publishing to TestPyPI from `main`
+  using trusted publishing via GitHub Actions OIDC.
+- Additional test coverage for backend parity, packaging consistency, and
+  release workflow support.
+- Monkey-patching support for baseline replacement workflows, including
+  `py_vollib_vectorized` compatibility-oriented patch helpers.
+
+### Changed
+
+- Versioning is now derived from Git tags via VCS-based build metadata, so
+  stable PyPI releases are tag-driven and development snapshots use `.devN`
+  versions automatically.
+
+---
+
 ## [0.1.1] — 2026-03-26
 
 First public release after the initial beta version. This release improves
@@ -66,5 +88,6 @@ behaviour across NumPy, PyTorch, and JAX.
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
+[0.1.2]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/raeidsaqur/fast-vollib/releases/tag/v0.1.0
