@@ -1,10 +1,11 @@
 site_name: fast-vollib
 site_description: >-
-  Modern Black, Black-Scholes, and Black-Scholes-Merton pricing and
+  Fast, CUDA Kernel-Fused Black, Black-Scholes, and Black-Scholes-Merton pricing and
   implied-volatility library with NumPy, PyTorch, and JAX backends.
 site_author: Raeid Saqur
 repo_name: fast-vollib
 repo_url: https://github.com/raeidsaqur/fast-vollib
+site_url: https://raeidsaqur.github.io/fast-vollib/
 edit_uri: edit/main/docs/
 
 docs_dir: docs
