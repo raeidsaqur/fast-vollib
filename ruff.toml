@@ -43,6 +43,9 @@ unfixable = [
 ]
 
 [lint.per-file-ignores]
+"*.ipynb" = [
+    "F401",   # notebook cells often keep exploratory imports for interactive runs
+]
 "tests/**" = [
     "F811",   # test imports can shadow intentionally
 ]

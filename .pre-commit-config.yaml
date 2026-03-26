@@ -10,5 +10,5 @@ repos:
     rev: v0.11.13
     hooks:
       - id: ruff-check
-        args: [--fix, "--extend-per-file-ignores=*.ipynb:F401"]
+        args: [--fix]
       - id: ruff-format
