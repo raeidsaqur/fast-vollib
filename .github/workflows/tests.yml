@@ -1,0 +1,86 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: pytest / Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
+      - name: Type-check (mypy)
+        run: uv run mypy src/fast_vollib --ignore-missing-imports
+        continue-on-error: true   # non-blocking until type coverage is complete
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short
+
+  test-torch:
+    name: pytest / PyTorch backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install with torch extra
+        run: uv sync --all-groups --extra torch
+
+      - name: Run tests with torch backend
+        run: uv run pytest tests/ -v --tb=short
+        env:
+          FAST_VOLLIB_BACKEND: torch
+
+  test-jax:
+    name: pytest / JAX backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install with jax extra
+        run: uv sync --all-groups --extra jax
+
+      - name: Run tests with jax backend
+        run: uv run pytest tests/ -v --tb=short
+        env:
+          FAST_VOLLIB_BACKEND: jax

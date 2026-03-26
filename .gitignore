@@ -1,0 +1,16 @@
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+dist/
+build/
+*.egg-info/
+.venv/
+site/
+benchmark-results/
+scripts/env/phoenix.md
+RELEASE_REVIEW.md
+docs/assets/generated
+docs/assets/branding

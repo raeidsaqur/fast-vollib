@@ -1,0 +1,62 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="56" x2="448" y2="456" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#081424"/>
+      <stop offset="0.55" stop-color="#10253E"/>
+      <stop offset="1" stop-color="#16365B"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="136" y1="124" x2="384" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#31E7D7"/>
+      <stop offset="1" stop-color="#5FA8FF"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="188" y1="120" x2="348" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF6BF"/>
+      <stop offset="0.5" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8A3D"/>
+    </linearGradient>
+    <filter id="shadow" x="32" y="32" width="448" height="448" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#020812" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="56" y="56" width="400" height="400" rx="96" fill="url(#bg)"/>
+  </g>
+
+  <circle cx="162" cy="150" r="96" fill="url(#glow)" opacity="0.16"/>
+  <circle cx="360" cy="344" r="108" fill="#2AD4C7" opacity="0.10"/>
+
+  <path
+    d="M96 180C140 146 196 136 246 150C295 163 341 195 385 200C409 203 431 198 451 182"
+    stroke="#52F0DF"
+    stroke-width="18"
+    stroke-linecap="round"
+    opacity="0.96"
+  />
+  <path
+    d="M88 256C135 223 190 214 239 227C293 240 341 277 390 282C413 284 433 278 448 266"
+    stroke="#67B4FF"
+    stroke-width="20"
+    stroke-linecap="round"
+    opacity="0.94"
+  />
+  <path
+    d="M98 334C142 304 193 295 239 308C290 322 334 355 377 361C406 365 431 358 448 344"
+    stroke="#FF7A74"
+    stroke-width="16"
+    stroke-linecap="round"
+    opacity="0.92"
+  />
+
+  <path
+    d="M266 112L170 272H242L220 398L344 232H272L312 112H266Z"
+    fill="url(#bolt)"
+  />
+
+  <circle cx="108" cy="180" r="10" fill="#D9FFF7"/>
+  <circle cx="92" cy="256" r="11" fill="#D7E7FF"/>
+  <circle cx="104" cy="334" r="9" fill="#FFD9D4"/>
+  <circle cx="448" cy="182" r="10" fill="#D9FFF7"/>
+  <circle cx="446" cy="266" r="11" fill="#D7E7FF"/>
+  <circle cx="446" cy="344" r="9" fill="#FFD9D4"/>
+</svg>
