@@ -9,7 +9,7 @@
 <h1 align="center">fast-vollib</h1>
 
 <p align="center">
-  Modern Black-Scholes pricing, implied volatility, and Greeks with pluggable
+  Accelerated Black-Scholes pricing, implied volatility, and Greeks library with pluggable
   NumPy, PyTorch, and JAX backends.
 </p>
 
@@ -31,7 +31,7 @@
   </a>
 </p>
 
-**fast-vollib** is an accelerated - kernel-fused, optimized - Python library for Black, Black-Scholes, and
+**fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library for Black, Black-Scholes, and
 Black-Scholes-Merton option pricing, implied volatility solving, and Greeks —
 with pluggable NumPy, PyTorch, and JAX backends and a compatibility-first API
 modeled on `py_vollib_vectorized`.
