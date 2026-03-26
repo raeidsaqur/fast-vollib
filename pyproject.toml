@@ -1,6 +1,6 @@
 [project]
 name = "fast-vollib"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Modern Black, Black-Scholes, and Black-Scholes-Merton pricing and implied volatility with NumPy, PyTorch, and JAX backends."
 readme = "README.md"
 license = { text = "MIT" }
@@ -99,8 +99,17 @@ cuvs-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extr
 # ---------------------------------------------------------------------------
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/fast_vollib/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/fast_vollib"]

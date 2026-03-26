@@ -2,6 +2,9 @@
 
 **fast-vollib** is a fast, modern Python library for Black, Black-Scholes, and Black-Scholes-Merton option pricing, implied volatility solving, and Greeks — with pluggable NumPy, PyTorch, and JAX backends.
 
+Stable tagged releases are published to PyPI. Development snapshots from each
+`main` commit are published to TestPyPI with VCS-derived `.devN` versions.
+
 [![PyPI version](https://img.shields.io/pypi/v/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![Python](https://img.shields.io/pypi/pyversions/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

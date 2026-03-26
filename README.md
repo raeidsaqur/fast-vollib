@@ -31,7 +31,7 @@
   </a>
 </p>
 
-**fast-vollib** is a modern Python library for Black, Black-Scholes, and
+**fast-vollib** is an accelerated - kernel-fused, optimized - Python library for Black, Black-Scholes, and
 Black-Scholes-Merton option pricing, implied volatility solving, and Greeks —
 with pluggable NumPy, PyTorch, and JAX backends and a compatibility-first API
 modeled on `py_vollib_vectorized`.
@@ -63,6 +63,20 @@ pip install "fast-vollib[torch]"       # PyTorch backend
 pip install "fast-vollib[jax]"         # JAX backend
 pip install "fast-vollib[torch,jax]"   # both backends
 ```
+
+### Development snapshots from TestPyPI
+
+Stable releases are published from Git tags to PyPI. Development snapshots are
+available via to TestPyPI versions such as `0.1.2.dev3`.
+
+```bash
+pip install --pre \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  fast-vollib
+```
+
+Use the dev TestPyPI channel only if you want nightly or dev builds only.
 
 ---
 
@@ -208,6 +222,13 @@ ruff check . --fix          # lint
 ruff format .               # format
 uv run mkdocs serve         # local docs server → http://localhost:8000
 ```
+
+### Release model
+
+- Tagged releases like `v0.1.2` publish stable builds to PyPI.
+- PRs on `main` publish development snapshots to TestPyPI.
+- The package version is derived from Git tags with `hatch-vcs`, so version
+  strings are no longer maintained manually in source files for each release
 
 ---
 

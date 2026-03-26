@@ -19,6 +19,30 @@ pip install fast-vollib
 uv add fast-vollib
 ```
 
+## TestPyPI development snapshots
+
+Development builds are published to TestPyPI with VCS-derived versions such as `0.1.2.dev3`.
+
+### pip
+
+```bash
+pip install --pre \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  fast-vollib
+```
+
+### uv
+
+```bash
+uv pip install --pre \
+  --index https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  fast-vollib
+```
+
+Use the normal PyPI channel if you want stable tagged releases only.
+
 ---
 
 ## Optional extras

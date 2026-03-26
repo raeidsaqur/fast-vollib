@@ -1,18 +1,17 @@
-name: Release
+name: Release TestPyPI
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+  group: release-testpypi-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    name: Build Distributions
+    name: Build Dev Distributions
     runs-on: ubuntu-latest
 
     steps:
@@ -35,18 +34,18 @@ jobs:
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
-          name: python-package-distributions
+          name: testpypi-package-distributions
           path: dist/
           if-no-files-found: error
 
   publish:
-    name: Publish To PyPI
+    name: Publish To TestPyPI
     needs: build
     runs-on: ubuntu-latest
 
     environment:
-      name: pypi
-      url: https://pypi.org/p/fast-vollib
+      name: testpypi
+      url: https://test.pypi.org/p/fast-vollib
 
     permissions:
       id-token: write
@@ -55,10 +54,11 @@ jobs:
       - name: Download distributions
         uses: actions/download-artifact@v4
         with:
-          name: python-package-distributions
+          name: testpypi-package-distributions
           path: dist/
 
-      - name: Publish package distributions to PyPI
+      - name: Publish package distributions to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          repository-url: https://test.pypi.org/legacy/
           skip-existing: true

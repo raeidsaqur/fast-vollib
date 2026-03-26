@@ -354,7 +354,6 @@ wheels = [
 
 [[package]]
 name = "fast-vollib"
-version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "joblib" },
@@ -415,7 +414,7 @@ requires-dist = [
     { name = "torch", marker = "sys_platform == 'linux' and extra == 'torch'", specifier = ">=2.5", index = "https://download.pytorch.org/whl/cu130" },
     { name = "torch", marker = "sys_platform != 'linux' and extra == 'torch'", specifier = ">=2.5" },
 ]
-provides-extras = ["torch", "jax", "numba", "cuda"]
+provides-extras = ["cuda", "jax", "numba", "torch"]
 
 [package.metadata.requires-dev]
 bench = [{ name = "pytest-benchmark", specifier = ">=4.0" }]

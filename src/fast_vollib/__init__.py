@@ -18,7 +18,18 @@ from .models import (
     fast_black_scholes_merton,
 )
 
-__version__ = "0.1.1"
+try:
+    from ._version import __version__
+except ImportError:  # pragma: no cover - fallback for source trees without build hooks
+    try:
+        from importlib.metadata import version as _pkg_version
+    except ImportError:  # pragma: no cover - Python < 3.8
+        from importlib_metadata import version as _pkg_version  # type: ignore[no-redef]
+
+    try:
+        __version__ = _pkg_version("fast-vollib")
+    except Exception:  # pragma: no cover - package metadata unavailable
+        __version__ = "0.0.0"
 
 __all__ = [
     "get_all_greeks",

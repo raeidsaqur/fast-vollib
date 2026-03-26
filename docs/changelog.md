@@ -5,6 +5,10 @@ All notable changes to this project will be documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+Only tagged public releases are recorded here. Development snapshots published
+from `main` to TestPyPI use VCS-derived `.devN` versions and are not tracked as
+separate changelog entries.
+
 ---
 
 ## [0.1.1] — 2026-03-26

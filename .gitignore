@@ -12,5 +12,6 @@ site/
 benchmark-results/
 scripts/env/phoenix.md
 RELEASE_REVIEW.md
+src/fast_vollib/_version.py
 docs/assets/generated
 docs/assets/branding
