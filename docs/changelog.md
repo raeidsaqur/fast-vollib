@@ -7,34 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased]
+## [0.1.1] — 2026-03-26
 
-## [0.1.1] — 2026-03-23
+First public release after the initial beta version. This release improves
+runtime correctness, tightens packaging and typing metadata, and aligns backend
+behaviour across NumPy, PyTorch, and JAX.
 
 ### Fixed
 
-- Replaced bare `assert` guards in `price_dataframe` with proper `ValueError`
-  raises (asserts are suppressed under `python -O`).
-- JAX IV backend: return `NaN` (not `0.0`) for below-intrinsic and zero-price
-  options, matching the NumPy and PyTorch backend behaviour.
-- Removed `FASTIV_BACKEND` legacy env-var alias (leftover from the `fastiv`
-  rename); the canonical name `FAST_VOLLIB_BACKEND` is now the only recognised
-  environment variable.  Removed the corresponding test and notebook cell.
+- `price_dataframe` now raises explicit `ValueError` exceptions instead of
+  relying on bare `assert` guards.
+- The JAX implied-volatility backend now returns `NaN` for below-intrinsic and
+  zero-price inputs, matching NumPy and PyTorch behaviour.
+- Backend configuration is now standardized on `FAST_VOLLIB_BACKEND`;
 
 ### Added
 
-- `py.typed` PEP 561 marker — downstream type-checkers now see the package
-  as typed.
-- Python 3.13 classifier in `pyproject.toml`.
-- `[tool.mypy]` configuration block in `pyproject.toml`.
+- `py.typed` marker for PEP 561-compatible downstream type-checking.
+- Packaging metadata improvements, including explicit mypy configuration and
+  updated Python version support metadata.
 
 ---
 
 ## [0.1.0] — 2026-03-22
 
-### Added
+### Features
 
-- Initial public release.
 - **Pricing** — `fast_black`, `fast_black_scholes`,
   `fast_black_scholes_merton` with full NumPy vectorization and
   broadcasting.
@@ -64,6 +62,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
-[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.1...HEAD
 [0.1.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/raeidsaqur/fast-vollib/releases/tag/v0.1.0
