@@ -1,0 +1,57 @@
+<svg width="1242" height="2688" viewBox="0 0 1242 2688" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="92" y1="92" x2="1142" y2="2508" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#071320"/>
+      <stop offset="0.5" stop-color="#112741"/>
+      <stop offset="1" stop-color="#183B61"/>
+    </linearGradient>
+    <linearGradient id="c1" x1="158" y1="646" x2="1090" y2="646" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4DF0E0"/>
+      <stop offset="1" stop-color="#6AB8FF"/>
+    </linearGradient>
+    <linearGradient id="c2" x1="146" y1="896" x2="1092" y2="896" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#76BCFF"/>
+      <stop offset="1" stop-color="#98D2FF"/>
+    </linearGradient>
+    <linearGradient id="c3" x1="160" y1="1142" x2="1102" y2="1142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8B78"/>
+      <stop offset="1" stop-color="#FFBF8C"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="512" y1="284" x2="766" y2="760" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF7BF"/>
+      <stop offset="0.45" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8A3D"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1242" height="2688" rx="96" fill="#06111B"/>
+  <rect x="44" y="44" width="1154" height="2600" rx="76" fill="url(#bg)"/>
+  <circle cx="260" cy="230" r="180" fill="#34E6D7" opacity="0.09"/>
+  <circle cx="992" cy="2414" r="280" fill="#69B9FF" opacity="0.08"/>
+
+  <text x="621" y="262" fill="#F7FBFF" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="124" font-weight="700" letter-spacing="-3">fast-vollib</text>
+  <text x="621" y="358" fill="#9DBAD8" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="48" font-weight="500">Fast implied volatility, pricing, and Greeks</text>
+
+  <path d="M158 646C260 572 388 550 500 583C611 614 711 690 812 701C867 707 918 697 962 663" stroke="url(#c1)" stroke-width="34" stroke-linecap="round"/>
+  <path d="M146 896C252 820 382 798 496 831C617 866 725 952 835 963C890 969 939 958 980 926" stroke="url(#c2)" stroke-width="38" stroke-linecap="round"/>
+  <path d="M160 1142C261 1071 384 1051 492 1082C607 1115 707 1188 805 1199C871 1207 924 1193 968 1159" stroke="url(#c3)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M624 276L420 620H568L520 922L780 556H632L716 276H624Z" fill="url(#bolt)"/>
+
+  <g transform="translate(140 1498)">
+    <rect x="0" y="0" width="962" height="620" rx="54" fill="#0D1D31" fill-opacity="0.72" stroke="rgba(255,255,255,0.08)"/>
+    <text x="80" y="136" fill="#F7FBFF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="74" font-weight="700">Backend-flexible quant tooling</text>
+    <text x="80" y="224" fill="#A5C0DB" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="42" font-weight="500">Black, Black-Scholes, and BSM pricing</text>
+    <text x="80" y="292" fill="#A5C0DB" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="42" font-weight="500">Vectorized IV solver with fast fallbacks</text>
+    <text x="80" y="360" fill="#A5C0DB" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="42" font-weight="500">Greeks, DataFrame helpers, and compatibility APIs</text>
+    <g transform="translate(80 452)">
+      <rect x="0" y="0" width="180" height="54" rx="27" fill="#102A43" stroke="#2AD4C7" stroke-opacity="0.30"/>
+      <text x="42" y="35" fill="#DDFCF8" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="600">NumPy</text>
+      <rect x="200" y="0" width="196" height="54" rx="27" fill="#102A43" stroke="#69B9FF" stroke-opacity="0.32"/>
+      <text x="242" y="35" fill="#E8F2FF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="600">PyTorch</text>
+      <rect x="416" y="0" width="138" height="54" rx="27" fill="#102A43" stroke="#FF9B6D" stroke-opacity="0.32"/>
+      <text x="458" y="35" fill="#FFF0E7" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="600">JAX</text>
+      <rect x="574" y="0" width="162" height="54" rx="27" fill="#102A43" stroke="#FFD166" stroke-opacity="0.32"/>
+      <text x="615" y="35" fill="#FFF7E0" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="600">Triton</text>
+    </g>
+  </g>
+</svg>

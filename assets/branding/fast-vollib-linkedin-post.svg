@@ -1,0 +1,53 @@
+<svg width="1200" height="627" viewBox="0 0 1200 627" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="74" y1="60" x2="1114" y2="580" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#081321"/>
+      <stop offset="0.58" stop-color="#102741"/>
+      <stop offset="1" stop-color="#173A61"/>
+    </linearGradient>
+    <linearGradient id="curve1" x1="68" y1="196" x2="440" y2="196" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#45ECD9"/>
+      <stop offset="1" stop-color="#5FA8FF"/>
+    </linearGradient>
+    <linearGradient id="curve2" x1="60" y1="278" x2="442" y2="278" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#78BFFF"/>
+      <stop offset="1" stop-color="#9DD2FF"/>
+    </linearGradient>
+    <linearGradient id="curve3" x1="70" y1="362" x2="448" y2="362" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8679"/>
+      <stop offset="1" stop-color="#FFC08F"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="208" y1="96" x2="352" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF7BE"/>
+      <stop offset="0.45" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8B3F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="627" rx="42" fill="#07111D"/>
+  <rect x="26" y="26" width="1148" height="575" rx="34" fill="url(#bg)"/>
+  <circle cx="242" cy="150" r="132" fill="#36E5D6" opacity="0.09"/>
+  <circle cx="1034" cy="516" r="150" fill="#69B9FF" opacity="0.08"/>
+
+  <g transform="translate(72 82)">
+    <rect x="0" y="0" width="380" height="380" rx="88" fill="#0D1E31"/>
+    <path d="M32 108C75 77 132 68 182 82C232 96 279 127 324 132C346 135 367 130 382 118" stroke="url(#curve1)" stroke-width="17" stroke-linecap="round"/>
+    <path d="M24 184C71 150 129 139 180 154C234 170 283 206 332 211C355 214 374 208 388 197" stroke="url(#curve2)" stroke-width="19" stroke-linecap="round"/>
+    <path d="M32 262C76 231 129 223 177 237C228 252 273 285 317 291C346 295 369 288 384 276" stroke="url(#curve3)" stroke-width="15" stroke-linecap="round"/>
+    <path d="M214 38L128 184H194L174 308L286 156H222L258 38H214Z" fill="url(#bolt)"/>
+  </g>
+
+  <text x="498" y="196" fill="#F5FAFF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="82" font-weight="700" letter-spacing="-2.2">fast-vollib</text>
+  <text x="500" y="264" fill="#E7F2FF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="32" font-weight="600">Fast implied volatility and Greeks</text>
+  <text x="500" y="312" fill="#9EBAD8" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="28" font-weight="500">Black, Black-Scholes, and BSM pricing with vectorized</text>
+  <text x="500" y="352" fill="#9EBAD8" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="28" font-weight="500">NumPy, PyTorch, JAX, and Triton backends.</text>
+
+  <g transform="translate(500 412)">
+    <rect x="0" y="0" width="136" height="42" rx="21" fill="#102A43" stroke="#2AD4C7" stroke-opacity="0.28"/>
+    <text x="24" y="28" fill="#DDFCF8" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="18" font-weight="600">PyPI ready</text>
+    <rect x="150" y="0" width="162" height="42" rx="21" fill="#102A43" stroke="#69B9FF" stroke-opacity="0.28"/>
+    <text x="180" y="28" fill="#E8F2FF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="18" font-weight="600">Torch + JAX</text>
+    <rect x="326" y="0" width="174" height="42" rx="21" fill="#102A43" stroke="#FFD166" stroke-opacity="0.28"/>
+    <text x="355" y="28" fill="#FFF7E0" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="18" font-weight="600">Triton kernels</text>
+  </g>
+</svg>

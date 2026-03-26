@@ -1,0 +1,43 @@
+<svg width="1024" height="500" viewBox="0 0 1024 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="48" x2="962" y2="454" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#081321"/>
+      <stop offset="0.52" stop-color="#112741"/>
+      <stop offset="1" stop-color="#173961"/>
+    </linearGradient>
+    <linearGradient id="curve1" x1="48" y1="160" x2="342" y2="160" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4AF0DF"/>
+      <stop offset="1" stop-color="#67B8FF"/>
+    </linearGradient>
+    <linearGradient id="curve2" x1="44" y1="224" x2="344" y2="224" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#73B8FF"/>
+      <stop offset="1" stop-color="#95D0FF"/>
+    </linearGradient>
+    <linearGradient id="curve3" x1="52" y1="292" x2="350" y2="292" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8A79"/>
+      <stop offset="1" stop-color="#FFBD8A"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="166" y1="72" x2="284" y2="278" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF7BE"/>
+      <stop offset="0.44" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8B3E"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="500" rx="34" fill="#06111B"/>
+  <rect x="20" y="20" width="984" height="460" rx="28" fill="url(#bg)"/>
+  <circle cx="198" cy="122" r="106" fill="#37E5D6" opacity="0.10"/>
+  <circle cx="910" cy="432" r="138" fill="#68B7FF" opacity="0.08"/>
+
+  <g transform="translate(56 70)">
+    <rect x="0" y="0" width="292" height="292" rx="68" fill="#0D1D31"/>
+    <path d="M24 92C58 68 103 60 144 71C183 81 220 106 255 110C273 113 290 109 303 100" stroke="url(#curve1)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M20 152C56 126 102 118 143 130C187 143 226 171 263 175C281 178 296 173 308 164" stroke="url(#curve2)" stroke-width="16" stroke-linecap="round"/>
+    <path d="M26 212C60 188 102 181 140 192C180 204 216 230 250 234C272 237 290 233 302 223" stroke="url(#curve3)" stroke-width="13" stroke-linecap="round"/>
+    <path d="M164 28L98 142H150L134 242L222 120H170L198 28H164Z" fill="url(#bolt)"/>
+  </g>
+
+  <text x="390" y="184" fill="#F6FBFF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="74" font-weight="700" letter-spacing="-2">fast-vollib</text>
+  <text x="392" y="242" fill="#D8E8F7" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="600">Fast IV, pricing, and Greeks</text>
+  <text x="392" y="286" fill="#98B7D5" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="500">Built for NumPy, PyTorch, JAX, and Triton workloads.</text>
+</svg>

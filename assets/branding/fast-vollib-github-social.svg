@@ -1,0 +1,66 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="108" y1="72" x2="1138" y2="596" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#071321"/>
+      <stop offset="0.52" stop-color="#112741"/>
+      <stop offset="1" stop-color="#173B61"/>
+    </linearGradient>
+    <linearGradient id="curveA" x1="74" y1="212" x2="520" y2="212" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4CF0DF"/>
+      <stop offset="1" stop-color="#69B9FF"/>
+    </linearGradient>
+    <linearGradient id="curveB" x1="70" y1="318" x2="524" y2="318" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#74B8FF"/>
+      <stop offset="1" stop-color="#8CCBFF"/>
+    </linearGradient>
+    <linearGradient id="curveC" x1="76" y1="422" x2="534" y2="422" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8A78"/>
+      <stop offset="1" stop-color="#FFB58B"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="247" y1="130" x2="424" y2="422" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF7BF"/>
+      <stop offset="0.45" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8C3F"/>
+    </linearGradient>
+    <filter id="shadow" x="32" y="32" width="1216" height="576" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#01070E" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="640" rx="48" fill="#06101C"/>
+  <g filter="url(#shadow)">
+    <rect x="32" y="32" width="1216" height="576" rx="40" fill="url(#bg)"/>
+  </g>
+
+  <circle cx="272" cy="176" r="150" fill="#3BE6D7" opacity="0.10"/>
+  <circle cx="1088" cy="548" r="172" fill="#6DAEFF" opacity="0.08"/>
+
+  <g transform="translate(92 74)">
+    <rect x="0" y="0" width="432" height="432" rx="96" fill="#0C1C30" stroke="rgba(255,255,255,0.08)"/>
+    <path d="M36 126C84 88 148 76 205 91C261 105 313 142 365 148C390 151 414 146 433 129" stroke="url(#curveA)" stroke-width="18" stroke-linecap="round"/>
+    <path d="M28 210C81 171 145 159 202 175C263 192 317 234 373 239C398 242 419 235 438 220" stroke="url(#curveB)" stroke-width="20" stroke-linecap="round"/>
+    <path d="M36 300C86 265 145 255 198 270C254 286 304 323 353 329C386 333 414 325 435 309" stroke="url(#curveC)" stroke-width="16" stroke-linecap="round"/>
+    <path d="M238 52L140 216H214L191 356L318 184H246L286 52H238Z" fill="url(#bolt)"/>
+    <circle cx="40" cy="126" r="9" fill="#D9FFF7"/>
+    <circle cx="28" cy="210" r="10" fill="#D7E7FF"/>
+    <circle cx="38" cy="300" r="8" fill="#FFD9D4"/>
+    <circle cx="430" cy="129" r="9" fill="#D9FFF7"/>
+    <circle cx="435" cy="220" r="10" fill="#D7E7FF"/>
+    <circle cx="432" cy="309" r="8" fill="#FFD9D4"/>
+  </g>
+
+  <text x="596" y="214" fill="#F5FAFF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="-2.5">fast-vollib</text>
+  <text x="598" y="282" fill="#99B7D6" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="500">Modern Black-Scholes pricing, IV solving, and Greeks</text>
+  <text x="598" y="328" fill="#99B7D6" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="500">with NumPy, PyTorch, JAX, and Triton acceleration.</text>
+
+  <g transform="translate(598 392)">
+    <rect x="0" y="0" width="148" height="44" rx="22" fill="#102A43" stroke="#2AD4C7" stroke-opacity="0.32"/>
+    <text x="28" y="29" fill="#DDFCF8" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="600">NumPy</text>
+    <rect x="164" y="0" width="164" height="44" rx="22" fill="#102A43" stroke="#69B9FF" stroke-opacity="0.34"/>
+    <text x="193" y="29" fill="#E4F1FF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="600">PyTorch</text>
+    <rect x="344" y="0" width="128" height="44" rx="22" fill="#102A43" stroke="#FF9B6D" stroke-opacity="0.34"/>
+    <text x="376" y="29" fill="#FFF0E7" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="600">JAX</text>
+    <rect x="488" y="0" width="148" height="44" rx="22" fill="#102A43" stroke="#FFD166" stroke-opacity="0.34"/>
+    <text x="523" y="29" fill="#FFF7DF" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="20" font-weight="600">Triton</text>
+  </g>
+</svg>

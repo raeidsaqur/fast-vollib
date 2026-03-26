@@ -1,0 +1,40 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="80" y1="70" x2="964" y2="998" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#071321"/>
+      <stop offset="0.56" stop-color="#112741"/>
+      <stop offset="1" stop-color="#173B61"/>
+    </linearGradient>
+    <linearGradient id="c1" x1="170" y1="264" x2="910" y2="264" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4BF0DF"/>
+      <stop offset="1" stop-color="#69B9FF"/>
+    </linearGradient>
+    <linearGradient id="c2" x1="164" y1="430" x2="908" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#74B8FF"/>
+      <stop offset="1" stop-color="#9BD2FF"/>
+    </linearGradient>
+    <linearGradient id="c3" x1="172" y1="600" x2="918" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF8A78"/>
+      <stop offset="1" stop-color="#FFC08D"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="446" y1="160" x2="662" y2="544" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF7BF"/>
+      <stop offset="0.46" stop-color="#FFD166"/>
+      <stop offset="1" stop-color="#FF8A3D"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1080" rx="72" fill="#06111B"/>
+  <rect x="44" y="44" width="992" height="992" rx="56" fill="url(#bg)"/>
+  <circle cx="242" cy="216" r="170" fill="#30E7D7" opacity="0.09"/>
+  <circle cx="866" cy="896" r="200" fill="#69B9FF" opacity="0.08"/>
+
+  <path d="M172 264C253 206 355 188 445 214C535 239 617 299 699 308C743 313 783 305 818 278" stroke="url(#c1)" stroke-width="28" stroke-linecap="round"/>
+  <path d="M164 430C249 369 353 352 444 378C542 406 629 472 717 481C761 486 800 477 832 452" stroke="url(#c2)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M174 600C254 545 350 530 435 554C526 580 606 638 685 647C738 653 781 641 816 614" stroke="url(#c3)" stroke-width="24" stroke-linecap="round"/>
+
+  <path d="M544 138L378 416H500L462 654L674 364H552L620 138H544Z" fill="url(#bolt)"/>
+
+  <text x="540" y="814" fill="#F7FBFF" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="108" font-weight="700" letter-spacing="-2">fast-vollib</text>
+  <text x="540" y="884" fill="#9DBAD8" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, Arial, sans-serif" font-size="34" font-weight="500">Volatility. Greeks. Speed.</text>
+</svg>
