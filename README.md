@@ -1,6 +1,6 @@
 <p align="center">
   <img
-    src="https://raw.githubusercontent.com/raeidsaqur/fast-vollib/main/docs/assets/fast-vollib-icon.png"
+    src="https://raeidsaqur.github.io/fast-vollib/assets/fast-vollib-icon.png"
     alt="fast-vollib icon"
     width="144"
   />
