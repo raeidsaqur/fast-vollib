@@ -41,12 +41,12 @@ modeled on `py_vollib_vectorized`.
 ## Features
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
-- **Vectorized IV solver** — Newton-Raphson with compiled bisection fallback (~10 M solves/s on CPU)
+- **Vectorized IV solver** — Halley's method with compiled bisection fallback
 - **Full Greeks** — delta, gamma, theta, rho, vega; all five in one `get_all_greeks` call
 - **Pluggable backends** — NumPy (default), PyTorch (CUDA), JAX (JIT)
 - **Automatic backend selection** — prefers CUDA > JAX > NumPy
 - **DataFrame-native** — `price_dataframe` works directly on a `pandas.DataFrame`
-- **Drop-in replacement** — `patch_py_vollib_vectorized()` replaces `py_vollib_vectorized` at runtime with no code changes
+- **Drop-in compatibility** — `patch_py_vollib()` and `patch_py_vollib_vectorized()` patch the scalar and vectorized upstream namespaces
 
 ---
 
@@ -190,7 +190,7 @@ from fast_vollib import (
     # Implied volatility
     fast_implied_volatility,
     fast_implied_volatility_black,
-    # Greeks
+    # Greeks (compatibility aliases)
     vectorized_delta,
     vectorized_gamma,
     vectorized_rho,

@@ -23,17 +23,25 @@ The following parameters appear across pricing, IV, and Greek functions:
 | `sigma` | `float \| array-like` | Volatility (annualized) |
 | `q` | `float \| array-like` | Continuous dividend yield (BSM only) |
 | `model` | `str` | `"black"`, `"black_scholes"` (default), or `"black_scholes_merton"` |
-| `return_as` | `str` | `"dataframe"` (default), `"series"`, or `"numpy"` |
-| `dtype` | `numpy.dtype` | Output dtype; default `numpy.float64` |
+| `return_as` | `str` | Output container; see each function below |
+| `dtype` | `numpy.dtype` | Input coercion dtype; default `numpy.float64` |
 | `backend` | `str` | `"auto"` (default), `"numpy"`, `"torch"`, or `"jax"` |
-| `return_native` | `bool` | Return backend-native tensor instead of `ndarray`; default `False` |
+| `return_native` | `bool` | Return backend-native arrays for torch/jax instead of formatted pandas/NumPy output |
 
-All array-like parameters are broadcast against each other following NumPy
+All array-like parameters are broadcast against each other using NumPy
 broadcasting rules.
 
 ---
 
 ## Pricing
+
+Pricing functions default to `return_as="dataframe"`. Supported container
+formats are:
+
+- `return_as="dataframe"`: `pandas.DataFrame`
+- `return_as="series"`: `pandas.Series`
+- `return_as="numpy"`: `numpy.ndarray`
+- `return_native=True` with `backend="torch"` or `backend="jax"`: native tensor/array
 
 ### `fast_black`
 
@@ -42,7 +50,7 @@ Black-76 model for options on futures.
 ```python
 fast_vollib.fast_black(
     flag,
-    F,        # forward price
+    F,
     K,
     t,
     r,
@@ -57,16 +65,14 @@ fast_vollib.fast_black(
 
 **Returns:** Option price(s) shaped by broadcasting rules.
 
----
-
 ### `fast_black_scholes`
 
-Black-Scholes model for European equity options (no dividends).
+Black-Scholes model for European equity options without dividends.
 
 ```python
 fast_vollib.fast_black_scholes(
     flag,
-    S,        # spot price
+    S,
     K,
     t,
     r,
@@ -80,8 +86,6 @@ fast_vollib.fast_black_scholes(
 ```
 
 **Returns:** Option price(s) shaped by broadcasting rules.
-
----
 
 ### `fast_black_scholes_merton`
 
@@ -95,7 +99,7 @@ fast_vollib.fast_black_scholes_merton(
     t,
     r,
     sigma,
-    q,        # continuous dividend yield (required)
+    q,
     *,
     return_as="dataframe",
     dtype=numpy.float64,
@@ -110,21 +114,25 @@ fast_vollib.fast_black_scholes_merton(
 
 ## Implied Volatility
 
+IV functions share the same output conventions as pricing functions:
+`"dataframe"`, `"series"`, `"numpy"`, or native torch/jax arrays via
+`return_native=True`.
+
 ### `fast_implied_volatility`
 
 Solve for implied volatility given a market price.
 
 ```python
 fast_vollib.fast_implied_volatility(
-    price,    # observed market price
+    price,
     S,
     K,
     t,
     r,
     flag,
-    q=None,   # required when model="black_scholes_merton"
+    q=None,
     *,
-    on_error="warn",   # "raise", "warn", or "ignore"
+    on_error="warn",
     model="black_scholes",
     return_as="dataframe",
     dtype=numpy.float64,
@@ -133,29 +141,26 @@ fast_vollib.fast_implied_volatility(
 )
 ```
 
-**Returns:** Implied volatility (σ) shaped by broadcasting rules. Returns
-`NaN` for options below intrinsic value when `on_error` is `"warn"` or
-`"ignore"`.
+**Returns:** Implied volatility shaped by broadcasting rules. Below-intrinsic
+inputs return `NaN` when `on_error` is `"warn"` or `"ignore"`.
 
 !!! note "`on_error`"
-    - `"raise"` — raise `ValueError` for below-intrinsic inputs
-    - `"warn"` (default) — emit a `RuntimeWarning` and return `NaN`
-    - `"ignore"` — silently return `NaN`
-
----
+    - `"raise"`: raise `ValueError` for below-intrinsic inputs
+    - `"warn"`: emit a warning and return `NaN`
+    - `"ignore"`: silently return `NaN`
 
 ### `fast_implied_volatility_black`
 
-Convenience wrapper: solves IV under the Black-76 model.
-Argument order matches `py_vollib` (`price, F, K, r, t, flag`).
+Convenience wrapper for Black-76 IV. The positional argument order matches
+`py_vollib`: `price, F, K, r, t, flag`.
 
 ```python
 fast_vollib.fast_implied_volatility_black(
     price,
-    F,        # forward price
+    F,
     K,
     r,
-    t,        # note: r before t (py_vollib convention)
+    t,
     flag,
     *,
     on_error="warn",
@@ -172,7 +177,11 @@ fast_vollib.fast_implied_volatility_black(
 
 ## Greeks
 
-All Greek functions share the same signature:
+The individual Greek functions are exported under the compatibility aliases
+`vectorized_delta`, `vectorized_gamma`, `vectorized_theta`, `vectorized_rho`,
+and `vectorized_vega`.
+
+Their signature is:
 
 ```python
 fast_vollib.vectorized_<greek>(
@@ -192,6 +201,13 @@ fast_vollib.vectorized_<greek>(
 )
 ```
 
+Supported outputs:
+
+- `return_as="dataframe"`: `pandas.DataFrame`
+- `return_as="series"`: `pandas.Series`
+- `return_as="numpy"`: `numpy.ndarray`
+- `return_native=True` with `backend="torch"` or `backend="jax"`: native tensor/array
+
 ### `vectorized_delta`
 
 First derivative of price with respect to the underlying (∂V/∂S).
@@ -202,8 +218,7 @@ Second derivative of price with respect to the underlying (∂²V/∂S²).
 
 ### `vectorized_theta`
 
-Rate of change of price with respect to time (∂V/∂t). Expressed as daily
-decay (divided by 365).
+Rate of change of price with respect to time (∂V/∂t), expressed as daily decay.
 
 ### `vectorized_rho`
 
@@ -211,8 +226,7 @@ Sensitivity to the risk-free rate (∂V/∂r).
 
 ### `vectorized_vega`
 
-Sensitivity to implied volatility (∂V/∂σ). Expressed per 1% move in vol
-(divided by 100).
+Sensitivity to implied volatility (∂V/∂σ), expressed per 1% move in vol.
 
 ---
 
@@ -238,9 +252,12 @@ fast_vollib.get_all_greeks(
 )
 ```
 
-**Returns:** When `return_as="dataframe"` (default), a `pandas.DataFrame`
-with columns `["delta", "gamma", "theta", "rho", "vega"]`. When
-`return_native=True`, a `dict` mapping Greek name to native array.
+**Returns:**
+
+- `return_as="dataframe"` (default): `pandas.DataFrame` with columns `delta`, `gamma`, `theta`, `rho`, `vega`
+- `return_as="json"`: JSON string mapping Greek name to values
+- `return_as="dict"`: Python `dict[str, numpy.ndarray]`
+- `return_native=True` with `backend="torch"` or `backend="jax"`: `dict[str, native array]`
 
 ---
 
@@ -248,22 +265,20 @@ with columns `["delta", "gamma", "theta", "rho", "vega"]`. When
 
 ### `price_dataframe`
 
-Price, compute IV, and compute Greeks for every row of a DataFrame in one
-call. Supply `sigma_col` to price options; supply `price_col` to solve IV;
-supply both to use the provided values as-is for Greeks.
+Price, solve IV, and compute Greeks for every row of a DataFrame in one call.
 
 ```python
 fast_vollib.price_dataframe(
-    df,                           # pandas.DataFrame
+    df,
     *,
-    flag_col,                     # required
-    underlying_price_col,         # required
-    strike_col,                   # required
-    annualized_tte_col,           # required
-    riskfree_rate_col,            # required
-    sigma_col=None,               # supply to price; result written to "Price"
-    price_col=None,               # supply to solve IV; result written to "IV"
-    dividend_col=None,            # optional; required for "black_scholes_merton"
+    flag_col,
+    underlying_price_col,
+    strike_col,
+    annualized_tte_col,
+    riskfree_rate_col,
+    sigma_col=None,
+    price_col=None,
+    dividend_col=None,
     model="black_scholes",
     inplace=False,
     dtype=numpy.float64,
@@ -272,10 +287,21 @@ fast_vollib.price_dataframe(
 )
 ```
 
-**Returns:** A new `pandas.DataFrame` (or `None` when `inplace=True`) with
-computed columns appended. Columns added: `"Price"` (if `sigma_col` was
-given), `"IV"` (if `price_col` was given), plus `delta`, `gamma`, `theta`,
-`rho`, `vega`.
+You must supply at least one of `sigma_col` or `price_col`:
+
+- `sigma_col`: compute `Price` plus Greeks
+- `price_col`: compute `IV` plus Greeks
+- both: use the supplied price and volatility data as inputs for the Greek calculation; the helper does not duplicate those input columns into the output
+
+**Returns:** A new `pandas.DataFrame`, or `None` when `inplace=True`. Added
+columns are:
+
+- `Price` when `sigma_col` is provided
+- `IV` when `price_col` is provided
+- `delta`, `gamma`, `theta`, `rho`, `vega`
+
+`price_dataframe` always materializes pandas output; `return_native` only
+affects intermediate backend execution.
 
 ---
 
@@ -287,8 +313,8 @@ given), `"IV"` (if `price_col` was given), plus `delta`, `gamma`, `theta`,
 fast_vollib.get_backend(explicit=None) -> str
 ```
 
-Return the backend that would be used for a given `explicit` value (or the
-auto-resolved backend when called with no arguments).
+Return the backend that would be used for a given explicit choice, or the
+auto-resolved backend when called without arguments.
 
 ### `set_backend`
 
@@ -296,8 +322,8 @@ auto-resolved backend when called with no arguments).
 fast_vollib.set_backend(name: str) -> None
 ```
 
-Set a process-level backend override. Valid values: `"auto"`, `"numpy"`,
-`"torch"`, `"jax"`.
+Set a process-level backend override. Valid values are `"auto"`, `"numpy"`,
+`"torch"`, and `"jax"`.
 
 ---
 
@@ -309,9 +335,16 @@ Set a process-level backend override. Valid values: `"auto"`, `"numpy"`,
 fast_vollib.patch_py_vollib() -> None
 ```
 
-Monkey-patch the `py_vollib` and `py_vollib_vectorized` namespaces with
-fast-vollib's implementations. After this call, any code that imports from
-`py_vollib` will transparently use fast_vollib. Requires `py_vollib` to be
-installed.
+Monkey-patch the scalar `py_vollib` namespace with fast-vollib implementations.
+Requires `py_vollib` to be installed.
 
-See [Compatibility](compatibility.md) for details.
+### `patch_py_vollib_vectorized`
+
+```python
+fast_vollib.patch_py_vollib_vectorized() -> None
+```
+
+Monkey-patch the `py_vollib_vectorized` namespace with fast-vollib
+implementations. Requires `py_vollib_vectorized` to be installed.
+
+See [Compatibility](compatibility.md) for examples and caveats.

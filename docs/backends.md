@@ -66,8 +66,10 @@ print(fast_vollib.get_backend("torch"))  # pass an explicit value to validate it
 
 ## Native tensor output
 
-By default all backends return `numpy.ndarray`. Pass `return_native=True` to
-receive the backend's native type instead:
+Most public functions default to `return_as="dataframe"`, which materializes a
+`pandas.DataFrame`. Pass `return_as="numpy"` if you want a `numpy.ndarray`, or
+pass `return_native=True` on the PyTorch and JAX backends to receive the
+backend's native type instead:
 
 ```python
 # Returns a torch.Tensor (float64)
@@ -81,6 +83,9 @@ price = fast_vollib.fast_black_scholes(
 !!! note
     `return_native=True` has no effect on the NumPy backend — NumPy arrays
     are already the native type.
+
+For `get_all_greeks`, `return_native=True` returns a `dict` mapping each Greek
+name to a native backend array or tensor.
 
 ---
 

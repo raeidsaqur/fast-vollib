@@ -11,6 +11,19 @@ separate changelog entries.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- `get_all_greeks(..., return_native=True)` now returns native torch/JAX arrays
+  instead of formatting the result back into pandas containers.
+- Below-intrinsic IV handling now honors `on_error=` consistently across the
+  NumPy, PyTorch, and JAX backends.
+- The `compare_against_py_vollib_vectorized.py` helper now imports the current
+  upstream `vectorized_*` entry points correctly.
+
+---
+
 ## [0.1.2] — 2026-03-26
 
 Release focused on packaging automation, public release channels, and broader
@@ -63,7 +76,7 @@ behaviour across NumPy, PyTorch, and JAX.
   `fast_black_scholes_merton` with full NumPy vectorization and
   broadcasting.
 - **Implied Volatility** — `fast_implied_volatility` and
-  `fast_implied_volatility_black` using Newton-Raphson with a compiled
+  `fast_implied_volatility_black` using Halley's method with a compiled
   bisection fallback (~10 M solves / s on CPU).
 - **Greeks** — `vectorized_delta`, `vectorized_gamma`, `vectorized_theta`,
   `vectorized_rho`, `vectorized_vega`, and `get_all_greeks`.
@@ -72,7 +85,7 @@ behaviour across NumPy, PyTorch, and JAX.
   per-call `backend=` kwarg).
 - **DataFrame helper** — `price_dataframe` for end-to-end pricing, IV
   solving, and Greek computation on a `pandas.DataFrame`.
-- **Compatibility** — `patch_py_vollib()` monkey-patches `py_vollib` and
+- **Compatibility** — patch helpers for `py_vollib` and
   `py_vollib_vectorized` namespaces at runtime.
 
 ### Fixed

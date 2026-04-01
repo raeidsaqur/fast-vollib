@@ -535,6 +535,10 @@ def implied_volatility(
     below_intrinsic = pt < intrinsic - 1e-10
 
     zero_price = (pt <= 0.0) & valid  # undetermined sigma for zero-price OTM options
+    if bool(below_intrinsic.any().item()):
+        handle_error(
+            f"Option price is below intrinsic value. {int(below_intrinsic.sum().item())}", on_error
+        )
 
     if _check_triton():
         from . import triton_kernels as tk

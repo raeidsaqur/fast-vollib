@@ -19,9 +19,9 @@ from fast_vollib import fast_black_scholes, fast_implied_volatility
 def main() -> None:
     try:
         from py_vollib_vectorized.implied_volatility import (
-            fast_implied_volatility as upstream_iv,
+            vectorized_implied_volatility as upstream_iv,
         )
-        from py_vollib_vectorized.models import fast_black_scholes as upstream_bs
+        from py_vollib_vectorized.models import vectorized_black_scholes as upstream_bs
     except Exception as exc:
         print(f"upstream_import_error={type(exc).__name__}: {exc}")
         return

@@ -12,9 +12,9 @@ fast-vollib is designed as a drop-in replacement for
 |---|---|
 | Argument order | Preserved exactly for all pricing, IV, and Greek entry points |
 | `flag` values | `"c"` / `"p"` strings work as before |
-| `return_as="dataframe"` | Returns `pandas.DataFrame`, same as upstream |
+| `return_as="dataframe"` | Default return path remains `pandas.DataFrame` |
 | `return_as="series"` | Returns `pandas.Series`, same as upstream |
-| Default NumPy output | `return_as="numpy"` returns `numpy.ndarray` |
+| NumPy array output | `return_as="numpy"` returns `numpy.ndarray` |
 
 ---
 
@@ -33,9 +33,18 @@ without changes.
 
 ## Runtime monkey-patch
 
-`patch_py_vollib()` replaces the implementations inside the `py_vollib`
-namespace at runtime. This is useful for codebases that import from `py_vollib`
-directly and cannot be changed.
+fast-vollib provides two separate patch helpers:
+
+- `patch_py_vollib()` for the scalar `py_vollib` namespace
+- `patch_py_vollib_vectorized()` for the `py_vollib_vectorized` namespace
+
+Use the helper that matches the package already imported by your application.
+
+### `patch_py_vollib()`
+
+`patch_py_vollib()` replaces implementations inside the scalar `py_vollib`
+namespace at runtime. This is useful for codebases that import from
+`py_vollib` directly and cannot be changed.
 
 ```python
 # At program startup, before any py_vollib imports are used:
@@ -56,6 +65,23 @@ from py_vollib.black_scholes.greeks.numerical import delta
 
 !!! warning "Requires `py_vollib`"
     `patch_py_vollib()` raises `ImportError` if `py_vollib` is not installed.
+
+### `patch_py_vollib_vectorized()`
+
+`patch_py_vollib_vectorized()` rewires the `py_vollib_vectorized` top-level,
+`models`, `implied_volatility`, `greeks`, and `api` modules to the
+fast-vollib implementations.
+
+```python
+import fast_vollib
+fast_vollib.patch_py_vollib_vectorized()
+
+from py_vollib_vectorized import vectorized_black_scholes
+```
+
+!!! warning "Requires `py_vollib_vectorized`"
+    `patch_py_vollib_vectorized()` raises `ImportError` if
+    `py_vollib_vectorized` is not installed.
 
 ---
 

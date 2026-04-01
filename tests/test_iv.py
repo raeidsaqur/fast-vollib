@@ -5,7 +5,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
+from fast_vollib.backends import available_backends
 from fast_vollib.implied_volatility import fast_implied_volatility
 from fast_vollib.models import fast_black_scholes
 
@@ -30,3 +32,22 @@ def test_implied_volatility_recovers_sigma() -> None:
     # sigma is undetermined from a zero price, so IVs are NaN — not testable.
     solvable = np.abs(prices) > 1e-8
     assert np.allclose(ivs[solvable], df["v"].to_numpy()[solvable], atol=1e-6)
+
+
+@pytest.mark.parametrize("backend", ["numpy", "torch", "jax"])
+def test_implied_volatility_raises_below_intrinsic_for_supported_backends(backend: str) -> None:
+    if backend != "numpy" and backend not in available_backends():
+        pytest.skip(f"{backend} not installed")
+
+    with pytest.raises(ValueError, match="below intrinsic"):
+        fast_implied_volatility(
+            np.array([0.01]),
+            np.array([100.0]),
+            np.array([50.0]),
+            np.array([1.0]),
+            np.array([0.0]),
+            np.array(["c"]),
+            backend=backend,
+            on_error="raise",
+            return_as="numpy",
+        )

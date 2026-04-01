@@ -402,6 +402,8 @@ def implied_volatility(
     import jax
     import jax.numpy as jnp
 
+    from ..utils.validation import handle_error
+
     is_call = _flag_to_bool(flag)
     pt = jnp.asarray(price, dtype=jnp.float64)
     st, kt, tt, rt = (jnp.asarray(x, dtype=jnp.float64) for x in (s, k, t, r))
@@ -414,6 +416,9 @@ def implied_volatility(
 
     # JIT'd pre-computation: ds, dk, sqrt_tt, below_intrinsic, sigma_init
     ds, dk, sqrt_tt, below_intrinsic, sigma = _get_jit_iv_pre()(pt, st, kt, tt, rt, qv, is_call)
+    below_intrinsic_count = int(np.asarray(below_intrinsic).sum())
+    if below_intrinsic_count:
+        handle_error(f"Option price is below intrinsic value. {below_intrinsic_count}", on_error)
 
     # Halley's method — fused 8-iteration loop via module-level lax.fori_loop JIT
     sigma = _get_jit_halley_all()(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call)

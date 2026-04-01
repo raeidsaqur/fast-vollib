@@ -252,6 +252,47 @@ def test_jax_backend_accepts_array_inputs_and_returns_native() -> None:
     assert len(native.devices()) >= 1
 
 
+@pytest.mark.skipif("torch" not in available_backends(), reason="torch not installed")
+def test_torch_greeks_return_native_returns_tensor_dict() -> None:
+    import torch
+
+    flag, s, k, t, r, sigma = _inputs()
+    native = get_all_greeks(
+        flag,
+        torch.as_tensor(s, dtype=torch.float64),
+        torch.as_tensor(k, dtype=torch.float64),
+        torch.as_tensor(t, dtype=torch.float64),
+        torch.as_tensor(r, dtype=torch.float64),
+        torch.as_tensor(sigma, dtype=torch.float64),
+        backend="torch",
+        return_native=True,
+    )
+    assert isinstance(native, dict)
+    assert set(native) == {"delta", "gamma", "theta", "rho", "vega"}
+    assert all(isinstance(value, torch.Tensor) for value in native.values())
+
+
+@pytest.mark.skipif("jax" not in available_backends(), reason="jax not installed")
+def test_jax_greeks_return_native_returns_array_dict() -> None:
+    import jax
+    import jax.numpy as jnp
+
+    flag, s, k, t, r, sigma = _inputs()
+    native = get_all_greeks(
+        flag,
+        jnp.asarray(s, dtype=jnp.float64),
+        jnp.asarray(k, dtype=jnp.float64),
+        jnp.asarray(t, dtype=jnp.float64),
+        jnp.asarray(r, dtype=jnp.float64),
+        jnp.asarray(sigma, dtype=jnp.float64),
+        backend="jax",
+        return_native=True,
+    )
+    assert isinstance(native, dict)
+    assert set(native) == {"delta", "gamma", "theta", "rho", "vega"}
+    assert all(isinstance(value, jax.Array) for value in native.values())
+
+
 # ---------------------------------------------------------------------------
 # Black-76 model — backend parity (torch + jax vs numpy)
 # ---------------------------------------------------------------------------

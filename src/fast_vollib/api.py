@@ -49,7 +49,7 @@ def get_all_greeks(
     bmod = backends.get_module(backend_name)
     data = bmod.greeks(model, flag, S, K, t, r, sigma, q=q)
     if return_native and backend_name in {"torch", "jax"}:
-        data = {k: bmod.to_native(v) for k, v in data.items()}
+        return {k: bmod.to_native(v) for k, v in data.items()}
     return format_greeks_output(data, return_as)
 
 

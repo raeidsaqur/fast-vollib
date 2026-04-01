@@ -16,11 +16,11 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 ## Features
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
-- **Vectorized IV solver** — Newton-Raphson with bisection fallback; handles large option chains efficiently
+- **Vectorized IV solver** — Halley's method with bisection fallback; handles large option chains efficiently
 - **Full Greeks** — delta, gamma, theta, rho, vega, and `get_all_greeks` in one call
 - **Pluggable backends** — NumPy (default), PyTorch (GPU-accelerated), JAX
 - **DataFrame-native** — `price_dataframe` works directly on pandas DataFrames
-- **Drop-in compatibility** — `patch_py_vollib()` replaces `py_vollib` / `py_vollib_vectorized` at runtime
+- **Drop-in compatibility** — separate patch helpers for `py_vollib` and `py_vollib_vectorized`
 - **Automatic backend selection** — prefers CUDA-capable PyTorch > JAX > NumPy
 
 ---
