@@ -65,12 +65,20 @@ pip install "fast-vollib[jax]"
 uv add "fast-vollib[jax]"
 ```
 
-### Both backends
+### Numba backend
 
 ```bash
-pip install "fast-vollib[torch,jax]"
+pip install "fast-vollib[numba]"
 # or
-uv add "fast-vollib[torch,jax]"
+uv add "fast-vollib[numba]"
+```
+
+### Multiple backends
+
+```bash
+pip install "fast-vollib[torch,jax,numba]"
+# or
+uv add "fast-vollib[torch,jax,numba]"
 ```
 
 ### GPU (Linux only — CUDA 13)

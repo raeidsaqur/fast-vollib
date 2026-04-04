@@ -13,6 +13,17 @@ separate changelog entries.
 
 ## [Unreleased]
 
+### Added
+
+- **Numba backend** (`backend="numba"`): JIT-compiled CPU kernels via
+  `@numba.njit(parallel=True)`.  Pricing, Greeks, and the full
+  Halley+bisection IV solver run as a single native-code dispatch per batch.
+  Enabled by `pip install "fast-vollib[numba]"` (requires `numba>=0.60.0`).
+  Kernels are compiled on first call and cached to `__pycache__` for
+  subsequent runs.
+- Isolated numba test suite under `tests/numba/` (skipped automatically when
+  numba is not installed).
+
 ### Fixed
 
 - `get_all_greeks(..., return_native=True)` now returns native torch/JAX arrays
