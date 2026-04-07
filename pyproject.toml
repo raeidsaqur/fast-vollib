@@ -72,6 +72,13 @@ jax = ["jax>=0.4.30"]
 numba = [
     "numba>=0.60.0",
 ]
+notebooks = [
+    "matplotlib>=3.8",
+    "jupyterlab>=4.0",
+    "ipykernel>=6.0",
+    "py-vollib-vectorized",
+    "pyarrow>=15.0",
+]
 cuda = [
     "torch>=2.5; sys_platform == 'linux'",
     "jax[cuda13]; sys_platform == 'linux'",
