@@ -11,4 +11,6 @@ repos:
     hooks:
       - id: ruff-check
         args: [--fix]
+        exclude: \.ipynb$
       - id: ruff-format
+        exclude: \.ipynb$

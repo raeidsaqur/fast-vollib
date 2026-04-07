@@ -1,5 +1,6 @@
 line-length = 100
 target-version = "py311"
+exclude = ["*.ipynb"]
 
 [format]
 quote-style = "double"
