@@ -79,6 +79,9 @@ unfixable = [
 "src/fast_vollib/compat/py_vollib.py" = [
     "F401",   # wrapper imports intentionally expose patched callables
 ]
+"src/fast_vollib/jackel/jackel_iv.py" = [
+    "F841",   # intermediate mask variables aid readability in numerical dispatch code
+]
 
 [lint.isort]
 known-first-party = ["fast_vollib"]
