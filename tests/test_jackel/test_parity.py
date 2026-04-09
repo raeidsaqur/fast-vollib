@@ -1,22 +1,25 @@
 """
-Experiment A: Jäckel parity stress test.
+Jäckel parity stress test.
 
 Compares fast-vollib IV recovery against py_lets_be_rational (the Jäckel
 reference implementation) over a wide grid of (log-moneyness, volatility) inputs.
 
-The tolerance tightens as experiments B–D land:
-  - Experiment A baseline:   max rel error ~1e-4  (current Halley × 8)
-  - After Experiment B (Householder × 2):    assert < 1e-5
-  - After Experiment C (3-branch g(σ)):      assert < 1e-8
-  - After Experiment D (4-branch guess):     assert < 1e-10
+Requires py-lets-be-rational (listed in the dev dependency group).  Tests are
+skipped gracefully when the package is absent so that minimal CI environments
+(core deps only) do not fail.
 
-py_lets_be_rational is a transitive venv dep of py_vollib — no new install needed.
+Accuracy threshold: max relative error < 1e-8 vs oracle (Householder(3)×2).
 """
 
 from __future__ import annotations
 
 import numpy as np
 import pytest
+
+pytest.importorskip(
+    "py_lets_be_rational",
+    reason="py-lets-be-rational not installed — install dev dependencies: uv sync",
+)
 
 from fast_vollib.jackel.jackel_iv import jackel_iv_black as _jackel_iv_black
 
@@ -28,7 +31,7 @@ from fast_vollib.jackel.jackel_iv import jackel_iv_black as _jackel_iv_black
 def _lbr_prices_and_ivs(
     F: float, K_arr: np.ndarray, sv_arr: np.ndarray, T: float
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Compute reference prices and IV using py_lets_be_rational (Jäckel)."""
+    """Compute reference prices and IV using py_lets_be_rational (Jäckel oracle)."""
     from py_lets_be_rational import (
         black as lbr_black,
         implied_volatility_from_a_transformed_rational_guess as lbr_iv,
