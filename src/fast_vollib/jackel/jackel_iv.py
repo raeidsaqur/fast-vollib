@@ -17,10 +17,18 @@ granted, provided that this notice is preserved.
 
 from __future__ import annotations
 
+import math
 import sys
 
 import numpy as np
 from scipy.special import erfcx as _sp_erfcx, ndtr as _sp_ndtr, ndtri as _sp_ndtri
+
+try:
+    import numba as _numba
+
+    _NUMBA_AVAILABLE = True
+except ImportError:
+    _NUMBA_AVAILABLE = False
 
 # ── Floating-point constants ───────────────────────────────────────────────────
 _DBL_EPSILON: float = sys.float_info.epsilon
@@ -829,6 +837,358 @@ def normalised_vega(x: np.ndarray, s: np.ndarray) -> np.ndarray:
     return np.where(zero_x, atm, np.where(bad_s, 0.0, otm))
 
 
+def _normalised_black_and_vega(x: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Fused normalised Black call + vega — shares exp(-0.5*(h²+t²)) between b and bp.
+
+    Assumes x ≤ 0 (OTM-call-reduced domain, as set by jackel_iv_black).
+    Uses the erfcx Region-4 formula.  Saves one exp call per iteration vs calling
+    normalised_black_call + normalised_vega separately.
+    """
+    tiny = np.finfo(float).tiny
+    s_safe = np.where(s > 0.0, s, tiny)
+    h = x / s_safe  # x ≤ 0, h ≤ 0
+    t = 0.5 * s
+    factor = np.exp(-0.5 * (h * h + t * t))
+    diff = _sp_erfcx(-_ONE_OVER_SQRT2 * (h + t)) - _sp_erfcx(-_ONE_OVER_SQRT2 * (h - t))
+    b = np.abs(np.maximum(0.5 * factor * diff, 0.0))
+    bp = factor * _ONE_OVER_SQRT2PI
+    return b, bp
+
+
+# ── Numba JIT Householder kernel (optional — skipped if numba not installed) ────
+
+if _NUMBA_AVAILABLE:
+    _NB_TINY: float = sys.float_info.min
+    _NB_ONE_OVER_SQRT2: float = _ONE_OVER_SQRT2
+    _NB_ONE_OVER_SQRT2PI: float = _ONE_OVER_SQRT2PI
+
+    @_numba.njit(fastmath=True)
+    def _erfcx_nb(x: float) -> float:
+        """Scalar erfcx for numba JIT — machine precision over full domain."""
+        if x >= 26.0:
+            isqrtpi = 0.5641895835477563
+            r = 1.0 / (x * x)
+            p = 1.0 + r * (
+                -0.5 + r * (0.75 + r * (-1.875 + r * (6.5625 + r * (-29.53125 + 162.421875 * r))))
+            )
+            return isqrtpi * p / x
+        elif x > -26.0:
+            return math.exp(x * x) * math.erfc(x)
+        else:
+            return 2.0 * math.exp(x * x)
+
+    @_numba.njit(fastmath=True, parallel=True)
+    def _householder_kernel_nb(
+        s: np.ndarray,
+        beta: np.ndarray,
+        x: np.ndarray,
+        use_lower: np.ndarray,
+        use_upper: np.ndarray,
+        b_max: np.ndarray,
+        n_iters: int,
+    ) -> np.ndarray:
+        """Numba-JIT Householder(3) × n_iters over all N elements.
+
+        Fuses _normalised_black_and_vega (shared exp factor) and the three-branch
+        objective dispatch into a single parallel loop.  Uses Intel SVML for
+        exp/erfc/erfcx when available (fastmath=True on AVX2+ CPUs).
+        """
+        N = len(s)
+        tiny = _NB_TINY
+        isq2 = _NB_ONE_OVER_SQRT2
+        isq2pi = _NB_ONE_OVER_SQRT2PI
+        s_out = s.copy()
+
+        for _ in range(n_iters):
+            for i in _numba.prange(N):
+                si = s_out[i]
+                s_safe = si if si > 0.0 else tiny
+                xi = x[i]
+                bi = beta[i]
+                bm = b_max[i]
+
+                # _normalised_black_and_vega — shared exp factor
+                h = xi / s_safe
+                t = 0.5 * s_safe
+                factor = math.exp(-0.5 * (h * h + t * t))
+                b = abs(
+                    max(
+                        0.5 * factor * (_erfcx_nb(-isq2 * (h + t)) - _erfcx_nb(-isq2 * (h - t))),
+                        0.0,
+                    )
+                )
+                bp = factor * isq2pi
+
+                bp_safe = bp if bp > 0.0 else tiny
+                b_safe = b if b > 0.0 else tiny
+
+                x_over_s = xi / s_safe
+                xs2 = x_over_s / s_safe
+                b_halley = x_over_s * x_over_s / s_safe - s_safe / 4.0
+                b_hh3 = b_halley * b_halley - 3.0 * xs2 * xs2 - 0.25
+
+                if use_lower[i]:
+                    ln_b = math.log(b_safe)
+                    ln_beta_val = math.log(bi if bi > 0.0 else tiny)
+                    bpob = bp / b_safe
+                    ln_b_s = ln_b if abs(ln_b) > 0.0 else tiny
+                    newton = (ln_beta_val - ln_b) * ln_b / ln_beta_val / bpob
+                    halley = b_halley - bpob * (1.0 + 2.0 / ln_b_s)
+                    hh3 = (
+                        b_hh3
+                        + 2.0 * bpob * bpob * (1.0 + 3.0 / ln_b_s * (1.0 + 1.0 / ln_b_s))
+                        - 3.0 * b_halley * bpob * (1.0 + 2.0 / ln_b_s)
+                    )
+                elif use_upper[i]:
+                    bm_b = bm - b
+                    bm_b_s = bm_b if bm_b > 0.0 else tiny
+                    bm_bt = bm - bi
+                    bm_bt_s = bm_bt if bm_bt > 0.0 else tiny
+                    g = math.log(bm_bt_s / bm_b_s)
+                    gp = bp / bm_b_s
+                    newton = -g / gp
+                    halley = b_halley + gp
+                    hh3 = b_hh3 + gp * (2.0 * gp + 3.0 * b_halley)
+                else:
+                    newton = (bi - b) / bp_safe
+                    halley = b_halley
+                    hh3 = b_hh3
+
+                # Householder(3) step
+                hf = (1.0 + 0.5 * halley * newton) / (1.0 + newton * (halley + hh3 * newton / 6.0))
+                ds = max(-0.5 * s_safe, newton * hf)
+                s_out[i] = s_safe + ds
+
+        return s_out
+
+    @_numba.njit(fastmath=True, parallel=True)
+    def _hermite_guess_kernel_nb(
+        beta: np.ndarray,
+        s_l: np.ndarray,
+        b_l: np.ndarray,
+        v_l_safe: np.ndarray,
+        s_c: np.ndarray,
+        b_c: np.ndarray,
+        v_c_safe: np.ndarray,
+        s_h: np.ndarray,
+        b_h: np.ndarray,
+        v_h_safe: np.ndarray,
+    ) -> np.ndarray:
+        """Cubic Hermite initial guess for Zones 2 and 3 in parallel.
+
+        Computes the piecewise cubic Hermite interpolant in (b, σ) space:
+          Zone 2 (b_l ≤ beta < b_c): interpolate between (b_l, s_l) and (b_c, s_c)
+          Zone 3 (b_c ≤ beta ≤ b_h): interpolate between (b_c, s_c) and (b_h, s_h)
+        Slopes are 1/v (derivative dσ/db = 1/vega).
+
+        Returns s_init for all elements (Zone 1/4 elements get s_c as placeholder
+        and are overwritten by the RC fallback in the caller).
+        """
+        N = len(beta)
+        tiny = _NB_TINY
+        s_out = np.empty(N)
+
+        for i in _numba.prange(N):
+            bi = beta[i]
+            bli = b_l[i]
+            bci = b_c[i]
+            bhi = b_h[i]
+            sci = s_c[i]
+
+            if bi < bli or bi > bhi:
+                # Zone 1 or 4 — placeholder; caller overwrites via RC fallback
+                s_out[i] = sci
+            elif bi < bci:
+                # Zone 2: Hermite between (b_l, s_l) and (b_c, s_c)
+                h2 = bci - bli
+                h2s = h2 if abs(h2) > tiny else tiny
+                t2 = (bi - bli) / h2s
+                if t2 < 0.0:
+                    t2 = 0.0
+                elif t2 > 1.0:
+                    t2 = 1.0
+                t2s = t2 * t2
+                t2c = t2s * t2
+                sli = s_l[i]
+                vls = v_l_safe[i]
+                vcs = v_c_safe[i]
+                s_out[i] = (
+                    (2.0 * t2c - 3.0 * t2s + 1.0) * sli
+                    + (t2c - 2.0 * t2s + t2) * h2s / vls
+                    + (-2.0 * t2c + 3.0 * t2s) * sci
+                    + (t2c - t2s) * h2s / vcs
+                )
+            else:
+                # Zone 3: Hermite between (b_c, s_c) and (b_h, s_h)
+                h3 = bhi - bci
+                h3s = h3 if abs(h3) > tiny else tiny
+                t3 = (bi - bci) / h3s
+                if t3 < 0.0:
+                    t3 = 0.0
+                elif t3 > 1.0:
+                    t3 = 1.0
+                t3s = t3 * t3
+                t3c = t3s * t3
+                shi = s_h[i]
+                vcs = v_c_safe[i]
+                vhs = v_h_safe[i]
+                s_out[i] = (
+                    (2.0 * t3c - 3.0 * t3s + 1.0) * sci
+                    + (t3c - 2.0 * t3s + t3) * h3s / vcs
+                    + (-2.0 * t3c + 3.0 * t3s) * shi
+                    + (t3c - t3s) * h3s / vhs
+                )
+
+        return s_out
+
+    @_numba.njit(fastmath=True, parallel=True)
+    def _boundary_kernel_nb(x: np.ndarray, b_max: np.ndarray) -> tuple:
+        """Compute all 3 boundary (b, v) pairs in a single parallel loop.
+
+        Returns (s_c, b_c, v_c_safe, s_l, b_l, v_l_safe, s_h, b_h, v_h_safe).
+        Fuses the 3 × _normalised_black_and_vega calls into one pass,
+        eliminating Python function-call overhead and temporary array allocations.
+        """
+        N = len(x)
+        tiny = _NB_TINY
+        isq2 = _NB_ONE_OVER_SQRT2
+        isq2pi = _NB_ONE_OVER_SQRT2PI
+
+        s_c = np.empty(N)
+        b_c = np.empty(N)
+        vc_s = np.empty(N)  # v_c_safe
+        s_l = np.empty(N)
+        b_l = np.empty(N)
+        vl_s = np.empty(N)  # v_l_safe
+        s_h = np.empty(N)
+        b_h = np.empty(N)
+        vh_s = np.empty(N)  # v_h_safe
+
+        for i in _numba.prange(N):
+            xi = x[i]
+            bm = b_max[i]
+
+            # Boundary 1: s_c = sqrt(|2x|)
+            sci = math.sqrt(abs(2.0 * xi))
+            s_c[i] = sci
+            s_cs = sci if sci > 0.0 else tiny
+            h = xi / s_cs
+            t = 0.5 * s_cs
+            fac = math.exp(-0.5 * (h * h + t * t))
+            bci = abs(
+                max(0.5 * fac * (_erfcx_nb(-isq2 * (h + t)) - _erfcx_nb(-isq2 * (h - t))), 0.0)
+            )
+            vci = fac * isq2pi
+            b_c[i] = bci
+            vcs = vci if vci > 0.0 else tiny
+            vc_s[i] = vcs
+
+            # Boundary 2: s_l = s_c - b_c / v_c
+            sli = sci - bci / vcs
+            s_l[i] = sli
+            s_ls = sli if sli > 0.0 else tiny
+            h = xi / s_ls
+            t = 0.5 * s_ls
+            fac = math.exp(-0.5 * (h * h + t * t))
+            bli = abs(
+                max(0.5 * fac * (_erfcx_nb(-isq2 * (h + t)) - _erfcx_nb(-isq2 * (h - t))), 0.0)
+            )
+            vli = fac * isq2pi
+            b_l[i] = bli
+            vls = vli if vli > 0.0 else tiny
+            vl_s[i] = vls
+
+            # Boundary 3: s_h = s_c + (b_max - b_c) / v_c
+            shi = sci + (bm - bci) / vcs if vci > tiny else sci
+            s_h[i] = shi
+            s_hs = shi if shi > 0.0 else tiny
+            h = xi / s_hs
+            t = 0.5 * s_hs
+            fac = math.exp(-0.5 * (h * h + t * t))
+            bhi = abs(
+                max(0.5 * fac * (_erfcx_nb(-isq2 * (h + t)) - _erfcx_nb(-isq2 * (h - t))), 0.0)
+            )
+            vhi = fac * isq2pi
+            b_h[i] = bhi
+            vhs = vhi if vhi > 0.0 else tiny
+            vh_s[i] = vhs
+
+        return s_c, b_c, vc_s, s_l, b_l, vl_s, s_h, b_h, vh_s
+
+    @_numba.njit(fastmath=True, parallel=True)
+    def _preproc_kernel_nb(
+        price: np.ndarray,
+        F: float,
+        K: np.ndarray,
+        is_call: np.ndarray,
+    ) -> tuple:
+        """Fused preproc: compute (beta, x_red, sqrt_FK, b_max) in one parallel pass.
+
+        Fuses ~10 numpy operations (log, sqrt, where, multiply, etc.) into a single
+        parallel loop, eliminating redundant passes over the 100k float64 arrays.
+
+        Returns (beta, x_red, sqrt_FK, b_max) all of shape (N,).
+        """
+        N = len(price)
+        tiny = _NB_TINY
+        beta_out = np.empty(N)
+        x_red_out = np.empty(N)
+        sqrt_fk_out = np.empty(N)
+        b_max_out = np.empty(N)
+
+        for i in _numba.prange(N):
+            pi = price[i]
+            ki = K[i]
+            qi = 1.0 if is_call[i] else -1.0
+
+            fk = F * ki
+            sqrt_fk = math.sqrt(fk) if fk > 0.0 else tiny
+            sqrt_fk_out[i] = sqrt_fk
+
+            xi = math.log(F / ki) if ki > 0.0 else 0.0
+            x_r = -xi if xi > 0.0 else xi
+            x_red_out[i] = x_r
+            b_max_out[i] = math.exp(0.5 * x_r)
+
+            # Intrinsic value (Black-76 put-call reduction)
+            intr = abs(max(qi * (F - ki), 0.0))
+            itm = qi * xi > 0.0
+            p_red = abs(max(pi - intr, 0.0)) if itm else pi
+            beta_out[i] = p_red / sqrt_fk if sqrt_fk > 0.0 else 0.0
+
+        return beta_out, x_red_out, sqrt_fk_out, b_max_out
+
+    @_numba.njit(fastmath=True, parallel=True)
+    def _postproc_kernel_nb(
+        sigma_hat: np.ndarray,
+        price: np.ndarray,
+        F: float,
+        K: np.ndarray,
+        T: float,
+        sqrt_T: float,
+    ) -> np.ndarray:
+        """Fused postproc: denormalise sigma_hat and apply NaN guards in one pass."""
+        N = len(sigma_hat)
+        out = np.empty(N)
+        inv_sqrt_T = 1.0 / sqrt_T if sqrt_T > 0.0 else 0.0
+
+        for i in _numba.prange(N):
+            pi = price[i]
+            ki = K[i]
+            sh = sigma_hat[i]
+            bad = (pi <= 0.0) or (T <= 0.0) or (F <= 0.0) or (ki <= 0.0) or (sh <= 0.0)
+            out[i] = math.nan if bad else sh * inv_sqrt_T
+
+        return out
+
+else:
+    _householder_kernel_nb = None  # type: ignore[assignment]
+    _hermite_guess_kernel_nb = None  # type: ignore[assignment]
+    _boundary_kernel_nb = None  # type: ignore[assignment]
+    _preproc_kernel_nb = None  # type: ignore[assignment]
+    _postproc_kernel_nb = None  # type: ignore[assignment]
+
+
 # ── Rational-cubic interpolation ───────────────────────────────────────────────
 
 
@@ -1159,39 +1519,82 @@ def jackel_iv_normalized(beta: np.ndarray, x: np.ndarray, n_iters: int = 2) -> n
 
     # Branch boundaries — computed ONCE and shared between initial guess and
     # Householder objective dispatch (eliminates 3 redundant normalised_black_call calls).
-    s_c = np.sqrt(np.abs(2.0 * x))
-    b_c = normalised_black_call(x, s_c)
-    v_c = normalised_vega(x, s_c)
-    v_c_safe = np.where(v_c > 0.0, v_c, np.finfo(float).tiny)
+    # I-4b: use fused _normalised_black_and_vega for all 3 boundary pairs (saves
+    # region-dispatch overhead on each call; x ≤ 0 guaranteed from jackel_iv_black).
+    # I-4d: use numba parallel kernel to fuse all 3 boundary pairs into one loop.
+    if _NUMBA_AVAILABLE and _boundary_kernel_nb is not None:
+        s_c, b_c, v_c_safe, s_l, b_l, v_l_safe, s_h, b_h, v_h_safe = _boundary_kernel_nb(x, b_max)
+    else:
+        s_c = np.sqrt(np.abs(2.0 * x))
+        b_c, v_c = _normalised_black_and_vega(x, s_c)
+        v_c_safe = np.where(v_c > 0.0, v_c, np.finfo(float).tiny)
 
-    s_l = s_c - b_c / v_c_safe
-    b_l = normalised_black_call(x, s_l)
-    v_l = normalised_vega(x, s_l)
-    v_l_safe = np.where(v_l > 0.0, v_l, np.finfo(float).tiny)
+        s_l = s_c - b_c / v_c_safe
+        b_l, v_l = _normalised_black_and_vega(x, s_l)
+        v_l_safe = np.where(v_l > 0.0, v_l, np.finfo(float).tiny)
 
-    s_h = np.where(v_c > _DBL_MIN, s_c + (b_max - b_c) / v_c_safe, s_c)
-    b_h = normalised_black_call(x, s_h)
-    v_h = normalised_vega(x, s_h)
-    v_h_safe = np.where(v_h > 0.0, v_h, np.finfo(float).tiny)
+        s_h = np.where(v_c > _DBL_MIN, s_c + (b_max - b_c) / v_c_safe, s_c)
+        b_h, v_h = _normalised_black_and_vega(x, s_h)
+        v_h_safe = np.where(v_h > 0.0, v_h, np.finfo(float).tiny)
 
     # Upper branch applies when beta > max(b_h, b_max/2)
     b_tilde_h = np.maximum(b_h, 0.5 * b_max)
 
-    # ── Initial guess (4-branch) — pass precomputed boundary values ────────────
-    s = _jackel_initial_guess(
-        beta,
-        x,
-        b_max,
-        s_c,
-        b_c,
-        v_c_safe,
-        s_l,
-        b_l,
-        v_l_safe,
-        s_h,
-        b_h,
-        v_h_safe,
-    )
+    # ── Initial guess — cubic Hermite for Zones 2/3; RC fallback for Zones 1/4 ─
+    # I-4c: Zones 2 and 3 use cubic Hermite interpolation in (b, σ) space.
+    # I-4e: numba-JIT parallel Hermite kernel eliminates 7ms numpy overhead.
+    if _NUMBA_AVAILABLE and _hermite_guess_kernel_nb is not None:
+        # Fast path: parallel Hermite for all elements; Zone 1/4 get s_c placeholder
+        s = _hermite_guess_kernel_nb(
+            beta, s_l, b_l, v_l_safe, s_c, b_c, v_c_safe, s_h, b_h, v_h_safe
+        )
+    else:
+        _tiny_ig = np.finfo(float).tiny
+        h2 = np.where(np.abs(b_c - b_l) > _tiny_ig, b_c - b_l, _tiny_ig)
+        t2 = np.clip((beta - b_l) / h2, 0.0, 1.0)
+        t2_sq, t2_cu = t2 * t2, t2 * t2 * t2
+        s_z2 = (
+            (2.0 * t2_cu - 3.0 * t2_sq + 1.0) * s_l
+            + (t2_cu - 2.0 * t2_sq + t2) * h2 / v_l_safe
+            + (-2.0 * t2_cu + 3.0 * t2_sq) * s_c
+            + (t2_cu - t2_sq) * h2 / v_c_safe
+        )
+        h3 = np.where(np.abs(b_h - b_c) > _tiny_ig, b_h - b_c, _tiny_ig)
+        t3 = np.clip((beta - b_c) / h3, 0.0, 1.0)
+        t3_sq, t3_cu = t3 * t3, t3 * t3 * t3
+        s_z3 = (
+            (2.0 * t3_cu - 3.0 * t3_sq + 1.0) * s_c
+            + (t3_cu - 2.0 * t3_sq + t3) * h3 / v_c_safe
+            + (-2.0 * t3_cu + 3.0 * t3_sq) * s_h
+            + (t3_cu - t3_sq) * h3 / v_h_safe
+        )
+        _z2_mask = (beta >= b_l) & (beta < b_c)
+        s = np.where(_z2_mask, s_z2, s_z3)
+
+    # Zones 1 and 4: rational-cubic on the (small) subset of extreme elements only
+    _z1_mask = beta < b_l
+    _z4_mask = beta > b_h
+    _z14 = _z1_mask | _z4_mask
+    if np.any(_z14):
+        # Index out only Zone 1/4 elements — avoids running RC on full 100k array
+        _idx = np.where(_z14)[0]
+        s_rc_sub = _jackel_initial_guess(
+            beta[_idx],
+            x[_idx],
+            b_max[_idx],
+            s_c[_idx],
+            b_c[_idx],
+            v_c_safe[_idx],
+            s_l[_idx],
+            b_l[_idx],
+            v_l_safe[_idx],
+            s_h[_idx],
+            b_h[_idx],
+            v_h_safe[_idx],
+        )
+        s = s.copy()
+        s[_idx] = s_rc_sub
+
     s = np.where(s > 0.0, s, s_c)  # fallback: inflection point
 
     # ── Householder(3) × n_iters with 3-branch objective ──────────────────────
@@ -1199,57 +1602,68 @@ def jackel_iv_normalized(beta: np.ndarray, x: np.ndarray, n_iters: int = 2) -> n
     use_upper = beta > b_tilde_h
     # use_middle: all others
 
-    for _ in range(n_iters):
-        s_safe = np.where(s > 0.0, s, np.finfo(float).tiny)
-        with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
-            b = normalised_black_call(x, s_safe)
-            bp = normalised_vega(x, s_safe)
-
-        bp_safe = np.where(bp > 0.0, bp, np.finfo(float).tiny)
-        b_safe = np.where(b > 0.0, b, np.finfo(float).tiny)
-
-        x_over_s = x / s_safe
-        xs2 = x_over_s / s_safe  # x/s²
-        b_halley = x_over_s * x_over_s / s_safe - s_safe / 4.0  # (x/s)²/s = x²/s³ − s/4
-        b_hh3 = b_halley * b_halley - 3.0 * xs2 * xs2 - 0.25  # halley² − 3(x/s²)² − 1/4
-
-        # Middle branch: g = b − β
-        newton_m = (beta - b) / bp_safe
-        halley_m = b_halley
-        hh3_m = b_hh3
-
-        # Lower branch: g = 1/ln(b) − 1/ln(β)
-        ln_b = np.log(b_safe)
-        ln_beta = np.log(np.where(beta > 0.0, beta, np.finfo(float).tiny))
-        bpob = bp / b_safe
-        ln_b_safe = np.where(np.abs(ln_b) > 0.0, ln_b, np.finfo(float).tiny)
-        newton_lo = (ln_beta - ln_b) * ln_b / ln_beta / bpob
-        halley_lo = b_halley - bpob * (1.0 + 2.0 / ln_b_safe)
-        hh3_lo = (
-            b_hh3
-            + 2.0 * bpob * bpob * (1.0 + 3.0 / ln_b_safe * (1.0 + 1.0 / ln_b_safe))
-            - 3.0 * b_halley * bpob * (1.0 + 2.0 / ln_b_safe)
+    if _NUMBA_AVAILABLE and _householder_kernel_nb is not None:
+        # Fast path: numba-JIT parallel loop fusing erfcx + exp + branch dispatch
+        s = _householder_kernel_nb(
+            s.copy(),
+            beta,
+            x,
+            use_lower,
+            use_upper,
+            b_max,
+            n_iters,
         )
+    else:
+        for _ in range(n_iters):
+            s_safe = np.where(s > 0.0, s, np.finfo(float).tiny)
+            with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+                b, bp = _normalised_black_and_vega(x, s_safe)
 
-        # Upper branch: g = ln((b_max − β) / (b_max − b))
-        b_max_b = b_max - b
-        b_max_b_safe = np.where(b_max_b > 0.0, b_max_b, np.finfo(float).tiny)
-        b_max_beta = b_max - beta
-        b_max_beta_safe = np.where(b_max_beta > 0.0, b_max_beta, np.finfo(float).tiny)
-        g = np.log(b_max_beta_safe / b_max_b_safe)
-        gp = bp / b_max_b_safe
-        newton_hi = -g / gp
-        halley_hi = b_halley + gp
-        hh3_hi = b_hh3 + gp * (2.0 * gp + 3.0 * b_halley)
+            bp_safe = np.where(bp > 0.0, bp, np.finfo(float).tiny)
+            b_safe = np.where(b > 0.0, b, np.finfo(float).tiny)
 
-        # Dispatch
-        newton = np.where(use_lower, newton_lo, np.where(use_upper, newton_hi, newton_m))
-        halley = np.where(use_lower, halley_lo, np.where(use_upper, halley_hi, halley_m))
-        hh3 = np.where(use_lower, hh3_lo, np.where(use_upper, hh3_hi, hh3_m))
+            x_over_s = x / s_safe
+            xs2 = x_over_s / s_safe  # x/s²
+            b_halley = x_over_s * x_over_s / s_safe - s_safe / 4.0  # (x/s)²/s = x²/s³ − s/4
+            b_hh3 = b_halley * b_halley - 3.0 * xs2 * xs2 - 0.25  # halley² − 3(x/s²)² − 1/4
 
-        ds = newton * _householder_factor(newton, halley, hh3)
-        ds = np.maximum(-0.5 * s_safe, ds)
-        s = s_safe + ds
+            # Middle branch: g = b − β
+            newton_m = (beta - b) / bp_safe
+            halley_m = b_halley
+            hh3_m = b_hh3
+
+            # Lower branch: g = 1/ln(b) − 1/ln(β)
+            ln_b = np.log(b_safe)
+            ln_beta = np.log(np.where(beta > 0.0, beta, np.finfo(float).tiny))
+            bpob = bp / b_safe
+            ln_b_safe = np.where(np.abs(ln_b) > 0.0, ln_b, np.finfo(float).tiny)
+            newton_lo = (ln_beta - ln_b) * ln_b / ln_beta / bpob
+            halley_lo = b_halley - bpob * (1.0 + 2.0 / ln_b_safe)
+            hh3_lo = (
+                b_hh3
+                + 2.0 * bpob * bpob * (1.0 + 3.0 / ln_b_safe * (1.0 + 1.0 / ln_b_safe))
+                - 3.0 * b_halley * bpob * (1.0 + 2.0 / ln_b_safe)
+            )
+
+            # Upper branch: g = ln((b_max − β) / (b_max − b))
+            b_max_b = b_max - b
+            b_max_b_safe = np.where(b_max_b > 0.0, b_max_b, np.finfo(float).tiny)
+            b_max_beta = b_max - beta
+            b_max_beta_safe = np.where(b_max_beta > 0.0, b_max_beta, np.finfo(float).tiny)
+            g = np.log(b_max_beta_safe / b_max_b_safe)
+            gp = bp / b_max_b_safe
+            newton_hi = -g / gp
+            halley_hi = b_halley + gp
+            hh3_hi = b_hh3 + gp * (2.0 * gp + 3.0 * b_halley)
+
+            # Dispatch
+            newton = np.where(use_lower, newton_lo, np.where(use_upper, newton_hi, newton_m))
+            halley = np.where(use_lower, halley_lo, np.where(use_upper, halley_hi, halley_m))
+            hh3 = np.where(use_lower, hh3_lo, np.where(use_upper, hh3_hi, hh3_m))
+
+            ds = newton * _householder_factor(newton, halley, hh3)
+            ds = np.maximum(-0.5 * s_safe, ds)
+            s = s_safe + ds
 
     out = np.where(finite, np.maximum(s, 0.0), 0.0)
     return out
@@ -1280,11 +1694,37 @@ def jackel_iv_black(
     σ  : annualised implied volatility (NaN for degenerate inputs)
     """
     price = np.asarray(price, dtype=float)
-    F = np.asarray(F, dtype=float)
+    F_arr = np.asarray(F, dtype=float)
     K = np.asarray(K, dtype=float)
-    T = np.asarray(T, dtype=float)
+    T_arr = np.asarray(T, dtype=float)
     is_call_arr = np.asarray(is_call, dtype=bool)
 
+    # I-4f: numba-fused preproc/postproc when F and T are scalar (common case).
+    # Falls back to numpy when F or T are arrays (handles broadcasting edge cases).
+    if (
+        _NUMBA_AVAILABLE
+        and _preproc_kernel_nb is not None
+        and F_arr.ndim == 0
+        and T_arr.ndim == 0
+        and price.ndim == 1
+        and K.ndim == 1
+    ):
+        F_f = float(F_arr)
+        T_f = float(T_arr)
+        sqrt_T_f = math.sqrt(max(T_f, 0.0))
+        # Broadcast scalar is_call to match K shape for the numba kernel
+        N = len(K)
+        if is_call_arr.ndim == 0:
+            is_call_1d = np.full(N, bool(is_call_arr), dtype=bool)
+        else:
+            is_call_1d = is_call_arr
+        beta, x_red, sqrt_FK, _b_max = _preproc_kernel_nb(price, F_f, K, is_call_1d)
+        sigma_hat = jackel_iv_normalized(beta, x_red)
+        return _postproc_kernel_nb(sigma_hat, price, F_f, K, T_f, sqrt_T_f)
+
+    # Numpy fallback (F or T are arrays, or numba unavailable)
+    F = F_arr
+    T = T_arr
     sqrt_FK = np.sqrt(F * K)
     x = np.log(F / K)
     sqrt_T = np.sqrt(np.maximum(T, 0.0))
