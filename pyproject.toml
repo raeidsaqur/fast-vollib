@@ -132,6 +132,7 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "pre-commit>=3.7.0",
+    "py-lets-be-rational>=1.0.1",
 ]
 docs = [
     "mkdocs>=1.6",

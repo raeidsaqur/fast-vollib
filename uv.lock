@@ -756,6 +756,7 @@ bench = [
 dev = [
     { name = "mypy" },
     { name = "pre-commit" },
+    { name = "py-lets-be-rational" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -793,6 +794,7 @@ bench = [{ name = "pytest-benchmark", specifier = ">=4.0" }]
 dev = [
     { name = "mypy", specifier = ">=1.10" },
     { name = "pre-commit", specifier = ">=3.7.0" },
+    { name = "py-lets-be-rational", specifier = ">=1.0.1" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "ruff", specifier = ">=0.4" },
 ]
