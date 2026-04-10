@@ -69,6 +69,7 @@ nav:
       - Quick Start: quickstart.md
   - User Guide:
       - Backend Selection: backends.md
+      - Jäckel IV Solver: jackel.md
       - Compatibility: compatibility.md
       - Benchmarks: benchmarks.md
   - API Reference: api.md

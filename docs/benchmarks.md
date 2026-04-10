@@ -97,6 +97,44 @@ test.
 
 ---
 
+## Jäckel IV solver performance
+
+The `jackel/` module provides a machine-precision IV solver using Jäckel's
+*"Let's Be Rational"* algorithm.  The table below shows the optimisation
+trajectory on the canonical benchmark grid (N = 100,000 options,
+H100 NVL GPU).
+
+### CPU chain (NumPy → Numba, 100k options)
+
+| Stage | Time (ms) | Speedup | Max rel err |
+|---|---:|---:|---|
+| NumPy baseline (I-1) | 106.5 | 1× | 3.2 × 10⁻¹⁴ |
+| + fused vega (I-3) | 88.9 | 1.2× | 3.2 × 10⁻¹⁴ |
+| + Numba Householder (I-4) | 58.6 | 1.8× | 3.2 × 10⁻¹⁴ |
+| + Numba boundary kernel (I-4b) | 37.0 | 2.9× | 3.2 × 10⁻¹⁴ |
+| + Hermite initial guess (I-4c/d) | 15.5 | 6.9× | 1.7 × 10⁻¹⁵ |
+| + Numba Hermite kernel (I-4e) | 11.6 | 9.2× | 1.7 × 10⁻¹⁵ |
+| + Numba preproc/postproc **(I-4f)** | **8.5** | **12.5×** | **2.2 × 10⁻¹⁵** |
+
+### GPU backends (100k options, CUDA events)
+
+| Backend | Compute (ms) | Wall-clock (ms) | Max rel err |
+|---|---:|---:|---|
+| torch.compile (I-5) | 2.7 | 4.8 | 2.8 × 10⁻¹⁵ |
+| JAX lax.fori_loop (I-6) | 2.4 | 2.4 | 4.9 × 10⁻¹⁵ |
+| **Triton single-pass (I-7)** | **0.056** | 2.1 | 9.3 × 10⁻¹⁴ |
+
+The Triton kernel is **11× faster** than the 0.636 ms Halley×8 target and
+**1905× faster** than the CPU baseline.
+
+To reproduce:
+
+```bash
+uv run python scripts/jackel_triton_bench.py
+```
+
+---
+
 ## Reporting benchmark results responsibly
 
 When quoting fast-vollib timings, include:
