@@ -20,6 +20,19 @@ separate changelog entries.
 
 ### Added
 
+- **`fast_vollib.jackel` module** — full implementation of Peter Jäckel's
+  *"Let's Be Rational"* (2016) algorithm with four backends:
+    - `jackel_iv_black` — NumPy + Numba (six parallel kernels; ~8.5 ms / 100k)
+    - `jackel_iv_black_torch` — PyTorch with `torch.compile(dynamic=True)` (~2.7 ms GPU compute)
+    - `jackel_iv_black_jax` — JAX `lax.fori_loop` + `@jax.jit` (~2.4 ms GPU compute)
+    - `jackel_iv_triton` — single-pass Triton kernel; entire pipeline in registers (**0.056 ms GPU compute / 100k**)
+- Dedicated test package `tests/test_jackel/` with parity tests against
+  `py_lets_be_rational` (oracle); max relative error < 10⁻⁸.
+- `py-lets-be-rational` added to the `dev` dependency group so CI installs
+  the oracle automatically.
+- `scripts/jackel_triton_bench.py` — correctness + CUDA-event timing script
+  for the Triton kernel.
+  
 - **Numba backend** (`backend="numba"`): JIT-compiled CPU kernels via
   `@numba.njit(parallel=True)`.  Pricing, Greeks, and the full
   Halley+bisection IV solver run as a single native-code dispatch per batch.
@@ -28,6 +41,7 @@ separate changelog entries.
   subsequent runs.
 - Isolated numba test suite under `tests/numba/` (skipped automatically when
   numba is not installed).
+
 
 ### Fixed
 

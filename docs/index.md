@@ -17,6 +17,8 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
 - **Vectorized IV solver** — Halley's method with bisection fallback; handles large option chains efficiently
+- **Machine-precision IV** — Jäckel "Let's Be Rational" solver (`jackel/`) with Householder(3)×3; max relative error ~10⁻¹⁴
+- **GPU-fused Jäckel** — single-pass Triton kernel achieving **0.056 ms / 100k** options on H100
 - **Full Greeks** — delta, gamma, theta, rho, vega, and `get_all_greeks` in one call
 - **Pluggable backends** — NumPy (default), PyTorch (GPU-accelerated), JAX
 - **DataFrame-native** — `price_dataframe` works directly on pandas DataFrames
@@ -74,6 +76,7 @@ greeks = fast_vollib.get_all_greeks(
 | [Installation](installation.md) | Install fast-vollib with pip, uv, or conda |
 | [Quick Start](quickstart.md) | More complete worked examples |
 | [Backend Selection](backends.md) | How to choose between NumPy, PyTorch, and JAX |
+| [Jäckel IV Solver](jackel.md) | Machine-precision IV — algorithm, API, and GPU benchmarks |
 | [Compatibility](compatibility.md) | Drop-in `py_vollib` replacement guide |
 | [Benchmarks](benchmarks.md) | Performance numbers and how to reproduce them |
 | [API Reference](api.md) | Complete function signatures and parameters |

@@ -142,3 +142,18 @@ python my_script.py
 - Large batches (≥ 10 k options) on a CPU-only machine
 - Environments where PyTorch / JAX cannot be installed (e.g. minimal Docker images)
 - When you need deterministic, portable CPU performance without GPU drivers
+
+## Jäckel IV — a separate high-precision solver
+
+The `fast_vollib.jackel` module is **not** routed through the backend system
+described above.  It is a self-contained implementation of Peter Jäckel's
+*"Let's Be Rational"* algorithm and exposes one function per backend:
+
+| Backend | Import | Notes |
+|---|---|---|
+| NumPy + Numba (CPU) | `fast_vollib.jackel.jackel_iv.jackel_iv_black` | Parallel Numba kernels; ~8.5 ms / 100k |
+| PyTorch (GPU) | `fast_vollib.jackel.torch_backend.jackel_iv_black_torch` | `torch.compile` fused; ~2.7 ms / 100k |
+| JAX (GPU) | `fast_vollib.jackel.jax_backend.jackel_iv_black_jax` | XLA fused; ~2.4 ms / 100k |
+| Triton (GPU) | `fast_vollib.jackel.triton_kernels.jackel_iv_triton` | Single-pass kernel; **0.056 ms / 100k** |
+
+See [Jäckel IV](jackel.md) for full documentation and usage examples.

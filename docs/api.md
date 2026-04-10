@@ -327,6 +327,68 @@ Set a process-level backend override. Valid values are `"auto"`, `"numpy"`,
 
 ---
 
+## Jäckel IV — machine-precision solver
+
+The `fast_vollib.jackel` module provides a standalone implementation of Peter
+Jäckel's *"Let's Be Rational"* algorithm.  These functions are called directly
+(not routed through `backend=`).  See [Jäckel IV](jackel.md) for full
+documentation.
+
+### `jackel_iv_black` (CPU — NumPy + Numba)
+
+```python
+from fast_vollib.jackel.jackel_iv import jackel_iv_black
+
+jackel_iv_black(price, F, K, T, is_call=True) -> np.ndarray
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `price` | `float \| ndarray` | Undiscounted option price |
+| `F` | `float \| ndarray` | Forward price |
+| `K` | `float \| ndarray` | Strike |
+| `T` | `float \| ndarray` | Time to expiry (years) |
+| `is_call` | `bool \| ndarray` | `True` = call, `False` = put |
+
+**Returns:** Annualised implied volatility. `NaN` for degenerate inputs
+(zero price, below intrinsic, zero expiry).
+
+### `jackel_iv_black_torch` (GPU — PyTorch)
+
+```python
+from fast_vollib.jackel.torch_backend import jackel_iv_black_torch
+
+jackel_iv_black_torch(price, F, K, T, is_call=True) -> torch.Tensor
+```
+
+Inputs must be `torch.float64` tensors on the same device.  The Householder
+loop is compiled with `torch.compile(dynamic=True)`.
+
+### `jackel_iv_black_jax` (GPU — JAX)
+
+```python
+from fast_vollib.jackel.jax_backend import jackel_iv_black_jax
+
+jackel_iv_black_jax(price, F, K, T, is_call=True) -> jax.Array
+```
+
+Uses `jax.lax.fori_loop` inside a `@jax.jit`-compiled function.
+Float64 mode is enabled automatically at import.
+
+### `jackel_iv_triton` (GPU — Triton, fastest)
+
+```python
+from fast_vollib.jackel.triton_kernels import jackel_iv_triton
+
+jackel_iv_triton(price, F, K, T, is_call=True) -> torch.Tensor
+```
+
+Single-pass `@triton.jit` kernel.  All pipeline stages (preproc, boundary,
+Hermite guess, Householder×3) execute in registers with one HBM read and one
+HBM write per element.
+
+---
+
 ## Compatibility
 
 ### `patch_py_vollib`
