@@ -1,5 +1,6 @@
 line-length = 100
 target-version = "py311"
+exclude = ["*.ipynb"]
 
 [format]
 quote-style = "double"
@@ -77,6 +78,9 @@ unfixable = [
 ]
 "src/fast_vollib/compat/py_vollib.py" = [
     "F401",   # wrapper imports intentionally expose patched callables
+]
+"src/fast_vollib/jackel/jackel_iv.py" = [
+    "F841",   # intermediate mask variables aid readability in numerical dispatch code
 ]
 
 [lint.isort]
