@@ -26,7 +26,7 @@ def _jax_available() -> bool:
 
 def set_backend(name: BackendLiteral) -> None:
     global _BACKEND_OVERRIDE
-    if name not in {"auto", "numpy", "torch", "jax"}:
+    if name not in {"auto", "numpy", "torch", "jax", "numba"}:
         raise ValueError(f"Unsupported backend: {name}")
     _BACKEND_OVERRIDE = name
 

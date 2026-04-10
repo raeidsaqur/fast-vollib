@@ -1,10 +1,11 @@
 # Backend Selection
 
-fast-vollib supports three numeric backends. All backends expose the same API and produce numerically equivalent results.
+fast-vollib supports four numeric backends. All backends expose the same API and produce numerically equivalent results.
 
 | Backend | When to use |
 |---|---|
 | `numpy` | Default; works everywhere; no GPU required |
+| `numba` | JIT-compiled CPU loops; faster than NumPy for large batches |
 | `torch` | GPU acceleration on CUDA hardware |
 | `jax` | JIT-compiled CPU/GPU/TPU; functional programming style |
 
@@ -21,6 +22,12 @@ using this priority order:
 4. `torch` — if `torch.cuda.is_available()` returns `True`
 5. `jax` — if JAX is importable
 6. `numpy` — always available as the final fallback
+
+!!! note
+    The `numba` backend is **not** inserted into the `auto` resolution chain because
+    it is a CPU-only backend like NumPy.  Use it explicitly via `backend="numba"` or
+    `FAST_VOLLIB_BACKEND=numba` when you want JIT-compiled CPU acceleration without
+    a GPU.
 
 ---
 
@@ -94,10 +101,47 @@ name to a native backend array or tensor.
 | Backend | `pip install` | Notes |
 |---|---|---|
 | `numpy` | bundled | Always available |
+| `numba` | `pip install "fast-vollib[numba]"` | CPU-only; JIT-compiled parallel loops |
 | `torch` | `pip install "fast-vollib[torch]"` | CPU wheels are cross-platform; GPU requires CUDA |
 | `jax` | `pip install "fast-vollib[jax]"` | CPU-only by default; add `jax[cuda13]` for GPU |
 
 ---
+
+## Numba backend
+
+The Numba backend compiles Black-Scholes pricing, Greeks, and the
+Halley+bisection IV solver to native machine code via `@numba.njit(parallel=True)`.
+Each batch incurs a single Python→native dispatch; the Halley loop and
+bisection fallback execute entirely within the compiled kernel.
+
+Kernels are compiled on **first call** and cached to `__pycache__` for
+subsequent process starts.  Expect a ~1–2 s warm-up on the first call; all
+subsequent calls hit the cache and are near-instant.
+
+```python
+import fast_vollib
+
+# Use the numba backend for a single call
+price = fast_vollib.fast_black_scholes(
+    flag="c", S=100, K=100, t=0.25, r=0.05, sigma=0.20,
+    backend="numba",
+)
+
+# Or set it process-wide
+fast_vollib.set_backend("numba")
+```
+
+```bash
+# Or via environment variable
+export FAST_VOLLIB_BACKEND=numba
+python my_script.py
+```
+
+### When to choose numba over numpy
+
+- Large batches (≥ 10 k options) on a CPU-only machine
+- Environments where PyTorch / JAX cannot be installed (e.g. minimal Docker images)
+- When you need deterministic, portable CPU performance without GPU drivers
 
 ## Jäckel IV — a separate high-precision solver
 
