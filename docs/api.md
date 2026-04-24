@@ -31,6 +31,16 @@ The following parameters appear across pricing, IV, and Greek functions:
 All array-like parameters are broadcast against each other using NumPy
 broadcasting rules.
 
+!!! tip "Shape-aware type hints"
+    Every public entry point carries [`jaxtyping`](https://docs.kidger.site/jaxtyping/)
+    shape annotations under a `TYPE_CHECKING` guard.  Static checkers see
+    `Float[np.ndarray, "n"]` / `Bool[np.ndarray, "n"]` at the backend
+    dispatch layer and a permissive `ArrayLike | FlagLike` union on the
+    user-facing signatures.  At runtime the annotations are stored as
+    PEP 563 strings and are never evaluated — there is no call-site cost.
+    See [Runtime type checking](#runtime-type-checking) to turn them into
+    enforced checks in tests or debug sessions.
+
 ---
 
 ## Pricing
@@ -410,3 +420,73 @@ Monkey-patch the `py_vollib_vectorized` namespace with fast-vollib
 implementations. Requires `py_vollib_vectorized` to be installed.
 
 See [Compatibility](compatibility.md) for examples and caveats.
+
+---
+
+## Runtime type checking
+
+fast-vollib ships pure shape annotations (no decorators) on the public
+API and on the four backend dispatch entry points.  When combined with
+`jaxtyping` + `beartype`, the annotations become enforced runtime
+checks that reject wrong-shape or wrong-dtype inputs at the boundary —
+without touching any inner hot path.
+
+### Install the extra
+
+```bash
+pip install "fast-vollib[typecheck]"
+```
+
+This pulls in `jaxtyping` and `beartype`.  The base install never loads
+either package; you can verify with:
+
+```bash
+python -c "import fast_vollib, sys; assert 'jaxtyping' not in sys.modules"
+```
+
+### Enable checks at import time
+
+```python
+from fast_vollib._typing import enable_runtime_checks
+enable_runtime_checks()          # install before importing fast_vollib
+import fast_vollib                 # public signatures now enforced
+```
+
+`enable_runtime_checks()` installs a `jaxtyping` import hook scoped to:
+
+- `fast_vollib.api`
+- `fast_vollib.models`
+- `fast_vollib.greeks`
+- `fast_vollib.implied_volatility`
+- `fast_vollib.backends.{numpy,torch,jax,numba}_backend`
+
+Everything under `fast_vollib.jackel`, all `@triton.jit` kernels,
+`@numba.njit` factories, `torch.compile` closures, and `@jax.jit`-traced
+functions are **deliberately excluded** from the hook so that compiled
+pipelines see exactly the same bytecode with or without the extra.
+
+### Customising the scope
+
+Pass an explicit tuple of module names to narrow or widen the hook
+(for example, only the backend dispatch layer):
+
+```python
+enable_runtime_checks((
+    "fast_vollib.backends.numpy_backend",
+    "fast_vollib.backends.torch_backend",
+))
+```
+
+### Performance impact
+
+None, when the hook is not installed.  The annotations live inside a
+`TYPE_CHECKING` block and as PEP 563 strings, so:
+
+- `jaxtyping` / `beartype` are not imported by default
+- No decorators are ever applied at module load
+- Call-site dispatch is unchanged byte-for-byte
+
+When the hook **is** installed, `beartype` performs an O(1) isinstance +
+shape + dtype check per public-API call (microseconds, independent of
+array size).  This is intended for tests and development; production
+code typically leaves the hook off.

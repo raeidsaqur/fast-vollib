@@ -73,6 +73,22 @@ pip install "fast-vollib[numba]"
 uv add "fast-vollib[numba]"
 ```
 
+### Runtime type checking (optional)
+
+Opt-in shape-aware checking of the public API via `jaxtyping` + `beartype`.
+Annotations are already present in the library (PEP 563 strings, zero cost
+by default); installing this extra only enables the `install_import_hook`
+used by `fast_vollib._typing.enable_runtime_checks()`.
+
+```bash
+pip install "fast-vollib[typecheck]"
+# or
+uv add "fast-vollib[typecheck]"
+```
+
+See [API Reference → Runtime type checking](api.md#runtime-type-checking)
+for usage.
+
 ### Multiple backends
 
 ```bash

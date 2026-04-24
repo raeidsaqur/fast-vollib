@@ -24,6 +24,7 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 - **DataFrame-native** — `price_dataframe` works directly on pandas DataFrames
 - **Drop-in compatibility** — separate patch helpers for `py_vollib` and `py_vollib_vectorized`
 - **Automatic backend selection** — prefers CUDA-capable PyTorch > JAX > NumPy
+- **Opt-in shape-aware typing** — `jaxtyping` + `beartype` annotations on every public entry point; zero runtime cost unless enabled, and never applied inside `torch.compile` / Triton / Numba / JAX-jit hot paths
 
 ---
 
