@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 import pandas as pd
 
@@ -8,25 +10,29 @@ from .config import get_backend
 from .greeks import delta, gamma, rho, theta, vega
 from .implied_volatility import fast_implied_volatility, fast_implied_volatility_black
 from .models import fast_black, fast_black_scholes, fast_black_scholes_merton
+from .types import BackendLiteral, ModelLiteral, ReturnAsLiteral
 from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
 from .utils.formatting import format_greeks_output
 from .utils.validation import validate_data
 
+if TYPE_CHECKING:
+    from ._typing import ArrayLike, FlagLike, OptionalArrayLike  # noqa: F401
+
 
 def get_all_greeks(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=None,
-    backend="auto",
-    return_native=False,
+    backend: BackendLiteral = "auto",
+    return_native: bool = False,
 ):
     # Single-pass: preprocess once, call backend greeks() once (avoids 5x redundant d1/d2/exp/ndtr)
     _dtype = dtype if dtype is not None else np.float64
@@ -56,19 +62,19 @@ def get_all_greeks(
 def price_dataframe(
     df: pd.DataFrame,
     *,
-    flag_col=None,
-    underlying_price_col=None,
-    strike_col=None,
-    annualized_tte_col=None,
-    riskfree_rate_col=None,
-    sigma_col=None,
-    price_col=None,
-    dividend_col=None,
-    model="black_scholes",
-    inplace=False,
+    flag_col: str | None = None,
+    underlying_price_col: str | None = None,
+    strike_col: str | None = None,
+    annualized_tte_col: str | None = None,
+    riskfree_rate_col: str | None = None,
+    sigma_col: str | None = None,
+    price_col: str | None = None,
+    dividend_col: str | None = None,
+    model: ModelLiteral = "black_scholes",
+    inplace: bool = False,
     dtype=None,
-    backend="auto",
-    return_native=False,
+    backend: BackendLiteral = "auto",
+    return_native: bool = False,
 ):
     if flag_col is None:
         raise ValueError("You must specify a `flag_col` argument!")

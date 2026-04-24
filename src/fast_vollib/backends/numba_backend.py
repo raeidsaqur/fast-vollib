@@ -28,11 +28,15 @@ Design conventions that match the rest of fast-vollib
 from __future__ import annotations
 
 import math
+from typing import TYPE_CHECKING
 
 import numpy as np
 
-from ..types import ModelLiteral
+from ..types import ModelLiteral, OnErrorLiteral
 from ..utils.validation import handle_error
+
+if TYPE_CHECKING:
+    from .._typing import FlagArray, Float1D, OptionalFloat1D  # noqa: F401
 
 # ---------------------------------------------------------------------------
 # Availability
@@ -380,40 +384,40 @@ def _intrinsic_vec(
 
 
 def price_black(
-    flag: np.ndarray,
-    f: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-) -> np.ndarray:
+    flag: FlagArray,
+    f: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+) -> Float1D:
     # Black-76: q = r so carry = disc and d1 = [ln(F/K) + 0.5σ²T] / (σ√T)
     is_call = flag == "c"
     return _get_kernels()["price"](is_call, f, k, t, r, sigma, r)
 
 
 def price_black_scholes(
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-) -> np.ndarray:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+) -> Float1D:
     is_call = flag == "c"
     q = np.zeros_like(r)
     return _get_kernels()["price"](is_call, s, k, t, r, sigma, q)
 
 
 def price_black_scholes_merton(
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray,
-) -> np.ndarray:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+    q: Float1D,
+) -> Float1D:
     is_call = flag == "c"
     return _get_kernels()["price"](is_call, s, k, t, r, sigma, q)
 
@@ -425,14 +429,14 @@ def price_black_scholes_merton(
 
 def greeks(
     model: ModelLiteral,
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray | None = None,
-) -> dict[str, np.ndarray]:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+    q: OptionalFloat1D = None,
+) -> dict[str, Float1D]:
     # Black-76: q = r so carry = disc and d1 uses only the σ² drift term
     qv = r if (model == "black" and q is None) else (np.zeros_like(r) if q is None else q)
     is_call = flag == "c"
@@ -453,15 +457,15 @@ def greeks(
 
 def implied_volatility(
     model: ModelLiteral,
-    price: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    flag: np.ndarray,
-    q: np.ndarray | None = None,
-    on_error: str = "warn",
-) -> np.ndarray:
+    price: Float1D,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    flag: FlagArray,
+    q: OptionalFloat1D = None,
+    on_error: OnErrorLiteral = "warn",
+) -> Float1D:
     # Black-76: q = r so carry = disc and d1 = [ln(F/K) + 0.5σ²T] / (σ√T)
     qv = r if (model == "black" and q is None) else (np.zeros_like(r) if q is None else q)
 

@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from . import backends
 from .config import get_backend
-from .types import BackendLiteral
+from .types import BackendLiteral, ReturnAsLiteral
 from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
 from .utils.formatting import format_named_output
 from .utils.validation import validate_data
+
+if TYPE_CHECKING:
+    from ._typing import ArrayLike, FlagLike, OptionalArrayLike  # noqa: F401
 
 
 def _finalize(
@@ -21,14 +26,14 @@ def _finalize(
 
 
 def fast_black(
-    flag,
-    F,
-    K,
-    t,
-    r,
-    sigma,
+    flag: FlagLike,
+    F: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
     *,
-    return_as="dataframe",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -42,14 +47,14 @@ def fast_black(
 
 
 def fast_black_scholes(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
     *,
-    return_as="dataframe",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -63,15 +68,15 @@ def fast_black_scholes(
 
 
 def fast_black_scholes_merton(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: ArrayLike,
     *,
-    return_as="dataframe",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
