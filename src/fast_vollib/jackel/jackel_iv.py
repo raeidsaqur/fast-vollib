@@ -64,7 +64,15 @@ _RC_MAX: float = 2.0 / (_DBL_EPSILON * _DBL_EPSILON)
 
 
 def _nb_asymptotic(h: np.ndarray, t: np.ndarray) -> np.ndarray:
-    """Region 1: 17th-order asymptotic expansion, valid for h ≪ -10."""
+    """Region 1: 17th-order asymptotic expansion, valid for h ≪ -10.
+
+    `eas` is the 17‑th‑order asymptotic series, in nested Horner form, for the "core" of
+    the normalized Black call `b(h,t)` in the deep‑wing regime.
+
+    The series is a nested Horner form in `q = (h / (h² - t²))²` and `e = (t / h)²`,
+    with each `q^k` coefficient itself a polynomial in `e`. Leading term
+    2.0 is the 0th-order Mills approximation.
+    """
     e = (t / h) * (t / h)
     r = (h + t) * (h - t)  # h² - t²
     # Guard division by r (safe because Region 1 has |h| >> |t|)
