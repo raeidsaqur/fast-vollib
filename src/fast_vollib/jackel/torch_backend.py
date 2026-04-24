@@ -263,9 +263,9 @@ _compiled_householder_loop = _make_compiled(_householder_loop_t)
 
 def jackel_iv_black_torch(
     price: "torch.Tensor",
-    F: float,
+    F: "torch.Tensor | float",
     K: "torch.Tensor",
-    T: float,
+    T: "torch.Tensor | float",
     is_call: "torch.Tensor | bool" = True,
 ) -> "torch.Tensor":
     """Jäckel IV for Black-76 options — native torch implementation.
@@ -273,9 +273,9 @@ def jackel_iv_black_torch(
     Parameters
     ----------
     price   : undiscounted option price (GPU tensor, float64)
-    F       : forward price (scalar)
+    F       : forward price (scalar or tensor broadcastable to price)
     K       : strike (GPU tensor, float64)
-    T       : time to expiry in years (scalar)
+    T       : time to expiry in years (scalar or tensor broadcastable to price)
     is_call : True = call, False = put (tensor or scalar bool)
 
     Returns
@@ -285,6 +285,9 @@ def jackel_iv_black_torch(
     import torch  # noqa: F811
 
     tiny = torch.finfo(price.dtype).tiny
+    F_t = torch.as_tensor(F, dtype=price.dtype, device=price.device)
+    T_t = torch.as_tensor(T, dtype=price.dtype, device=price.device)
+    price, F_t, K, T_t = torch.broadcast_tensors(price, F_t, K, T_t)
 
     # Broadcast is_call
     if isinstance(is_call, bool):
@@ -292,12 +295,12 @@ def jackel_iv_black_torch(
     else:
         is_call_t = is_call
 
-    sqrt_FK = (F * K).sqrt()
-    x = torch.log(torch.tensor(F, dtype=price.dtype, device=price.device) / K)
-    sqrt_T = math.sqrt(max(T, 0.0))
+    sqrt_FK = (F_t * K).sqrt()
+    x = torch.log(F_t / K)
+    sqrt_T = torch.sqrt(torch.clamp(T_t, min=0.0))
 
     q = torch.where(is_call_t, torch.ones_like(price), -torch.ones_like(price))
-    intrinsic = (q * (F - K)).clamp(min=0.0).abs()
+    intrinsic = (q * (F_t - K)).clamp(min=0.0).abs()
     itm = (q * x) > 0.0
     price_red = torch.where(itm, (price - intrinsic).clamp(min=0.0).abs(), price)
     x_red = torch.where(x > 0.0, -x, x)
@@ -317,10 +320,14 @@ def jackel_iv_black_torch(
     sigma_hat = _compiled_householder_loop(s_init, beta, x_red, use_lower, use_upper, b_max)
 
     # Denormalize
-    sigma = sigma_hat / sqrt_T if sqrt_T > 0.0 else torch.zeros_like(sigma_hat)
+    sigma = torch.where(
+        sqrt_T > 0.0,
+        sigma_hat / torch.clamp(sqrt_T, min=tiny),
+        torch.zeros_like(sigma_hat),
+    )
 
     # NaN guards
-    bad = (price <= 0.0) | (T <= 0.0) | (F <= 0.0) | (K <= 0.0) | (sigma_hat <= 0.0)
+    bad = (price <= 0.0) | (T_t <= 0.0) | (F_t <= 0.0) | (K <= 0.0) | (sigma_hat <= 0.0)
     return torch.where(bad, torch.full_like(sigma, float("nan")), sigma)
 
 

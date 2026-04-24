@@ -12,6 +12,11 @@ from .implied_volatility import (
     fast_implied_volatility,
     fast_implied_volatility_black,
 )
+
+try:
+    from .jackel.differentiable import implied_volatility_autograd
+except ImportError:  # pragma: no cover - torch is an optional dependency
+    implied_volatility_autograd = None  # type: ignore[assignment]
 from .models import (
     fast_black,
     fast_black_scholes,
@@ -41,6 +46,7 @@ __all__ = [
     "fast_black",
     "fast_black_scholes",
     "fast_black_scholes_merton",
+    "implied_volatility_autograd",
     "vectorized_delta",
     "vectorized_gamma",
     "fast_implied_volatility",

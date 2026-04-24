@@ -27,7 +27,13 @@ from .jackel_iv import (
     normalised_vega,
 )
 
+try:
+    from .differentiable import implied_volatility_autograd
+except ImportError:  # pragma: no cover - torch is an optional dependency
+    implied_volatility_autograd = None  # type: ignore[assignment]
+
 __all__ = [
+    "implied_volatility_autograd",
     "jackel_iv_black",
     "jackel_iv_normalized",
     "normalised_black_call",
