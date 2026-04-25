@@ -70,6 +70,7 @@ nav:
   - User Guide:
       - Backend Selection: backends.md
       - Jäckel IV Solver: jackel.md
+      - Differentiable IV: differentiable_iv.md
       - Compatibility: compatibility.md
       - Benchmarks: benchmarks.md
   - API Reference: api.md

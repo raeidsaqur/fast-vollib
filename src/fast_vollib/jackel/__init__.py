@@ -32,8 +32,14 @@ try:
 except ImportError:  # pragma: no cover - torch is an optional dependency
     implied_volatility_autograd = None  # type: ignore[assignment]
 
+try:
+    from .differentiable_jax import implied_volatility_autograd_jax
+except ImportError:  # pragma: no cover - jax is an optional dependency
+    implied_volatility_autograd_jax = None  # type: ignore[assignment]
+
 __all__ = [
     "implied_volatility_autograd",
+    "implied_volatility_autograd_jax",
     "jackel_iv_black",
     "jackel_iv_normalized",
     "normalised_black_call",
