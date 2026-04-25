@@ -1,7 +1,7 @@
 """
 Jäckel torch backend — machine-precision implied volatility.
 
-Experiment I-5: Native torch Jäckel Householder(3)×2 implementation using
+Native torch Jäckel Householder(3)×2 implementation using
 `torch.special.erfcx` and `torch.special.ndtri`.  The Householder loop is
 wrapped with `torch.compile(dynamic=True)` so that erfcx evaluations and
 branch dispatches fuse into a single CUDA kernel.
@@ -255,6 +255,20 @@ def _make_compiled(fn):
 
 _compiled_householder_loop = _make_compiled(_householder_loop_t)
 
+
+# ---------------------------------------------------------------------------
+# Solver-agnostic BSM helpers re-exported under the jackel namespace.
+#
+# ``_bsm_price_t`` and ``_price_vega_d1d2_t`` are pure Black-Scholes-Merton
+# price/vega computations that the Jäckel autograd path also relies on.  The
+# implementations currently live under ``backends.torch_backend`` (alongside
+# the Halley solver), but they are independent of any solver and downstream
+# ---------------------------------------------------------------------------
+
+from ..backends.torch_backend import (  # noqa: E402, F401
+    _bsm_price_t,
+    _price_vega_d1d2_t,
+)
 
 # ---------------------------------------------------------------------------
 # Public: jackel_iv_black (tensor in, tensor out) — native torch
