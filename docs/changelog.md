@@ -20,6 +20,26 @@ separate changelog entries.
 
 ### Added
 
+- **Opt-in shape-aware runtime type checking** — pure-annotation layer
+  (`jaxtyping` + `beartype`) applied to the public API (`fast_black`,
+  `fast_black_scholes`, `fast_black_scholes_merton`, `fast_implied_volatility`,
+  `fast_implied_volatility_black`, `get_all_greeks`, `price_dataframe`,
+  the `vectorized_*` Greeks) and to the four backend dispatch entry points
+  (`price_*`, `greeks`, `implied_volatility`).
+    - Annotations are stored as PEP 563 strings (every annotated module uses
+      `from __future__ import annotations`) — **zero runtime cost** when not
+      enabled.
+    - Runtime checking is scoped to the public dispatch layer only via
+      `fast_vollib._typing.enable_runtime_checks()`.  Inner `torch.compile`
+      closures, Triton kernels, Numba `@njit` factories, and JAX
+      `@jax.jit`-traced functions are **never decorated or rewritten**, so the
+      hot paths are bit-identical to the un-annotated build (verified with
+      sha256 fingerprints of the `jackel_iv` numpy / torch / triton outputs
+      before and after).
+    - Install via the new `[typecheck]` extra:
+      `pip install "fast-vollib[typecheck]"` (adds `jaxtyping>=0.2` and
+      `beartype>=0.18`).  Default installs do **not** pull either package
+      into `sys.modules`.
 - **`fast_vollib.jackel` module** — full implementation of Peter Jäckel's
   *"Let's Be Rational"* (2016) algorithm with four backends:
     - `jackel_iv_black` — NumPy + Numba (six parallel kernels; ~8.5 ms / 100k)
@@ -32,7 +52,7 @@ separate changelog entries.
   the oracle automatically.
 - `scripts/jackel_triton_bench.py` — correctness + CUDA-event timing script
   for the Triton kernel.
-  
+
 - **Numba backend** (`backend="numba"`): JIT-compiled CPU kernels via
   `@numba.njit(parallel=True)`.  Pricing, Greeks, and the full
   Halley+bisection IV solver run as a single native-code dispatch per batch.

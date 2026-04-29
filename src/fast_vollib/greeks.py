@@ -1,27 +1,32 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from . import backends
 from .config import get_backend
-from .types import BackendLiteral
+from .types import BackendLiteral, ModelLiteral, ReturnAsLiteral
 from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
 from .utils.formatting import format_named_output
 from .utils.validation import validate_data
 
+if TYPE_CHECKING:
+    from ._typing import ArrayLike, FlagLike, OptionalArrayLike  # noqa: F401
+
 
 def _greek(
     name: str,
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -51,16 +56,16 @@ def _greek(
 
 
 def delta(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -83,16 +88,16 @@ def delta(
 
 
 def gamma(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -115,16 +120,16 @@ def gamma(
 
 
 def rho(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -147,16 +152,16 @@ def rho(
 
 
 def theta(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -179,16 +184,16 @@ def theta(
 
 
 def vega(
-    flag,
-    S,
-    K,
-    t,
-    r,
-    sigma,
-    q=None,
+    flag: FlagLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    sigma: ArrayLike,
+    q: OptionalArrayLike = None,
     *,
-    model="black_scholes",
-    return_as="dataframe",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,

@@ -72,6 +72,14 @@ jax = ["jax>=0.4.30"]
 numba = [
     "numba>=0.60.0",
 ]
+
+# Opt-in shape-aware runtime type checking for the public API.
+# Pure annotations only; no decorators on hot paths. Default install
+# does not import jaxtyping (see fast_vollib._typing).
+typecheck = [
+    "jaxtyping>=0.2",
+    "beartype>=0.18",
+]
 notebooks = [
     "matplotlib>=3.8",
     "jupyterlab>=4.0",
