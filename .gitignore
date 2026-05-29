@@ -10,10 +10,10 @@ build/
 .venv/
 site/
 benchmark-results/
-scripts/env/phoenix.md
 RELEASE_REVIEW.md
 src/fast_vollib/_version.py
 docs/assets/generated
 docs/assets/branding
+notebooks/wrds_iv_accuracy.ipynb
 notebooks/wrds_iv_accuracy_dev.ipynb
 notebooks/fast_vollib_experiments_dev.ipynb

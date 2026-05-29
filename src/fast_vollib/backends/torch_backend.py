@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 import warnings
 
 import numpy as np
 
-from ..types import ModelLiteral
+from ..types import ModelLiteral, OnErrorLiteral
+
+if TYPE_CHECKING:
+    from .._typing import FlagArray, Float1D, OptionalFloat1D  # noqa: F401
 
 
 def _make_compiled(fn):
@@ -216,8 +220,8 @@ def _price_with_triton_or_torch(is_call_np, s_t, k_t, t_t, r_t, sigma_t, q_t) ->
 
 
 def price_black(
-    flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray
-) -> np.ndarray:
+    flag: FlagArray, f: Float1D, k: Float1D, t: Float1D, r: Float1D, sigma: Float1D
+) -> Float1D:
     import torch
 
     dev = _device()
@@ -231,8 +235,8 @@ def price_black(
 
 
 def price_black_scholes(
-    flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray
-) -> np.ndarray:
+    flag: FlagArray, s: Float1D, k: Float1D, t: Float1D, r: Float1D, sigma: Float1D
+) -> Float1D:
     import torch
 
     dev = _device()
@@ -246,14 +250,14 @@ def price_black_scholes(
 
 
 def price_black_scholes_merton(
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray,
-) -> np.ndarray:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+    q: Float1D,
+) -> Float1D:
     dev = _device()
     st = _h2d(s, "s", dev)
     kt = _h2d(k, "k", dev)
@@ -323,14 +327,14 @@ def _get_compiled_greeks_core(model: str):
 
 def greeks(
     model: ModelLiteral,
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray | None = None,
-) -> dict[str, np.ndarray]:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+    q: OptionalFloat1D = None,
+) -> dict[str, Float1D]:
     import torch
 
     dev = _device()
@@ -494,15 +498,15 @@ def _initial_guess_t(price, s, t):
 
 def implied_volatility(
     model: ModelLiteral,
-    price: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    flag: np.ndarray,
-    q: np.ndarray | None = None,
-    on_error: str = "warn",
-) -> np.ndarray:
+    price: Float1D,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    flag: FlagArray,
+    q: OptionalFloat1D = None,
+    on_error: OnErrorLiteral = "warn",
+) -> Float1D:
     import torch
 
     from ..utils.validation import handle_error

@@ -1,27 +1,32 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from . import backends
 from .config import get_backend
-from .types import BackendLiteral
+from .types import BackendLiteral, ModelLiteral, OnErrorLiteral, ReturnAsLiteral
 from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
 from .utils.formatting import format_named_output
 from .utils.validation import ensure_on_error, validate_data
 
+if TYPE_CHECKING:
+    from ._typing import ArrayLike, FlagLike, OptionalArrayLike  # noqa: F401
+
 
 def fast_implied_volatility(
-    price,
-    S,
-    K,
-    t,
-    r,
-    flag,
-    q=None,
+    price: ArrayLike,
+    S: ArrayLike,
+    K: ArrayLike,
+    t: ArrayLike,
+    r: ArrayLike,
+    flag: FlagLike,
+    q: OptionalArrayLike = None,
     *,
-    on_error="warn",
-    model="black_scholes",
-    return_as="dataframe",
+    on_error: OnErrorLiteral = "warn",
+    model: ModelLiteral = "black_scholes",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
@@ -56,15 +61,15 @@ def fast_implied_volatility(
 
 
 def fast_implied_volatility_black(
-    price,
-    F,
-    K,
-    r,
-    t,
-    flag,
+    price: ArrayLike,
+    F: ArrayLike,
+    K: ArrayLike,
+    r: ArrayLike,
+    t: ArrayLike,
+    flag: FlagLike,
     *,
-    on_error="warn",
-    return_as="dataframe",
+    on_error: OnErrorLiteral = "warn",
+    return_as: ReturnAsLiteral = "dataframe",
     dtype=np.float64,
     backend: BackendLiteral = "auto",
     return_native: bool = False,

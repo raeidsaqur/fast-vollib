@@ -4,16 +4,19 @@ Loads SPX 2023 OptionMetrics data, computes implied volatility via
 fast_vollib using the WRDS forward prices, and reports MAE vs the WRDS
 impl_volatility column.
 
-WRDS data is internal-only; this script only reads from local rfs paths
-and never prints, logs, or returns raw data values.
+Requires a WRDS subscription and local access to OptionMetrics data.
+Set the WRDS_DATA_PATH environment variable to your local instrument
+directory, or pass --instrument-dir explicitly.
 
 Usage:
-    python scripts/wrds_benchmark.py [--instrument-dir PATH] [--sample N]
+    WRDS_DATA_PATH=/path/to/wrds/SPX_108105 python scripts/wrds_benchmark.py
+    python scripts/wrds_benchmark.py --instrument-dir /path/to/wrds/SPX_108105 [--sample N]
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 from pathlib import Path
 import sys
 import time
@@ -27,7 +30,9 @@ if str(SRC_ROOT) not in sys.path:
 
 from fast_vollib import fast_implied_volatility
 
-_DEFAULT_INSTRUMENT_DIR = Path("/home/saqur/rfs/data/raw/wrds_optionm_all/SPX_108105")
+_DEFAULT_INSTRUMENT_DIR: Path | None = (
+    Path(os.environ["WRDS_DATA_PATH"]) if "WRDS_DATA_PATH" in os.environ else None
+)
 _DEFAULT_OPTION_FILE = "opprcd2023.parquet"
 _DEFAULT_FORWARD_FILE = "fwdprd2023.parquet"
 _RISK_FREE_RATE = 0.048  # optimal constant rate for SPX 2023 (grid-searched)
@@ -154,7 +159,13 @@ def run_benchmark(instrument_dir: Path, max_rows: int | None) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--instrument-dir", default=str(_DEFAULT_INSTRUMENT_DIR))
+    parser.add_argument(
+        "--instrument-dir",
+        default=str(_DEFAULT_INSTRUMENT_DIR) if _DEFAULT_INSTRUMENT_DIR else None,
+        required=_DEFAULT_INSTRUMENT_DIR is None,
+        help="path to WRDS instrument directory (e.g. .../SPX_108105). "
+        "Defaults to $WRDS_DATA_PATH if set.",
+    )
     parser.add_argument(
         "--sample", type=int, default=None, help="random subsample size (default: all valid rows)"
     )

@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
-from ..types import ModelLiteral
+from ..types import ModelLiteral, OnErrorLiteral
+
+if TYPE_CHECKING:
+    from .._typing import FlagArray, Float1D, OptionalFloat1D  # noqa: F401
 
 # ---------------------------------------------------------------------------
 # Availability
@@ -103,8 +108,8 @@ def _flag_to_bool(flag: np.ndarray):
 
 
 def price_black(
-    flag: np.ndarray, f: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray
-) -> np.ndarray:
+    flag: FlagArray, f: Float1D, k: Float1D, t: Float1D, r: Float1D, sigma: Float1D
+) -> Float1D:
     _ensure_x64()
     import jax
     import jax.numpy as jnp
@@ -117,8 +122,8 @@ def price_black(
 
 
 def price_black_scholes(
-    flag: np.ndarray, s: np.ndarray, k: np.ndarray, t: np.ndarray, r: np.ndarray, sigma: np.ndarray
-) -> np.ndarray:
+    flag: FlagArray, s: Float1D, k: Float1D, t: Float1D, r: Float1D, sigma: Float1D
+) -> Float1D:
     _ensure_x64()
     import jax
     import jax.numpy as jnp
@@ -131,14 +136,14 @@ def price_black_scholes(
 
 
 def price_black_scholes_merton(
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray,
-) -> np.ndarray:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+    q: Float1D,
+) -> Float1D:
     _ensure_x64()
     import jax
     import jax.numpy as jnp
@@ -210,14 +215,14 @@ def _get_jit_greeks_core(model: str):
 
 def greeks(
     model: ModelLiteral,
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray | None = None,
-) -> dict[str, np.ndarray]:
+    flag: FlagArray,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    sigma: Float1D,
+    q: OptionalFloat1D = None,
+) -> dict[str, Float1D]:
     _ensure_x64()
     import jax.numpy as jnp
 
@@ -389,15 +394,15 @@ def _get_jit_iv_post():
 
 def implied_volatility(
     model: ModelLiteral,
-    price: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    flag: np.ndarray,
-    q: np.ndarray | None = None,
-    on_error: str = "warn",
-) -> np.ndarray:
+    price: Float1D,
+    s: Float1D,
+    k: Float1D,
+    t: Float1D,
+    r: Float1D,
+    flag: FlagArray,
+    q: OptionalFloat1D = None,
+    on_error: OnErrorLiteral = "warn",
+) -> Float1D:
     _ensure_x64()
     import jax
     import jax.numpy as jnp
