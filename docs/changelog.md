@@ -11,15 +11,13 @@ separate changelog entries.
 
 ---
 
-## [0.1.3] — 2026-04-04
-- Added backend_parity tests for torch
-- Updated tutorial notebook with Mac MPS backend (for Apple silicon chips).
-
-
-## [Unreleased]
+## [0.1.5] — 2026-05-29
 
 ### Added
 
+- **Python 3.10 support** — lowered `requires-python` from `>=3.11` to `>=3.10`,
+  added the `Programming Language :: Python :: 3.10` classifier, and extended the
+  CI test matrix to cover 3.10 alongside 3.11–3.13.
 - **Opt-in shape-aware runtime type checking** — pure-annotation layer
   (`jaxtyping` + `beartype`) applied to the public API (`fast_black`,
   `fast_black_scholes`, `fast_black_scholes_merton`, `fast_implied_volatility`,
@@ -40,6 +38,12 @@ separate changelog entries.
       `pip install "fast-vollib[typecheck]"` (adds `jaxtyping>=0.2` and
       `beartype>=0.18`).  Default installs do **not** pull either package
       into `sys.modules`.
+
+
+## [0.1.4] — 2026-04-10
+
+### Added
+
 - **`fast_vollib.jackel` module** — full implementation of Peter Jäckel's
   *"Let's Be Rational"* (2016) algorithm with four backends:
     - `jackel_iv_black` — NumPy + Numba (six parallel kernels; ~8.5 ms / 100k)
@@ -71,6 +75,11 @@ separate changelog entries.
   NumPy, PyTorch, and JAX backends.
 - The `compare_against_py_vollib_vectorized.py` helper now imports the current
   upstream `vectorized_*` entry points correctly.
+
+
+## [0.1.3] — 2026-04-04
+- Added backend_parity tests for torch
+- Updated tutorial notebook with Mac MPS backend (for Apple silicon chips).
 
 ---
 
