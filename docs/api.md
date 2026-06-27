@@ -399,6 +399,73 @@ HBM write per element.
 
 ---
 
+## Surface arbitrage-evaluation harness
+
+The `fast_vollib.surface` subpackage scores generated IV surfaces for static
+arbitrage and provides a differentiable training penalty. See
+[Surface Arbitrage Harness](surface.md) for the full guide.
+
+```python
+from fast_vollib.surface import (
+    IVSurface, SurfaceSequence, validate_surface, arbitrage_penalty,
+)
+```
+
+### `IVSurface`
+
+Backend-agnostic surface container, parametrized in forward log-moneyness
+`k = log(K/F)` × maturity `T`. Constructors:
+
+```python
+IVSurface.from_logmoneyness(k, T, iv, *, forward=1.0, r=0.0, q=0.0, native_mask=None)
+IVSurface.from_strikes(K, T, iv, *, spot, r=0.0, q=0.0, native_mask=None)
+IVSurface.from_total_variance(k, T, w, *, forward=1.0, r=0.0, q=0.0)
+IVSurface.from_call_prices(K, T, call_prices, *, spot, r=0.0, q=0.0, discounted=True)
+```
+
+Accepts numpy / torch / jax arrays and preserves dtype and device.
+
+### `validate_surface`
+
+```python
+validate_surface(
+    surf,
+    *,
+    tolerance=1e-6,
+    trust_tolerance=1e-6,
+    weights=None,
+    max_violations=2000,
+    compute_trust=True,
+    return_as="report",      # "report" | "dict" | "json"
+) -> ArbitrageReport
+```
+
+**Returns:** an `ArbitrageReport` with `passed`, normalized `metrics`, the
+`sas` composite, localized `violations`, `by_condition` counts, the
+`native` / `interpolation_induced` artifact buckets, and the round-trip
+`trust_mask`.
+
+### `arbitrage_penalty`
+
+```python
+arbitrage_penalty(
+    iv, k, T, forward, r=0.0,
+    *, weights=None, reduction="mean", shared_k=True,
+) -> scalar
+```
+
+Differentiable scalar arbitrage penalty in the namespace of `iv` (≥ 0; 0 for an
+arbitrage-free surface). Drop into a generator's training loss; gradients flow
+to `iv`. `penalty_from_surface(surf)` is the `IVSurface` convenience wrapper.
+
+### Diagnostic figures
+
+`fast_vollib.diagnostics` (requires the `[viz]` extra) returns matplotlib
+`Figure`s: `plot_total_variance_slices`, `plot_durrleman_g`, `plot_density`,
+`plot_violation_heatmap`, `plot_calendar_map`, `plot_trust_map`.
+
+---
+
 ## Compatibility
 
 ### `patch_py_vollib`

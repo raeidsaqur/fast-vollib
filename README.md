@@ -47,6 +47,7 @@ modeled on `py_vollib_vectorized`.
 - **Automatic backend selection** — prefers CUDA > JAX > NumPy
 - **DataFrame-native** — `price_dataframe` works directly on a `pandas.DataFrame`
 - **Drop-in compatibility** — `patch_py_vollib()` and `patch_py_vollib_vectorized()` patch the scalar and vectorized upstream namespaces
+- **Surface arbitrage harness** — `fast_vollib.surface` scores generated IV surfaces for static arbitrage with normalized, cross-model metrics and a differentiable training penalty ([guide](https://raeidsaqur.github.io/fast-vollib/surface/))
 
 ---
 
