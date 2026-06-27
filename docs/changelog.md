@@ -13,6 +13,10 @@ separate changelog entries.
 
 ## [Unreleased]
 
+---
+
+## [0.1.6] — 2026-06-27
+
 ### Fixed
 
 - **CUDA tensor inputs to `fast_implied_volatility`** — passing a CUDA-resident
