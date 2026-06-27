@@ -11,6 +11,24 @@ separate changelog entries.
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **CUDA tensor inputs to `fast_implied_volatility`** — passing a CUDA-resident
+  `torch.Tensor` (or any CPU tensor with `requires_grad=True`) raised
+  `TypeError: can't convert cuda:0 device type tensor to numpy` because
+  `to_numpy()` fell through to `np.asarray(value)`, which invoked
+  `Tensor.__array__()` → `.numpy()` — illegal for both cases.
+  `to_numpy()` now detects torch tensors via `type(value).__module__` and
+  calls `.detach().cpu().numpy()` before the conversion.  All other input types
+  (numpy arrays, pandas, scalars, lists, JAX arrays) are unaffected.
+  Note: `.detach()` means gradients do **not** flow through IV inversion; the
+  compute still round-trips through host numpy.  A fully differentiable GPU-
+  resident IV path remains a separate feature request.
+
+---
+
 ## [0.1.5] — 2026-05-29
 
 ### Added
