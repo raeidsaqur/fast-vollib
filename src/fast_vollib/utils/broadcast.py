@@ -25,7 +25,8 @@ def to_numpy(value: object, dtype: np.dtype | type | None = None) -> np.ndarray:
         array = np.asarray(value)
     else:
         mod = type(value).__module__ or ""
-        if mod.startswith("torch"):
+        is_torch = mod == "torch" or mod.startswith("torch.")
+        if is_torch and all(hasattr(value, attr) for attr in ("detach", "cpu", "numpy")):
             # CUDA tensors and CPU tensors with requires_grad both raise inside
             # np.asarray() because Tensor.__array__() calls .numpy() which is
             # illegal in those cases.  .detach().cpu() brings the data to host
