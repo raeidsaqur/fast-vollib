@@ -24,7 +24,15 @@ def to_numpy(value: object, dtype: np.dtype | type | None = None) -> np.ndarray:
     elif isinstance(value, Sequence):
         array = np.asarray(value)
     else:
-        array = np.asarray(value)
+        mod = type(value).__module__ or ""
+        if mod.startswith("torch"):
+            # CUDA tensors and CPU tensors with requires_grad both raise inside
+            # np.asarray() because Tensor.__array__() calls .numpy() which is
+            # illegal in those cases.  .detach().cpu() brings the data to host
+            # without gradients before the conversion.
+            array = value.detach().cpu().numpy()  # type: ignore[union-attr]
+        else:
+            array = np.asarray(value)
     if dtype is not None:
         return array.astype(dtype, copy=False)
     return array
