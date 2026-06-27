@@ -11,6 +11,53 @@ separate changelog entries.
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- **Surface arbitrage-evaluation harness** (`fast_vollib.surface`) — a
+  generator-agnostic, backend-pluggable, differentiable evaluator for implied
+  -volatility surfaces. Takes an arbitrary surface on an arbitrary
+  `(log-moneyness × maturity)` mesh and returns calibrated, dimensionless
+  arbitrage diagnostics.
+    - `IVSurface` / `SurfaceSequence` containers with `from_logmoneyness`,
+      `from_strikes`, `from_total_variance`, and `from_call_prices` constructors;
+      numpy / torch / jax arrays preserved with dtype and device.
+    - `validate_surface()` → `ArbitrageReport`: price-space discrete checks
+      (convexity / slope / box / calendar; Davis–Hobson 2007) **and**
+      total-variance checks (`∂_T w ≥ 0`, Durrleman `g ≥ 0`;
+      Gatheral–Jacquier 2014), with **normalized** metrics
+      (`ndm`, `bfly_frac`, `cal_depth_max`, `cal_frac`, `vert_frac`,
+      `bound_frac`) and the `SAS` composite (reported only alongside its
+      components).
+    - **Artifact-vs-arbitrage separation**: violations whose stencil touches an
+      interpolated node are bucketed as `interpolation_induced` rather than
+      counted as model arbitrage.
+    - **Round-trip trust mask**: per-node `σ→C→σ'` Jäckel LBR fixed-point
+      residual, machine-tight where the quote is well-posed.
+    - Butterfly violations gate on the **per-slice-normalized** density magnitude
+      vs the dimensionless tolerance (never raw `density < 0`), so O(h²)
+      truncation noise at near-degenerate wings cannot manufacture spurious
+      violations on an arbitrage-free surface. Severity bands key off the
+      normalized magnitude; an empty / all-NaN surface reports `passed=False`
+      (`context["coverage"]`).
+    - `arbitrage_penalty()` — a differentiable soft form of the same checks that
+      stays in the input tensor's namespace (no host round-trip), so it is
+      autograd-traceable on torch/jax and matches the numpy report to machine
+      precision. A reusable replacement for the inline VolGAN / deep-smoothing
+      penalty functions.
+    - Backend parity verified numpy == torch == jax to fp tolerance; SVI
+      closed-form oracles validate the non-uniform divided-difference stencils
+      (second-order convergence) and Durrleman `g`; `models.fast_black` validates
+      the surface's own normalized-Black pricing to machine epsilon.
+- **`fast_vollib.diagnostics`** — six publication-quality figures
+  (total-variance slices, Durrleman `g`, risk-neutral density, violation
+  heatmap, calendar map, round-trip trust map), gated behind a new `[viz]`
+  extra (`pip install "fast-vollib[viz]"`). Matplotlib stays out of the
+  numerics core dependencies.
+
+---
+
 ## [0.1.5] — 2026-05-29
 
 ### Added
