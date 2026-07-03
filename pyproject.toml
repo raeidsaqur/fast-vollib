@@ -74,6 +74,12 @@ numba = [
     "numba>=0.60.0",
 ]
 
+# Diagnostic figures for the surface arbitrage-evaluation harness
+# (fast_vollib.diagnostics). Kept out of the numerics core deps.
+viz = [
+    "matplotlib>=3.8",
+]
+
 # Opt-in shape-aware runtime type checking for the public API.
 # Pure annotations only; no decorators on hot paths. Default install
 # does not import jaxtyping (see fast_vollib._typing).
