@@ -13,6 +13,10 @@ separate changelog entries.
 
 ## [Unreleased]
 
+---
+
+## [0.1.7] — 2026-07-03
+
 ### Added
 
 - **Surface arbitrage-evaluation harness** (`fast_vollib.surface`) — a
