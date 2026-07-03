@@ -84,7 +84,9 @@ def compute_fields(
 
     # -- butterfly: price-space convexity (BL density ≥ 0) -------------------
     density, density_strikes = bl_density(k2d, w, forward2d, xp)
-    abs_mass = xp.sum(xp.abs(density), axis=0)  # (Nt,) per-slice scale
+    # NaN-safe per-slice scale: a single unquoted node must not NaN the whole
+    # slice's normalization (violations elsewhere in the slice stay detectable).
+    abs_mass = xp.nansum(xp.abs(density), axis=0)  # (Nt,) per-slice scale
     scale = xp.maximum(abs_mass, xp.asarray(_FLOOR, like=abs_mass))
     bfly_mag = xp.relu(-density) / scale
     g = durrleman_g(k2d, w, xp)

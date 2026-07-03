@@ -130,17 +130,33 @@ def plot_density(surf: "IVSurface", *, t_index: int = 0, ax=None) -> "Figure":
 def plot_violation_heatmap(
     surf: "IVSurface", report: "ArbitrageReport | None" = None, *, ax=None
 ) -> "Figure":
-    """Per-node maximum normalized violation magnitude over the ``(k, T)`` mesh."""
-    plt = _plt()
-    from ..surface.metrics import validate_surface
+    """Per-node maximum normalized violation magnitude over the ``(k, T)`` mesh.
 
-    report = report or validate_surface(surf, compute_trust=False)
-    k2d, T2d, *_ = _geometry(surf)
+    Magnitudes are recomputed from the arbitrage fields (gated at the report's
+    tolerance), so the map is complete even when ``report.violations`` was
+    truncated by ``max_violations``.
+    """
+    plt = _plt()
+    from ..surface.arbitrage import compute_fields
+    from ..surface.metrics import DEFAULT_TOLERANCE
+
+    tolerance = report.tolerance if report is not None else DEFAULT_TOLERANCE
+    k2d, T2d, w, fwd2d, disc2d, xp = _geometry(surf)
+    fields = compute_fields(k2d, w, fwd2d, disc2d, xp, shared_k=surf.shared_k)
     heat = np.zeros((surf.Nk, surf.Nt))
-    for v in report.violations:
-        if v.index is not None:
-            i, j = v.index
-            heat[i, j] = max(heat[i, j], v.value)
+
+    def _scatter(mag, i0: int, j0: int) -> None:
+        m = np.nan_to_num(xp.to_numpy(mag), nan=0.0)
+        m = np.where(m > tolerance, m, 0.0)
+        view = heat[i0 : i0 + m.shape[0], j0 : j0 + m.shape[1]]
+        np.maximum(view, m, out=view)
+
+    # Anchor nodes match metrics._collect: butterfly interior rows shift by 1;
+    # calendar/vertical pairs anchor on the earlier/lower node.
+    _scatter(fields.bfly_mag, 1, 0)
+    _scatter(fields.cal_rel, 0, 0)
+    _scatter(fields.vert_mag, 0, 0)
+    _scatter(fields.bound_mag, 0, 0)
     fig, ax = _fig_ax(plt, ax)
     mesh = ax.pcolormesh(T2d, k2d, heat, shading="nearest", cmap="inferno")
     fig.colorbar(mesh, ax=ax, label="max normalized violation")

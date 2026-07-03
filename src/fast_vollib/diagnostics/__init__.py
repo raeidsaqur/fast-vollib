@@ -7,8 +7,9 @@ the numerics core stays dependency-light::
 
 Each plotting function returns a :class:`matplotlib.figure.Figure` (and is the
 static, paper-ready counterpart of the interactive surfaces the Part II UI
-renders).  Importing this subpackage without matplotlib installed raises a
-clear, actionable error rather than a bare ``ModuleNotFoundError``.
+renders).  Matplotlib is imported lazily: importing this subpackage succeeds
+without it, and the first *call* to a plotting function raises a clear,
+actionable error (install hint) rather than a bare ``ModuleNotFoundError``.
 """
 
 from __future__ import annotations

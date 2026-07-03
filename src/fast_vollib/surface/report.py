@@ -34,8 +34,12 @@ class ArbitrageViolation:
         density), ``'calendar'`` (total-variance crossing), ``'vertical'``
         (call monotonicity / slope), or ``'bound'`` (price box).
     severity:
-        Magnitude bucket relative to ``tolerance``: ``minor`` (<2×),
-        ``moderate`` (<5×), ``severe`` (≥5×).
+        Bucket of the *normalized, dimensionless* violation ``value`` on
+        absolute magnitude bands: ``minor`` (< 0.01), ``moderate`` (< 0.10),
+        ``severe`` (≥ 0.10) — see ``metrics.SEVERITY_MINOR_MAX`` /
+        ``metrics.SEVERITY_MODERATE_MAX``.  Bands are deliberately *not*
+        multiples of the detection ``tolerance`` (~1e-6), which would label
+        every real violation severe.
     value:
         Normalized, dimensionless violation magnitude (see design §5).
     tolerance:

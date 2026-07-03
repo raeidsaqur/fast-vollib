@@ -32,10 +32,26 @@ if TYPE_CHECKING:
 
 
 def _as_array(x: Any) -> Any:
-    """Pass native arrays through untouched; coerce python scalars/sequences."""
+    """Pass native arrays through untouched; coerce python scalars/sequences.
+
+    The ``"jax"`` prefix is a plain string match, so it covers both ``jax.*``
+    and ``jaxlib.*`` implementation classes.
+    """
     mod = type(x).__module__
     if mod.startswith(("torch", "jax")) or isinstance(x, np.ndarray):
         return x
+    return np.asarray(x, dtype=np.float64)
+
+
+def _to_host_f64(x: Any) -> np.ndarray:
+    """Coerce constructor geometry (``K``/``T``/``spot``/``r``/``q``) to host float64.
+
+    Torch tensors (possibly CUDA-resident or ``requires_grad``) go through
+    ``.detach().cpu()`` first — ``np.asarray`` alone raises for both.  Geometry
+    is host-side by design; only ``iv`` keeps its native backend/device.
+    """
+    if type(x).__module__.startswith("torch") and hasattr(x, "detach"):
+        x = x.detach().cpu().numpy()
     return np.asarray(x, dtype=np.float64)
 
 
@@ -199,12 +215,16 @@ class IVSurface:
         otherwise ``k`` becomes 2-D and calendar checks use the fixed-strike
         (undiscounted-call) form.  ``K`` and ``T`` are matched to ``iv`` of
         shape ``(len(K), len(T))``.
+
+        Geometry (``K``/``T``/``spot``/``r``/``q``) is converted to host
+        float64 (torch tensors via ``.detach().cpu()``); ``iv`` keeps its
+        native backend, dtype, and device.
         """
-        K_a = np.asarray(K, dtype=np.float64)
-        T_a = np.asarray(T, dtype=np.float64)
-        r_a = np.asarray(r, dtype=np.float64)
-        q_a = np.asarray(q, dtype=np.float64)
-        spot_a = np.asarray(spot, dtype=np.float64)
+        K_a = _to_host_f64(K)
+        T_a = _to_host_f64(T)
+        r_a = _to_host_f64(r)
+        q_a = _to_host_f64(q)
+        spot_a = _to_host_f64(spot)
         forward = spot_a * np.exp((r_a - q_a) * T_a)  # (Nt,) or scalar
         forward = np.broadcast_to(forward, T_a.shape) if T_a.ndim else forward
         # k_ij = log(K_i / F_j)
@@ -254,12 +274,12 @@ class IVSurface:
         """
         from ..implied_volatility import fast_implied_volatility
 
-        K_a = np.asarray(K, dtype=np.float64)
-        T_a = np.asarray(T, dtype=np.float64)
-        r_a = np.asarray(r, dtype=np.float64)
-        q_a = np.asarray(q, dtype=np.float64)
-        spot_a = np.asarray(spot, dtype=np.float64)
-        prices = np.asarray(call_prices, dtype=np.float64)
+        K_a = _to_host_f64(K)
+        T_a = _to_host_f64(T)
+        r_a = _to_host_f64(r)
+        q_a = _to_host_f64(q)
+        spot_a = _to_host_f64(spot)
+        prices = _to_host_f64(call_prices)
         Nk, Nt = prices.shape
         K2d = np.broadcast_to(K_a[:, None], (Nk, Nt))
         T2d = np.broadcast_to(np.atleast_1d(T_a)[None, :], (Nk, Nt))

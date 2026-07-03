@@ -115,6 +115,40 @@ def test_nan_quotes_contribute_no_penalty():
     assert np.isfinite(float(pen))
 
 
+def test_nan_in_slice_does_not_suppress_butterfly_penalty():
+    # Regression: the per-slice butterfly scale must be NaN-safe.  A single
+    # missing quote in a slice used to NaN the whole slice's normalization,
+    # zeroing the butterfly term for a real violation elsewhere in that slice.
+    k, T, iv = _seed_surface()
+    iv = iv.copy()
+    iv[10, 2] *= 0.5  # real butterfly violation in slice j=2
+    iv[0, 2] = np.nan  # unrelated missing quote in the same slice
+    bfly_only = {"butterfly": 1.0, "calendar": 0.0, "vertical": 0.0, "bound": 0.0}
+    pen = float(arbitrage_penalty(iv, k, T, 1.0, 0.0, weights=bfly_only))
+    assert np.isfinite(pen)
+    assert pen > 0.0
+
+
+def test_mean_reduction_uses_quoted_count():
+    # Regression: reduction="mean" must average over non-NaN entries only —
+    # blanking a clean far region shrinks the denominator, so the mean penalty
+    # from the same single violation must strictly increase (it used to be
+    # diluted by the full grid size regardless of coverage).
+    k, T, iv = _seed_surface()
+    iv = iv.copy()
+    iv[10, 2] *= 0.5
+    pen_full = float(arbitrage_penalty(iv, k, T, 1.0, 0.0, reduction="mean"))
+    iv_sparse = iv.copy()
+    iv_sparse[:5, :] = np.nan  # clean far wing, away from the violation
+    pen_sparse = float(arbitrage_penalty(iv_sparse, k, T, 1.0, 0.0, reduction="mean"))
+    assert pen_sparse > pen_full * 1.05
+    # "sum" is nearly unaffected by blanking a clean region (only the per-slice
+    # butterfly scale shifts slightly as wing entries drop out).
+    s_full = float(arbitrage_penalty(iv, k, T, 1.0, 0.0, reduction="sum"))
+    s_sparse = float(arbitrage_penalty(iv_sparse, k, T, 1.0, 0.0, reduction="sum"))
+    assert s_sparse == pytest.approx(s_full, rel=0.15)
+
+
 def test_penalty_from_surface_matches_direct():
     k, T, iv = _seed_surface()
     iv = iv.copy()

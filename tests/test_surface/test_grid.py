@@ -89,6 +89,33 @@ def test_from_call_prices_recovers_iv(maturities):
     np.testing.assert_allclose(surf.iv, iv_true, atol=1e-6)
 
 
+def test_as_array_passes_torch_and_jax_through():
+    # Regression guard: native arrays must not be copied to host numpy.  The
+    # "jax" prefix is a plain string match, so jaxlib.* classes pass too.
+    from fast_vollib.surface.grid import _as_array
+
+    torch = pytest.importorskip("torch")
+    t = torch.tensor([1.0, 2.0], dtype=torch.float64)
+    assert _as_array(t) is t
+    jax = pytest.importorskip("jax")
+    x = jax.numpy.asarray([1.0, 2.0])
+    assert _as_array(x) is x
+
+
+def test_from_strikes_accepts_torch_geometry(maturities):
+    # Regression: geometry tensors with requires_grad (or CUDA-resident) used
+    # to crash np.asarray; they are now safely detached to host float64 while
+    # iv keeps its native backend.
+    torch = pytest.importorskip("torch")
+    K = torch.linspace(80.0, 120.0, 11, dtype=torch.float64, requires_grad=True)
+    T = torch.tensor(maturities, dtype=torch.float64)
+    iv = torch.full((11, maturities.size), 0.25, dtype=torch.float64)
+    surf = IVSurface.from_strikes(K, T, iv, spot=torch.tensor(100.0))
+    assert torch.is_tensor(surf.iv)
+    assert isinstance(surf.forward, np.ndarray)
+    np.testing.assert_allclose(np.asarray(surf.k), np.log(K.detach().numpy() / 100.0))
+
+
 def test_surface_sequence(moneyness, maturities, flat_iv):
     frames = [
         IVSurface.from_logmoneyness(moneyness, maturities, flat_iv, t_index=i) for i in range(3)

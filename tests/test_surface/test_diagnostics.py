@@ -53,6 +53,19 @@ def test_violation_heatmap(dirty_surf):
     assert isinstance(plot_violation_heatmap(dirty_surf, rep), Figure)
 
 
+def test_violation_heatmap_complete_despite_truncated_report(dirty_surf):
+    # Regression: the heatmap is recomputed from the arbitrage fields, so a
+    # report truncated to max_violations=1 must still show every violating node.
+    from fast_vollib.diagnostics import plot_violation_heatmap
+
+    rep = validate_surface(dirty_surf, compute_trust=False, max_violations=1)
+    assert rep.by_condition["_truncated"] is True
+    assert len(rep.violations) == 1
+    fig = plot_violation_heatmap(dirty_surf, rep)
+    heat = fig.axes[0].collections[0].get_array()
+    assert int(np.count_nonzero(np.asarray(heat))) > 1
+
+
 def test_calendar_map(dirty_surf):
     from fast_vollib.diagnostics import plot_calendar_map
 

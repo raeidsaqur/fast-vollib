@@ -95,6 +95,20 @@ def test_nan_quotes_excluded_from_metrics(moneyness, maturities, svi_iv):
     assert rep.metrics["bfly_frac"] == 0.0
 
 
+def test_nan_in_slice_does_not_suppress_butterfly_detection(moneyness, maturities, svi_iv):
+    # Regression: the per-slice butterfly scale is NaN-safe (nansum).  A single
+    # missing quote used to NaN the whole slice's normalized magnitude, hiding
+    # a real butterfly violation elsewhere in the same slice from the report.
+    iv = svi_iv.copy()
+    mid = moneyness.size // 2
+    iv[mid, 1] *= 0.5  # real butterfly violation in slice j=1
+    iv[0, 1] = np.nan  # unrelated missing quote in the same slice
+    rep = validate_surface(IVSurface.from_logmoneyness(moneyness, maturities, iv))
+    assert not rep.passed
+    assert rep.by_condition["butterfly"]["count"] > 0
+    assert any(v.type == "butterfly" and v.index[1] == 1 for v in rep.violations)
+
+
 def test_wide_wing_clean_no_spurious_butterfly(maturities):
     # A flat-vol surface is exactly arbitrage-free, but over a very wide
     # moneyness range the wing call prices underflow toward 0, so the density

@@ -61,7 +61,8 @@ def arbitrage_penalty(
         Per-condition weights; defaults to :data:`DEFAULT_PENALTY_WEIGHTS`.
     reduction:
         ``"mean"`` (default) or ``"sum"`` over each field's violation
-        magnitudes.
+        magnitudes.  ``"mean"`` averages over the *quoted* (non-NaN) entries,
+        so missing quotes neither contribute penalty nor dilute it.
     shared_k:
         See :func:`~fast_vollib.surface.arbitrage.compute_fields`.
 
@@ -129,7 +130,7 @@ def _reducer(xp, reduction: str):
     if reduction == "sum":
         return lambda x: xp.sum(_nan_to_zero(x, xp))
     if reduction == "mean":
-        return lambda x: xp.sum(_nan_to_zero(x, xp)) / _size(x)
+        return lambda x: xp.sum(_nan_to_zero(x, xp)) / _valid_count(x, xp)
     raise ValueError(f"reduction must be 'mean' or 'sum'; got {reduction!r}.")
 
 
@@ -138,8 +139,12 @@ def _nan_to_zero(x, xp):
     return xp.where(xp.isnan(x), xp.asarray(0.0, like=x), x)
 
 
-def _size(x) -> int:
-    n = 1
-    for s in x.shape:
-        n *= int(s)
-    return max(n, 1)
+def _valid_count(x, xp):
+    """Number of non-NaN entries (≥ 1), in-namespace so torch/jax stay traced.
+
+    Dividing the mean by the *quoted* count keeps the penalty independent of
+    how many quotes are missing (unquoted nodes contribute nothing, so they
+    must not appear in the denominator either).
+    """
+    ones = xp.where(xp.isnan(x), xp.asarray(0.0, like=x), xp.asarray(1.0, like=x))
+    return xp.maximum(xp.sum(ones), xp.asarray(1.0, like=x))
