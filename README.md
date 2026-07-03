@@ -38,6 +38,39 @@ modeled on `py_vollib_vectorized`.
 
 ---
 
+## What's New?
+
+**v0.1.7 — IV-surface arbitrage evaluation harness.** `fast_vollib.surface` is a
+generator-agnostic, backend-pluggable evaluator for implied-volatility surfaces:
+
+- **`IVSurface` / `SurfaceSequence`** containers — build from log-moneyness,
+  strikes, total variance, or call prices; numpy / torch / jax arrays are
+  preserved with dtype and device.
+- **`validate_surface()` → `ArbitrageReport`** — price-space checks (convexity,
+  slope, box, calendar) and total-variance checks (`∂_T w ≥ 0`, Durrleman
+  `g ≥ 0`) with normalized, cross-model metrics, localized violations, an
+  interpolation-artifact vs model-arbitrage split, and a `σ→C→σ'` round-trip
+  trust mask.
+- **`arbitrage_penalty()`** — a differentiable soft form of the same checks that
+  never leaves the input tensor's namespace, so it is autograd-traceable on
+  torch/jax and drops directly into a surface generator's training loss.
+- **`fast_vollib.diagnostics`** — six publication-quality figures (total-variance
+  slices, Durrleman `g`, risk-neutral density, violation heatmap, calendar map,
+  trust map) behind the optional `[viz]` extra: `pip install "fast-vollib[viz]"`.
+
+```python
+from fast_vollib.surface import IVSurface, validate_surface, arbitrage_penalty
+
+surf = IVSurface.from_logmoneyness(k, T, iv)   # numpy, torch, or jax iv grid
+report = surf.validate()                       # → ArbitrageReport (passed, metrics, violations)
+loss = pricing_loss + arbitrage_penalty(iv, k, T, forward)  # differentiable soft constraint
+```
+
+See the [surface harness guide](https://raeidsaqur.github.io/fast-vollib/surface/)
+and the [changelog](https://raeidsaqur.github.io/fast-vollib/changelog/) for details.
+
+---
+
 ## Features
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
