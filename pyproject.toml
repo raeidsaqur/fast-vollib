@@ -74,6 +74,12 @@ numba = [
     "numba>=0.60.0",
 ]
 
+# Diagnostic figures for the surface arbitrage-evaluation harness
+# (fast_vollib.diagnostics). Kept out of the numerics core deps.
+viz = [
+    "matplotlib>=3.8",
+]
+
 # Opt-in shape-aware runtime type checking for the public API.
 # Pure annotations only; no decorators on hot paths. Default install
 # does not import jaxtyping (see fast_vollib._typing).
@@ -88,25 +94,79 @@ notebooks = [
     "py-vollib-vectorized",
     "pyarrow>=15.0",
 ]
+# GPU stack. The CUDA major version is selected by CPU architecture — see the
+# note above [tool.uv.sources] for why aarch64 gets the CUDA 12 stack.
 cuda = [
     "torch>=2.5; sys_platform == 'linux'",
-    "jax[cuda13]; sys_platform == 'linux'",
-    # RAPIDS — requires CUDA 13.0 and the nvidia PyPI index (see [tool.uv.sources])
-    "cudf-cu13; sys_platform == 'linux'",
-    "cuvs-cu13; sys_platform == 'linux'",
+    # CUDA 13 stack (x86_64 Linux).
+    "jax[cuda13]; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # RAPIDS — from the nvidia PyPI index (see [tool.uv.sources])
+    "cudf-cu13; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "cuvs-cu13; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    # CUDA 12 stack (aarch64 Linux: Grace-Hopper / Grace-Blackwell).
+    #
+    # No RAPIDS here on purpose. Only `cudf-*`/`cuvs-*` are mapped to the nvidia
+    # index below; their transitive closure (pylibraft, librmm, libkvikio, ...)
+    # falls back to PyPI, where NVIDIA publishes build-time *stub* packages
+    # rather than real wheels. The resolver then backtracks onto ancient RAPIDS
+    # releases (pylibraft-cu12==24.8.1) that fail to build. Nothing in this
+    # library imports cudf/cuvs, so the ARM side simply omits them; extending
+    # RAPIDS to ARM means mapping its whole closure to `nvidia-pypi` first.
+    "jax[cuda12]; sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
 
 [tool.uv]
 default-groups = ["dev"]
+# Development/CI resolution only — keeps the dev environments across hosts on
+# one torch so cross-host benchmarks are comparable. `[tool.uv]` is not
+# published in the wheel metadata, so installers of fast-vollib are not capped
+# by this; `project.optional-dependencies` still says only `torch>=2.5`.
+#
+# The lower bound is load-bearing, not cosmetic. Left to its own devices the
+# resolver backtracks the CUDA forks a long way down (torch 2.6.0+cu126) to
+# simplify the very large nvidia-* dependency graph, even though 2.11 resolves
+# fine. Without `>=2.11` the two GPU hosts silently end up on different torch.
+constraint-dependencies = ["torch>=2.11,<2.12"]
+# torch publishes no sdist, and not every torch release ships an aarch64 wheel
+# (e.g. 2.8.0+cu126 is x86_64/Windows only). Without this, uv is free to lock a
+# version under an `aarch64` marker that has no installable artifact, and the
+# break only surfaces at `uv sync` time on the ARM host. Declaring the target
+# environments forces the resolver to pick wheel-backed versions up front.
+#
+# Scoped to python_full_version >= '3.12': this library still supports 3.10/3.11,
+# but torch's aarch64 CUDA wheels (and their triton dependency) do not reach that
+# far back, so requiring ARM coverage across the whole 3.10+ range backtracks the
+# resolver all the way to torch 2.6.0. 3.12 is what the GPU hosts actually run.
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_full_version >= '3.12'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_full_version >= '3.12'",
+]
 index = [
     { name = "pytorch-cu130", url = "https://download.pytorch.org/whl/cu130", explicit = true },
+    { name = "pytorch-cu126", url = "https://download.pytorch.org/whl/cu126", explicit = true },
     { name = "nvidia-pypi", url = "https://pypi.nvidia.com", explicit = true },
 ]
 
+# ---------------------------------------------------------------------------
+# CUDA wheel selection is keyed on CPU architecture
+#
+#   x86_64  Linux -> CUDA 13.0 wheels (cu130)
+#   aarch64 Linux -> CUDA 12.6 wheels (cu126)
+#   anything else -> default PyPI index (CPU / macOS MPS)
+#
+# CUDA 13 requires an r580-or-newer NVIDIA driver. The aarch64 Linux hosts this
+# library is developed and benchmarked on are Grace-Hopper systems (NVIDIA
+# GH200) whose sites still ship 12.x drivers and toolkits, so ARM64 pins the
+# CUDA 12.6 build. Both cu126 and cu130 publish manylinux_2_28_aarch64 and
+# manylinux_2_28_x86_64 torch wheels, so this only changes the CUDA runtime,
+# not the torch version.
+# ---------------------------------------------------------------------------
 [tool.uv.sources]
-# PyTorch 2.9.1 + CUDA 13.0 wheels on Linux; CPU/MPS default index elsewhere.
-torch       = [{ index = "pytorch-cu130", marker = "sys_platform == 'linux'" }]
-# RAPIDS (cudf, cuvs): CUDA 13 wheels from nvidia PyPI, opt-in via --extra cuda.
+torch = [
+    { index = "pytorch-cu130", marker = "sys_platform == 'linux' and platform_machine == 'x86_64'" },
+    { index = "pytorch-cu126", marker = "sys_platform == 'linux' and platform_machine == 'aarch64'" },
+]
+# RAPIDS (cudf, cuvs) from nvidia PyPI, opt-in via --extra cuda.
 cudf-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extra == 'cuda'" }]
 cuvs-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extra == 'cuda'" }]
 
@@ -141,7 +201,13 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
     "pre-commit>=3.7.0",
-    "py-lets-be-rational>=1.0.1",
+    # Pinned below 1.1: py_vollib_vectorized jits against this package with
+    # numba, and 1.1.x restructured it (adding `piecewise-rational`) so that
+    # nopython type inference fails inside its IV solver. 1.0.x is what the
+    # x86_64 host runs. Note 1.0.x reads DBL_MIN/DBL_MAX from CPython's
+    # internal `_testcapi`, absent from uv-managed CPython — see the
+    # testcapi-compat shim in autoresearch-iv.
+    "py-lets-be-rational>=1.0.1,<1.1",
 ]
 docs = [
     "mkdocs>=1.6",

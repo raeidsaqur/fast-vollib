@@ -11,15 +11,82 @@ separate changelog entries.
 
 ---
 
-## [0.1.3] — 2026-04-04
-- Added backend_parity tests for torch
-- Updated tutorial notebook with Mac MPS backend (for Apple silicon chips).
-
-
 ## [Unreleased]
+
+---
+
+## [0.1.7] — 2026-07-03
 
 ### Added
 
+- **Surface arbitrage-evaluation harness** (`fast_vollib.surface`) — a
+  generator-agnostic, backend-pluggable, differentiable evaluator for implied
+  -volatility surfaces. Takes an arbitrary surface on an arbitrary
+  `(log-moneyness × maturity)` mesh and returns calibrated, dimensionless
+  arbitrage diagnostics.
+    - `IVSurface` / `SurfaceSequence` containers with `from_logmoneyness`,
+      `from_strikes`, `from_total_variance`, and `from_call_prices` constructors;
+      numpy / torch / jax arrays preserved with dtype and device.
+    - `validate_surface()` → `ArbitrageReport`: price-space discrete checks
+      (convexity / slope / box / calendar; Davis–Hobson 2007) **and**
+      total-variance checks (`∂_T w ≥ 0`, Durrleman `g ≥ 0`;
+      Gatheral–Jacquier 2014), with **normalized** metrics
+      (`ndm`, `bfly_frac`, `cal_depth_max`, `cal_frac`, `vert_frac`,
+      `bound_frac`) and the `SAS` composite (reported only alongside its
+      components).
+    - **Artifact-vs-arbitrage separation**: violations whose stencil touches an
+      interpolated node are bucketed as `interpolation_induced` rather than
+      counted as model arbitrage.
+    - **Round-trip trust mask**: per-node `σ→C→σ'` Jäckel LBR fixed-point
+      residual, machine-tight where the quote is well-posed.
+    - Butterfly violations gate on the **per-slice-normalized** density magnitude
+      vs the dimensionless tolerance (never raw `density < 0`), so O(h²)
+      truncation noise at near-degenerate wings cannot manufacture spurious
+      violations on an arbitrage-free surface. Severity bands key off the
+      normalized magnitude; an empty / all-NaN surface reports `passed=False`
+      (`context["coverage"]`).
+    - `arbitrage_penalty()` — a differentiable soft form of the same checks that
+      stays in the input tensor's namespace (no host round-trip), so it is
+      autograd-traceable on torch/jax and matches the numpy report to machine
+      precision. A reusable replacement for the inline VolGAN / deep-smoothing
+      penalty functions.
+    - Backend parity verified numpy == torch == jax to fp tolerance; SVI
+      closed-form oracles validate the non-uniform divided-difference stencils
+      (second-order convergence) and Durrleman `g`; `models.fast_black` validates
+      the surface's own normalized-Black pricing to machine epsilon.
+- **`fast_vollib.diagnostics`** — six publication-quality figures
+  (total-variance slices, Durrleman `g`, risk-neutral density, violation
+  heatmap, calendar map, round-trip trust map), gated behind a new `[viz]`
+  extra (`pip install "fast-vollib[viz]"`). Matplotlib stays out of the
+  numerics core dependencies.
+
+---
+
+## [0.1.6] — 2026-06-27
+
+### Fixed
+
+- **CUDA tensor inputs to `fast_implied_volatility`** — passing a CUDA-resident
+  `torch.Tensor` (or any CPU tensor with `requires_grad=True`) raised
+  `TypeError: can't convert cuda:0 device type tensor to numpy` because
+  `to_numpy()` fell through to `np.asarray(value)`, which invoked
+  `Tensor.__array__()` → `.numpy()` — illegal for both cases.
+  `to_numpy()` now detects torch tensors via `type(value).__module__` and
+  calls `.detach().cpu().numpy()` before the conversion.  All other input types
+  (numpy arrays, pandas, scalars, lists, JAX arrays) are unaffected.
+  Note: `.detach()` means gradients do **not** flow through IV inversion; the
+  compute still round-trips through host numpy.  A fully differentiable GPU-
+  resident IV path remains a separate feature request.
+
+---
+
+## [0.1.5] — 2026-05-29
+
+### Added
+
+- **Python 3.10 support** — lowered `requires-python` from `>=3.11` to `>=3.10`,
+  added the `Programming Language :: Python :: 3.10` classifier, and extended the
+  CI test matrix to cover 3.10 alongside 3.11–3.13.
 - **Opt-in shape-aware runtime type checking** — pure-annotation layer
   (`jaxtyping` + `beartype`) applied to the public API (`fast_black`,
   `fast_black_scholes`, `fast_black_scholes_merton`, `fast_implied_volatility`,
@@ -40,6 +107,12 @@ separate changelog entries.
       `pip install "fast-vollib[typecheck]"` (adds `jaxtyping>=0.2` and
       `beartype>=0.18`).  Default installs do **not** pull either package
       into `sys.modules`.
+
+
+## [0.1.4] — 2026-04-10
+
+### Added
+
 - **`fast_vollib.jackel` module** — full implementation of Peter Jäckel's
   *"Let's Be Rational"* (2016) algorithm with four backends:
     - `jackel_iv_black` — NumPy + Numba (six parallel kernels; ~8.5 ms / 100k)
@@ -71,6 +144,11 @@ separate changelog entries.
   NumPy, PyTorch, and JAX backends.
 - The `compare_against_py_vollib_vectorized.py` helper now imports the current
   upstream `vectorized_*` entry points correctly.
+
+
+## [0.1.3] — 2026-04-04
+- Added backend_parity tests for torch
+- Updated tutorial notebook with Mac MPS backend (for Apple silicon chips).
 
 ---
 
