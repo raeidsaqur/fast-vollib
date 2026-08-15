@@ -308,6 +308,24 @@ present, or follow the standard fork-and-PR workflow.
 
 ---
 
+## Citation
+
+If you use **fast-vollib** in your work, please cite:
+
+```bibtex
+@misc{saqur2026fastvollibfastimpliedvolatility,
+      title={Fast-Vollib: A Fast Implied Volatility Library for Python with PyTorch, JAX, and CUDA Fused-Kernel Backends},
+      author={Raeid Saqur},
+      year={2026},
+      eprint={2604.27210},
+      archivePrefix={arXiv},
+      primaryClass={q-fin.CP},
+      url={https://arxiv.org/abs/2604.27210},
+}
+```
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
