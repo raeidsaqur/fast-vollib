@@ -169,6 +169,10 @@ torch = [
 # RAPIDS (cudf, cuvs) from nvidia PyPI, opt-in via --extra cuda.
 cudf-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extra == 'cuda'" }]
 cuvs-cu13 = [{ index = "nvidia-pypi", marker = "sys_platform == 'linux' and extra == 'cuda'" }]
+# In-tree dev shim, not a PyPI package. A plain path source rather than a uv
+# workspace member: this project is itself consumed as a path dependency
+# elsewhere, and a nested workspace root would conflict there.
+testcapi-compat = { path = "tools/testcapi-compat" }
 
 # ---------------------------------------------------------------------------
 # Build system
@@ -203,11 +207,14 @@ dev = [
     "pre-commit>=3.7.0",
     # Pinned below 1.1: py_vollib_vectorized jits against this package with
     # numba, and 1.1.x restructured it (adding `piecewise-rational`) so that
-    # nopython type inference fails inside its IV solver. 1.0.x is what the
-    # x86_64 host runs. Note 1.0.x reads DBL_MIN/DBL_MAX from CPython's
-    # internal `_testcapi`, absent from uv-managed CPython — see the
-    # testcapi-compat shim in autoresearch-iv.
+    # nopython type inference fails inside its IV solver — a call-time
+    # TypingError rather than a catchable ImportError.
     "py-lets-be-rational>=1.0.1,<1.1",
+    # 1.0.x in turn reads DBL_MIN/DBL_MAX from CPython's private `_testcapi`,
+    # which some distributions omit (notably the python-build-standalone builds
+    # `uv python install` provides). Supplies it; inert on interpreters that
+    # ship the real module. See tools/testcapi-compat/README.md.
+    "testcapi-compat",
 ]
 docs = [
     "mkdocs>=1.6",
