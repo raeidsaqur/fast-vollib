@@ -15,6 +15,48 @@ separate changelog entries.
 
 ---
 
+## [0.1.8] — 2026-08-15
+
+### Added
+
+- **Differentiable Jäckel implied volatility** (`fast_vollib.jackel`):
+    - `implied_volatility_autograd` — PyTorch `autograd.Function` wrapper around
+      the machine-precision "Let's Be Rational" solver. Forward runs the full
+      Jäckel solver; backward applies the implicit function theorem to the
+      discounted pricing equation (`∂σ/∂price = 1/ν`,
+      `∂σ/∂θ = −(∂price/∂θ)/ν`), giving exact gradients w.r.t. price, spot,
+      strike, maturity, rate, and dividend yield without differentiating
+      through the Householder iterations. Also exported at the top level
+      (`fast_vollib.implied_volatility_autograd`; `None` when torch is not
+      installed).
+    - `implied_volatility_autograd_jax` — JAX `custom_vjp` equivalent.
+    - Contract: invalid domain (below-intrinsic, non-positive price / spot /
+      strike, zero maturity) produces `NaN` in forward and backward; a low-vega
+      upstream-aware guard returns a zero gradient when the upstream cotangent
+      is exactly zero, preventing `0 × NaN` chain-rule contamination of valid
+      rows.
+    - Test suites for both wrappers (`tests/test_jackel/test_autograd.py`,
+      `test_autograd_jax.py`) covering gradient correctness against finite
+      differences, the NaN domain contract, and the low-vega guard.
+- **Differentiable IV documentation** — `docs/differentiable_iv.md` training-loop
+  guide (PyTorch IV-loss, hybrid price + IV-roundtrip with the caller-side
+  low-vega filter, JAX example) wired into the mkdocs nav; expanded tutorial
+  notebook.
+
+### Changed
+
+- Development/CI environments select CUDA wheels by CPU architecture: cu130 on
+  x86_64 Linux, cu126 on aarch64 Linux (Grace-Hopper). Dev-only `[tool.uv]`
+  resolution constraints — not published in wheel metadata; installed package
+  requirements are unchanged.
+- Dev dependency `py-lets-be-rational` pinned `<1.1` (1.1.x breaks
+  `py_vollib_vectorized`'s numba type inference), with an in-tree
+  `testcapi-compat` shim supplying CPython's private `_testcapi` module on
+  interpreters that omit it (e.g. `python-build-standalone` via
+  `uv python install`).
+
+---
+
 ## [0.1.7] — 2026-07-03
 
 ### Added

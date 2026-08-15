@@ -40,6 +40,40 @@ modeled on `py_vollib_vectorized`.
 
 ## What's New?
 
+**v0.1.8 — Differentiable Jäckel implied volatility.** `fast_vollib.jackel` now
+ships autograd wrappers around the machine-precision "Let's Be Rational" solver
+for PyTorch and JAX:
+
+- **`implied_volatility_autograd`** (PyTorch) and
+  **`implied_volatility_autograd_jax`** (JAX `custom_vjp`) — the forward pass
+  runs the full Jäckel solver (~2e-11 relative error); the backward pass applies
+  the **implicit function theorem** to the discounted pricing equation
+  (`∂σ/∂price = 1/ν`, `∂σ/∂θ = −(∂price/∂θ)/ν` with `ν` = vega), giving exact
+  gradients w.r.t. price, spot, strike, maturity, rate, and dividend yield
+  without back-propagating through the branch-heavy Householder iterations.
+- **Well-defined edge behavior** — invalid domain (below-intrinsic, non-positive
+  price / spot / strike, zero maturity) yields `NaN` in both forward and
+  backward; an upstream-aware low-vega guard returns a zero gradient when the
+  upstream cotangent is exactly zero, so `0 × NaN` chain-rule poisoning cannot
+  contaminate valid rows.
+- **Training-loop guide** — a new
+  [Differentiable Jäckel IV page](https://raeidsaqur.github.io/fast-vollib/differentiable_iv/)
+  with PyTorch IV-loss and hybrid price + IV-roundtrip examples, a JAX
+  equivalent, and an expanded tutorial notebook.
+- Dev-environment: CUDA wheels are now selected by CPU architecture (cu130 on
+  x86_64, cu126 on aarch64 / GH200), and an in-tree `testcapi-compat` shim keeps
+  `py_lets_be_rational` 1.0.x importable on `python-build-standalone`
+  interpreters.
+
+```python
+import torch
+from fast_vollib.jackel import implied_volatility_autograd
+
+price = price.requires_grad_(True)
+sigma = implied_volatility_autograd(price, S, K, t, r, is_call, q=q, model="black_scholes")
+sigma.sum().backward()   # exact ∂σ/∂price = 1/vega via the implicit function theorem
+```
+
 **v0.1.7 — IV-surface arbitrage evaluation harness.** `fast_vollib.surface` is a
 generator-agnostic, backend-pluggable evaluator for implied-volatility surfaces:
 
