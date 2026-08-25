@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raeidsaqur.github.io/fast-vollib/schemas/instrument-v1.schema.json",
+  "title": "fast-vollib instrument record",
+  "description": "A single fast-vollib instrument, serialized. Records are discriminated by 'instrument_type' and versioned by 'schema_version'. Objects are closed: an unknown field is an error, not ignored input. Generated from the same field table the runtime codec uses; do not edit by hand. Experimental until explicitly declared stable.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/asset"
+    },
+    {
+      "$ref": "#/$defs/forward"
+    },
+    {
+      "$ref": "#/$defs/future"
+    },
+    {
+      "$ref": "#/$defs/european_option"
+    }
+  ],
+  "$defs": {
+    "asset": {
+      "type": "object",
+      "title": "Asset",
+      "description": "An economic underlier: what derivatives are written on.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "asset",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Symbol or ticker."
+        },
+        "asset_class": {
+          "type": "string",
+          "enum": [
+            "equity",
+            "index",
+            "fx",
+            "commodity",
+            "rate",
+            "credit",
+            "digital_asset",
+            "other"
+          ],
+          "description": "Economic class of the asset. Descriptive; selects nothing."
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Upper-cased currency code."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "identifier",
+        "asset_class"
+      ]
+    },
+    "european_option": {
+      "type": "object",
+      "title": "EuropeanOption",
+      "description": "Option on a single underlier, exercisable only at maturity.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "european_option",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "option_type": {
+          "type": "string",
+          "enum": [
+            "call",
+            "put"
+          ],
+          "description": "Call or put. The short 'c'/'p' flags are not wire format."
+        },
+        "strike": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Strike price; strictly positive."
+        },
+        "maturity": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Never a date."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "physical"
+          ],
+          "description": "How the contract settles at maturity."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "option_type",
+        "strike",
+        "maturity"
+      ]
+    },
+    "forward": {
+      "type": "object",
+      "title": "Forward",
+      "description": "Agreement to buy the underlier at maturity for a price fixed now.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "forward",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "delivery_price": {
+          "type": "number",
+          "description": "Price agreed at inception. Any finite value, negatives included."
+        },
+        "maturity": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Never a date."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "physical"
+          ],
+          "description": "How the contract settles at maturity."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "delivery_price",
+        "maturity"
+      ]
+    },
+    "future": {
+      "type": "object",
+      "title": "Future",
+      "description": "Exchange-traded contract on the underlier, expiring at maturity.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "future",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "contract_price": {
+          "type": "number",
+          "description": "Traded futures price. Any finite value, negatives included."
+        },
+        "maturity": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Never a date."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "physical"
+          ],
+          "description": "How the contract settles at maturity."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "contract_price",
+        "maturity"
+      ]
+    },
+    "instrument_ref": {
+      "type": "object",
+      "title": "Underlier reference",
+      "description": "An immutable pointer to an underlier. Carries identity and descriptive metadata only -- never market data.",
+      "additionalProperties": false,
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Symbol, ticker, or other stable key for the underlier."
+        },
+        "asset_class": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "equity",
+            "index",
+            "fx",
+            "commodity",
+            "rate",
+            "credit",
+            "digital_asset",
+            "other",
+            null
+          ],
+          "description": "Economic class of the underlier. Descriptive; selects nothing."
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Upper-cased currency code."
+        }
+      },
+      "required": [
+        "identifier"
+      ]
+    }
+  }
+}

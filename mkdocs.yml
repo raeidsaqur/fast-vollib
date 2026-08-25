@@ -72,6 +72,7 @@ nav:
       - Jäckel IV Solver: jackel.md
       - Differentiable IV: differentiable_iv.md
       - Surface Arbitrage Harness: surface.md
+      - Instruments: instruments.md
       - Compatibility: compatibility.md
       - Benchmarks: benchmarks.md
   - API Reference: api.md

@@ -11,6 +11,7 @@ build/
 site/
 benchmark-results/
 RELEASE_REVIEW.md
+README_LOCAL.md
 src/fast_vollib/_version.py
 docs/assets/generated
 docs/assets/branding
@@ -20,3 +21,4 @@ notebooks/fast_vollib_experiments_dev.ipynb
 # `.venv/` matches a directory only. On HPC hosts the env is often created on a
 # fast/large filesystem and `.venv` is a symlink to it, which needs a bare rule.
 .venv
+.dev

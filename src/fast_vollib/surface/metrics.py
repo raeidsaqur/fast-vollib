@@ -391,8 +391,8 @@ def _trust_mask(
     ``trust_tolerance`` (deep wings, degenerate quotes) are flagged as
     low-confidence (design §6).
     """
+    from .._array_api import numpy_namespace
     from ..jackel.jackel_iv import jackel_iv_black
-    from ._xp import numpy_namespace
     from .transforms import undiscounted_call
 
     np_ns = numpy_namespace()

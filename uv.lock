@@ -1039,11 +1039,13 @@ bench = [
     { name = "pytest-benchmark" },
 ]
 dev = [
+    { name = "jsonschema" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "py-lets-be-rational" },
     { name = "pytest" },
     { name = "ruff" },
+    { name = "sympy" },
     { name = "testcapi-compat" },
 ]
 docs = [
@@ -1085,11 +1087,13 @@ provides-extras = ["cuda", "jax", "notebooks", "numba", "torch", "typecheck", "v
 [package.metadata.requires-dev]
 bench = [{ name = "pytest-benchmark", specifier = ">=4.0" }]
 dev = [
+    { name = "jsonschema", specifier = ">=4.0" },
     { name = "mypy", specifier = ">=1.10" },
     { name = "pre-commit", specifier = ">=3.7.0" },
     { name = "py-lets-be-rational", specifier = ">=1.0.1,<1.1" },
     { name = "pytest", specifier = ">=8.0" },
     { name = "ruff", specifier = ">=0.4" },
+    { name = "sympy", specifier = ">=1.14" },
     { name = "testcapi-compat", directory = "tools/testcapi-compat" },
 ]
 docs = [

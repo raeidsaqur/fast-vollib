@@ -27,7 +27,7 @@ from .density import bl_density, durrleman_g
 from .transforms import discounted_call, iv_to_total_variance, undiscounted_call
 
 if TYPE_CHECKING:
-    from ._xp import ArrayNS
+    from .._array_api import ArrayNS
 
 _FLOOR = 1e-300
 
