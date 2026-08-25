@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from .api import get_all_greeks, price_dataframe
 from .compat.py_vollib_vectorized import patch_py_vollib, patch_py_vollib_vectorized
 from .config import get_backend, set_backend
@@ -36,8 +38,35 @@ except ImportError:  # pragma: no cover - fallback for source trees without buil
     except Exception:  # pragma: no cover - package metadata unavailable
         __version__ = "0.0.0"
 
+if TYPE_CHECKING:  # pragma: no cover - import-time cost is the point of the guard
+    from . import instruments
+
+
+def __getattr__(name: str):
+    """Expose ``fast_vollib.instruments`` without importing it at startup.
+
+    The instruments package is an optional API surface; charging every bare
+    ``import fast_vollib`` for it would be a regression for the functional API,
+    which is what most callers want. Resolving it here keeps
+    ``fast_vollib.instruments`` working as an attribute while deferring the
+    import to first use. ``import fast_vollib.instruments`` is unaffected.
+    """
+    if name == "instruments":
+        import importlib
+
+        module = importlib.import_module(".instruments", __name__)
+        globals()[name] = module
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted([*globals(), "instruments"])
+
+
 __all__ = [
     "get_all_greeks",
+    "instruments",
     "get_backend",
     "patch_py_vollib",
     "patch_py_vollib_vectorized",

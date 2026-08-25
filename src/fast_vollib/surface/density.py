@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING
 from .transforms import undiscounted_call
 
 if TYPE_CHECKING:
-    from ._xp import ArrayNS
+    from .._array_api import ArrayNS
 
 
 def parabolic_derivatives(x, y, xp: "ArrayNS"):

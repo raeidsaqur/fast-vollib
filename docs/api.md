@@ -557,3 +557,33 @@ When the hook **is** installed, `beartype` performs an O(1) isinstance +
 shape + dtype check per public-API call (microseconds, independent of
 array size).  This is intended for tests and development; production
 code typically leaves the hook off.
+
+---
+
+## Instruments
+
+`fast_vollib.instruments` is a separate, optional namespace: contract objects
+and columnar batches with thin adapters onto the kernels above. The namespace
+is exposed lazily as `fast_vollib.instruments`, but its individual APIs are not
+re-exported from `fast_vollib`. Importing `fast_vollib` alone does not load the
+instruments package.
+
+```python
+from fast_vollib.instruments import EuropeanOption, VanillaMarketInputs, price_instrument
+```
+
+| Group | Names |
+|---|---|
+| Contracts | `Asset`, `Forward`, `Future`, `EuropeanOption`, `InstrumentRef`, `Instrument`, `Derivative` |
+| Batches and coordinates | `EuropeanOptionBatch`, `moneyness`, `log_moneyness`, `time_to_maturity`, `forward_price` |
+| Market inputs | `VanillaMarketInputs` |
+| Payoffs and adapters | `payoff`, `payoff_requirement`, `price_instrument`, `greeks_instrument`, `implied_volatility_instrument` |
+| Discovery | `instrument_types`, `instrument_type`, `InstrumentTypeInfo`, `capabilities`, `CapabilitySet` |
+| Serialization | `instrument_to_dict`, `instrument_from_dict`, `instrument_to_json`, `instrument_from_json` |
+| Vocabularies | `AssetClass`, `InstrumentKind`, `OptionType`, `ExerciseStyle`, `SettlementType`, `PricingModel`, `IVSolver`, `PayoffRequirement` |
+| Errors | `InstrumentError`, `InstrumentValidationError`, `UnsupportedInstrumentError`, `UnsupportedModelError`, `UnsupportedSolverError`, `MissingMarketInputError`, `SerializationError` |
+
+The adapters take `model` as a required keyword and never infer it, and they
+never fall back to a different model, engine, solver, or backend. `price_instrument`
+and `greeks_instrument` are **not** differentiable; see
+[Instruments](instruments.md#differentiability) for the full table.

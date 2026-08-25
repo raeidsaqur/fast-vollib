@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ._xp import ArrayNS
+    from .._array_api import ArrayNS
 
 # Floor for √w / w to keep d₁,d₂ finite as w → 0 (mirrors the 1e-32 idiom used
 # throughout the numpy backend). w = 0 corresponds to T = 0 or σ = 0 where the

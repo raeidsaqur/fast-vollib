@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._xp import get_namespace
+from .._array_api import get_namespace
 from .arbitrage import compute_fields
 
 if TYPE_CHECKING:

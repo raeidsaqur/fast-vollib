@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from ..surface._xp import numpy_namespace
+from .._array_api import numpy_namespace
 from ..surface.density import bl_density, durrleman_g
 
 if TYPE_CHECKING:

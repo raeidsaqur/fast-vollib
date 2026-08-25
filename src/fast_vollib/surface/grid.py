@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
-from ._xp import ArrayNS, get_namespace
+from .._array_api import ArrayNS, get_namespace
 
 if TYPE_CHECKING:
     from .._typing import ArrayLike  # noqa: F401

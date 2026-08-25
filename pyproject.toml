@@ -215,6 +215,14 @@ dev = [
     # `uv python install` provides). Supplies it; inert on interpreters that
     # ship the real module. See tools/testcapi-compat/README.md.
     "testcapi-compat",
+    # Dev-only. Checks that the checked-in instrument JSON Schema really accepts
+    # every record the codec emits and rejects every record the codec refuses.
+    # Nothing in the library validates against a schema at runtime.
+    "jsonschema>=4.0",
+    # Dev-only symbolic oracle for pricing identities and analytic derivatives.
+    # Production sources must not import it; tests/symbolic/test_dependency_boundary.py
+    # enforces both the import and published-metadata boundaries.
+    "sympy>=1.14",
 ]
 docs = [
     "mkdocs>=1.6",
