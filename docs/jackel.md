@@ -29,6 +29,14 @@ The `jackel/` module provides:
 Numbers measured on an NVIDIA H100 NVL, N = 100,000 options,
 canonical near-ATM grid (K = F·exp(U(−0.3, 0.3)), σ = U(0.10, 0.60)).
 
+!!! warning "The Halley route is deprecated"
+    `solver="halley"` — the Halley-with-bisection route reached through
+    `fast_implied_volatility` — remains available, tested, and unchanged, and
+    it raises no runtime warning. It is nevertheless deprecated in favour of
+    the Jäckel solver, which is more accurate at comparable cost and is the
+    only route with gradient support. Use Halley for legacy compatibility with
+    existing results, not for new work.
+
 ---
 
 ## Algorithm overview

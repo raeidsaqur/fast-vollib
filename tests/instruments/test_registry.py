@@ -7,16 +7,21 @@ import dataclasses
 import pytest
 
 from fast_vollib.instruments import (
+    AsianOption,
     Asset,
+    BarrierOption,
+    BinaryOption,
     CapabilitySet,
     EuropeanOption,
     Forward,
     Future,
     InstrumentKind,
     IVSolver,
+    LookbackOption,
     PayoffRequirement,
     PricingModel,
     UnsupportedInstrumentError,
+    VarianceSwap,
     capabilities,
     instrument_type,
     instrument_types,
@@ -28,10 +33,15 @@ EXPECTED_TYPES = {
     "forward": Forward,
     "future": Future,
     "european_option": EuropeanOption,
+    "binary_option": BinaryOption,
+    "asian_option": AsianOption,
+    "barrier_option": BarrierOption,
+    "lookback_option": LookbackOption,
+    "variance_swap": VarianceSwap,
 }
 
 
-def test_registry_lists_every_phase_one_type() -> None:
+def test_registry_lists_every_shipped_type() -> None:
     assert (
         dict((type_id, info.python_type) for type_id, info in instrument_types().items())
         == EXPECTED_TYPES
@@ -106,6 +116,11 @@ def test_payoff_requirements_are_declared_per_type() -> None:
         "forward": PayoffRequirement.TERMINAL,
         "future": PayoffRequirement.TERMINAL,
         "european_option": PayoffRequirement.TERMINAL,
+        "binary_option": PayoffRequirement.TERMINAL,
+        "asian_option": PayoffRequirement.PATH,
+        "barrier_option": PayoffRequirement.PATH,
+        "lookback_option": PayoffRequirement.PATH,
+        "variance_swap": PayoffRequirement.PATH,
     }
 
 
@@ -125,7 +140,7 @@ def test_european_option_capabilities() -> None:
     assert set(caps.implied_volatility) == set(PricingModel)
     for model in PricingModel:
         assert caps.solvers_for(model) == frozenset(IVSolver)
-    assert caps.simulate is False
+    assert caps.simulate is True
 
 
 def test_implied_volatility_capability_keeps_the_solver_dimension() -> None:
@@ -161,10 +176,28 @@ def test_linear_contracts_are_recognized_but_have_no_analytic_kernel(cls: type) 
     assert caps.native_autodiff == frozenset()
 
 
+def test_a_forward_can_be_simulated_but_a_future_cannot() -> None:
+    """Their terminal formulas coincide; their economics do not."""
+    assert capabilities(Forward).simulate is True
+    assert capabilities(Future).simulate is False
+    assert capabilities(Future).simulation_autodiff == frozenset()
+
+
+def test_simulation_autodiff_tracks_installed_backends() -> None:
+    import importlib.util
+
+    caps = capabilities(EuropeanOption)
+    for name in ("torch", "jax"):
+        installed = importlib.util.find_spec(name) is not None
+        assert caps.supports_simulation_autodiff(name) is installed
+    assert caps.supports_simulation_autodiff("numpy") is False
+
+
 def test_asset_has_no_operations() -> None:
     caps = capabilities(Asset)
     assert caps.payoff is False
     assert caps.price == frozenset()
+    assert caps.simulate is False
 
 
 def test_capabilities_accepts_an_instance() -> None:

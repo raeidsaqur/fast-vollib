@@ -10,10 +10,10 @@ one supports:
 Only the block between the BEGIN/END markers is rewritten.  A test regenerates
 it and compares, so a stale table fails the suite.
 
-Deliberately excluded: the ``native_autodiff`` set, which depends on which
-optional backends are installed and would make the checked-in file
-environment-dependent.  Differentiability is documented as prose in the same
-page.
+Deliberately excluded: the ``native_autodiff`` and ``simulation_autodiff``
+sets, which depend on which optional backends are installed and would make the
+checked-in file environment-dependent.  Differentiability is documented as
+prose in the same page.
 """
 
 from __future__ import annotations
@@ -64,8 +64,9 @@ def render_table() -> str:
     lines = [
         BEGIN,
         "",
-        "| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | Implied volatility |",
-        "|---|---|---|---|---|---|---|",
+        "| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | "
+        "Implied volatility | Monte Carlo |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for info in instrument_types().values():
         caps = info.capabilities
@@ -77,7 +78,8 @@ def render_table() -> str:
             f"| {requirement} "
             f"| {_models(caps.price)} "
             f"| {_models(caps.greeks)} "
-            f"| {_solvers(caps.implied_volatility)} |"
+            f"| {_solvers(caps.implied_volatility)} "
+            f"| {'yes' if caps.simulate else 'no'} |"
         )
     lines.extend(
         [
@@ -85,7 +87,11 @@ def render_table() -> str:
             "Model abbreviations: `black` = Black-76, `bs` = Black-Scholes, "
             "`bsm` = Black-Scholes-Merton. A dash means the operation is not "
             "available for that type, and asking for it raises rather than "
-            "returning an approximation.",
+            "returning an approximation. **Monte Carlo** is a type-level "
+            "answer: an individual contract is additionally eligible only with "
+            "a strictly positive maturity, which "
+            "`MonteCarloEngine.supports(instrument)` applies and is "
+            "authoritative for an actual request.",
             "",
             END,
         ]

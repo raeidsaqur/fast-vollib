@@ -9,9 +9,9 @@ into it.
 The package is organized into five layers:
 
 1. **Contracts** -- :class:`Asset`, :class:`Forward`, :class:`Future`,
-   :class:`EuropeanOption`: frozen, slotted, keyword-only dataclasses holding
-   contract terms and :class:`InstrumentRef` underliers.  Backend-free and
-   JSON-serializable.
+   :class:`EuropeanOption`, and the digital and path-dependent contracts:
+   frozen, slotted, keyword-only dataclasses holding contract terms and
+   :class:`InstrumentRef` underliers.  Backend-free and JSON-serializable.
 2. **Batches** -- :class:`EuropeanOptionBatch`: a homogeneous columnar
    container that is the unit of execution.  One batch is one vectorized kernel
    call, never a Python loop over contracts.
@@ -64,6 +64,8 @@ from .batch import (
 from .capabilities import CapabilitySet, capabilities
 from .enums import (
     AssetClass,
+    AveragingMethod,
+    BarrierType,
     ExerciseStyle,
     InstrumentKind,
     IVSolver,
@@ -71,6 +73,7 @@ from .enums import (
     PayoffRequirement,
     PricingModel,
     SettlementType,
+    StrikeConvention,
 )
 from .errors import (
     InstrumentError,
@@ -80,6 +83,13 @@ from .errors import (
     UnsupportedInstrumentError,
     UnsupportedModelError,
     UnsupportedSolverError,
+)
+from .exotics import (
+    AsianOption,
+    BarrierOption,
+    BinaryOption,
+    LookbackOption,
+    VarianceSwap,
 )
 from .forwards import Forward, Future
 from .market import VanillaMarketInputs
@@ -100,6 +110,14 @@ from .serialization import (
 
 __all__ = [
     "Asset",
+    "AsianOption",
+    "AveragingMethod",
+    "BarrierOption",
+    "BarrierType",
+    "BinaryOption",
+    "LookbackOption",
+    "VarianceSwap",
+    "StrikeConvention",
     "price_instrument",
     "implied_volatility_instrument",
     "greeks_instrument",

@@ -28,6 +28,8 @@ from enum import Enum
 
 __all__ = [
     "AssetClass",
+    "AveragingMethod",
+    "BarrierType",
     "ExerciseStyle",
     "IVSolver",
     "InstrumentKind",
@@ -35,6 +37,7 @@ __all__ = [
     "PayoffRequirement",
     "PricingModel",
     "SettlementType",
+    "StrikeConvention",
 ]
 
 
@@ -68,6 +71,61 @@ class InstrumentKind(str, Enum):
     FORWARD = "forward"
     FUTURE = "future"
     EUROPEAN_OPTION = "european_option"
+    BINARY_OPTION = "binary_option"
+    ASIAN_OPTION = "asian_option"
+    BARRIER_OPTION = "barrier_option"
+    LOOKBACK_OPTION = "lookback_option"
+    VARIANCE_SWAP = "variance_swap"
+
+
+class BarrierType(str, Enum):
+    """Which way the barrier is crossed, and what crossing it does.
+
+    ``IN`` contracts only pay if the barrier was touched; ``OUT`` contracts
+    stop paying if it was. Direction and knock sense are one field rather than
+    two booleans, because only these four combinations exist and a pair of
+    flags would admit a fifth that does not.
+    """
+
+    UP_AND_IN = "up_and_in"
+    UP_AND_OUT = "up_and_out"
+    DOWN_AND_IN = "down_and_in"
+    DOWN_AND_OUT = "down_and_out"
+
+    @property
+    def is_up(self) -> bool:
+        """Whether the barrier is monitored from below."""
+        return self in (BarrierType.UP_AND_IN, BarrierType.UP_AND_OUT)
+
+    @property
+    def knocks_in(self) -> bool:
+        """Whether touching the barrier switches the contract on rather than off."""
+        return self in (BarrierType.UP_AND_IN, BarrierType.DOWN_AND_IN)
+
+
+class AveragingMethod(str, Enum):
+    """How a path is reduced to the single level an average-rate option pays on.
+
+    Not a numerical detail: the two produce different prices, and which one
+    applies is written in the term sheet. It is a contract field for that
+    reason, never a default chosen by an evaluator.
+    """
+
+    ARITHMETIC = "arithmetic"
+    GEOMETRIC = "geometric"
+
+
+class StrikeConvention(str, Enum):
+    """Whether the strike is agreed at inception or read off the path.
+
+    ``FIXED`` compares against a strike in the contract. ``FLOATING`` compares
+    against a level the path itself produces, so the contract carries no
+    strike at all -- and one that carried both would be describing two
+    different instruments.
+    """
+
+    FIXED = "fixed"
+    FLOATING = "floating"
 
 
 class OptionType(str, Enum):
@@ -147,7 +205,9 @@ class PayoffRequirement(str, Enum):
 
     Declared per instrument type so an engine can reject incompatible data
     before it simulates anything.  ``TERMINAL`` means the terminal underlying
-    state alone suffices. No path-dependent payoff requirement is defined.
+    state alone suffices; ``PATH`` means the whole trajectory is needed, and a
+    terminal state alone cannot be substituted for it.
     """
 
     TERMINAL = "terminal"
+    PATH = "path"

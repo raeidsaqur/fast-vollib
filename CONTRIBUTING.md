@@ -22,18 +22,23 @@ and include:
 git clone https://github.com/raeidsaqur/fast-vollib.git
 cd fast-vollib
 
-# Install all dev dependencies (requires Python >=3.11 and uv)
+# Install all dev dependencies (requires Python >=3.10 and uv)
 uv sync --all-groups
 
 # Run the test suite
 uv run pytest tests/ -v
 
+# Optional backends normally skip when absent. Name the ones this run must
+# actually exercise and a missing or skipped backend fails instead.
+uv sync --all-groups --extra torch --extra jax
+FV_REQUIRE_BACKENDS=torch,jax uv run pytest tests/ -q
+
 # Lint and format
 uv run ruff check . --fix
 uv run ruff format .
 
-# Type-check
-uv run mypy src/fast_vollib --ignore-missing-imports
+# Type-check against the repository's accepted diagnostic baseline
+uv run python scripts/check_mypy_baseline.py
 ```
 
 ---

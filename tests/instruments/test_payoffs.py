@@ -217,3 +217,107 @@ def test_no_host_staging_in_the_payoff_path(
     terminal = torch.tensor(TERMINAL.tolist(), dtype=torch.float64, requires_grad=True)
     result = payoff(instrument, terminal)
     assert result.requires_grad
+
+
+# --- digital payoffs ----------------------------------------------------------
+
+from fast_vollib.instruments import BinaryOption  # noqa: E402
+
+DIGITAL_CALL = BinaryOption(
+    underlier="ACME", option_type="call", strike=100.0, maturity=1.0, cash_amount=10.0
+)
+DIGITAL_PUT = BinaryOption(
+    underlier="ACME", option_type="put", strike=100.0, maturity=1.0, cash_amount=10.0
+)
+
+
+def test_digital_pays_the_cash_amount_on_the_right_side_of_the_strike() -> None:
+    np.testing.assert_array_equal(payoff(DIGITAL_CALL, TERMINAL), np.array([0.0, 0.0, 10.0]))
+    np.testing.assert_array_equal(payoff(DIGITAL_PUT, TERMINAL), np.array([10.0, 0.0, 0.0]))
+
+
+def test_at_the_strike_exactly_a_digital_call_and_put_both_pay_nothing() -> None:
+    """Strict on both sides: neither pays at a level the market has not resolved."""
+    at_strike = np.array([100.0])
+    assert float(payoff(DIGITAL_CALL, at_strike)[0]) == 0.0
+    assert float(payoff(DIGITAL_PUT, at_strike)[0]) == 0.0
+
+
+def test_a_digital_call_and_put_never_both_pay() -> None:
+    grid = np.linspace(50.0, 150.0, 401)
+    both = payoff(DIGITAL_CALL, grid) * payoff(DIGITAL_PUT, grid)
+    assert np.all(both == 0.0)
+
+
+def test_digital_notional_scales_the_cash_amount() -> None:
+    short = BinaryOption(
+        underlier="ACME",
+        option_type="call",
+        strike=100.0,
+        maturity=1.0,
+        cash_amount=10.0,
+        notional=-2.5,
+    )
+    np.testing.assert_array_equal(payoff(short, TERMINAL), np.array([-0.0, -0.0, -25.0]))
+
+
+def test_digital_declares_a_terminal_requirement() -> None:
+    assert payoff_requirement(DIGITAL_CALL) is PayoffRequirement.TERMINAL
+
+
+@pytest.mark.parametrize("dtype_name", ["float32", "float64"])
+def test_digital_preserves_the_numpy_dtype(dtype_name: str) -> None:
+    """A digital selects between constants; the constants must not promote."""
+    terminal = TERMINAL.astype(dtype_name)
+    assert payoff(DIGITAL_CALL, terminal).dtype == terminal.dtype
+
+
+@pytest.mark.parametrize("dtype_name", ["float32", "float64"])
+def test_digital_preserves_torch_dtype_and_device(dtype_name: str) -> None:
+    torch = pytest.importorskip("torch", reason="torch not installed")
+    terminal = torch.tensor(TERMINAL.tolist(), dtype=getattr(torch, dtype_name))
+    result = payoff(DIGITAL_CALL, terminal)
+    assert result.dtype == terminal.dtype
+    assert result.device == terminal.device
+    np.testing.assert_allclose(
+        result.detach().cpu().numpy(), payoff(DIGITAL_CALL, TERMINAL.astype(dtype_name))
+    )
+
+
+def test_digital_keeps_the_graph_and_differentiates_to_zero() -> None:
+    """The pathwise derivative of an indicator is zero, not undefined-and-absent.
+
+    Selecting between two bare constants would detach the result and the
+    gradient would come back as ``None``, which reads like "no answer" rather
+    than the correct answer of exactly zero.
+    """
+    torch = pytest.importorskip("torch", reason="torch not installed")
+    terminal = torch.tensor([80.0, 125.0], dtype=torch.float64, requires_grad=True)
+    result = payoff(DIGITAL_CALL, terminal)
+    assert result.requires_grad
+    result.sum().backward()
+    assert terminal.grad is not None
+    torch.testing.assert_close(terminal.grad, torch.zeros(2, dtype=torch.float64))
+
+
+def test_digital_jax_value_and_zero_gradient() -> None:
+    jax = pytest.importorskip("jax", reason="jax not installed")
+    jnp = jax.numpy
+    terminal = jnp.asarray(TERMINAL)
+    np.testing.assert_allclose(
+        np.asarray(payoff(DIGITAL_CALL, terminal)), payoff(DIGITAL_CALL, TERMINAL)
+    )
+    gradient = jax.grad(lambda s: payoff(DIGITAL_CALL, s).sum())(jnp.asarray([80.0, 125.0]))
+    np.testing.assert_array_equal(np.asarray(gradient), np.zeros(2))
+
+
+def test_digital_does_not_stage_through_host_memory(monkeypatch: pytest.MonkeyPatch) -> None:
+    torch = pytest.importorskip("torch", reason="torch not installed")
+
+    def forbidden(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("payoff evaluation must not stage through host memory")
+
+    for name in ("numpy", "detach", "cpu", "item", "tolist"):
+        monkeypatch.setattr(torch.Tensor, name, forbidden, raising=True)
+    terminal = torch.tensor(TERMINAL.tolist(), dtype=torch.float64, requires_grad=True)
+    assert payoff(DIGITAL_CALL, terminal).requires_grad

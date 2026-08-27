@@ -22,7 +22,23 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from .base import Asset, Instrument
-from .enums import AssetClass, InstrumentKind, OptionType, PayoffRequirement, SettlementType
+from .enums import (
+    AssetClass,
+    AveragingMethod,
+    BarrierType,
+    InstrumentKind,
+    OptionType,
+    PayoffRequirement,
+    SettlementType,
+    StrikeConvention,
+)
+from .exotics import (
+    AsianOption,
+    BarrierOption,
+    BinaryOption,
+    LookbackOption,
+    VarianceSwap,
+)
 from .forwards import Forward, Future
 from .options import EuropeanOption
 
@@ -119,6 +135,22 @@ _NOTIONAL = FieldSpec(
     description=("Contract multiplier. Non-zero and finite; negative denotes a short position."),
 )
 
+_OPTION_TYPE = FieldSpec(
+    name="option_type",
+    json_type="string",
+    required=True,
+    enum_cls=OptionType,
+    description="Call or put. The short 'c'/'p' flags are not wire format.",
+)
+
+_STRIKE = FieldSpec(
+    name="strike",
+    json_type="number",
+    required=True,
+    exclusive_minimum=0.0,
+    description="Strike price; strictly positive.",
+)
+
 _UNDERLIER = FieldSpec(
     name="underlier",
     json_type="object",
@@ -132,6 +164,37 @@ _MATURITY = FieldSpec(
     required=True,
     minimum=0.0,
     description="Time to maturity as a year fraction from valuation. Never a date.",
+)
+
+_OPTIONAL_STRIKE = FieldSpec(
+    name="strike",
+    json_type="number",
+    required=False,
+    nullable=True,
+    exclusive_minimum=0.0,
+    description=(
+        "Strike price under a fixed strike convention; null under a floating one, "
+        "where a level read off the path plays the strike's role."
+    ),
+)
+
+_STRIKE_CONVENTION = FieldSpec(
+    name="strike_convention",
+    json_type="string",
+    required=True,
+    enum_cls=StrikeConvention,
+    description="Whether the strike is agreed at inception or read off the path.",
+)
+
+_POSITIVE_MATURITY = FieldSpec(
+    name="maturity",
+    json_type="number",
+    required=True,
+    exclusive_minimum=0.0,
+    description=(
+        "Time to maturity as a year fraction from valuation. Strictly positive: a "
+        "path-dependent payoff needs a path."
+    ),
 )
 
 _SETTLEMENT = FieldSpec(
@@ -254,22 +317,126 @@ TYPE_SPECS: tuple[TypeSpec, ...] = (
         fields=(
             _INSTRUMENT_ID,
             _UNDERLIER,
+            _OPTION_TYPE,
+            _STRIKE,
+            _MATURITY,
+            _SETTLEMENT,
+            _NOTIONAL,
+        ),
+    ),
+    TypeSpec(
+        type_id=InstrumentKind.BINARY_OPTION.value,
+        kind=InstrumentKind.BINARY_OPTION,
+        python_type=BinaryOption,
+        payoff_requirement=PayoffRequirement.TERMINAL,
+        description="Cash-or-nothing digital paying a fixed amount if it finishes in the money.",
+        fields=(
+            _INSTRUMENT_ID,
+            _UNDERLIER,
+            _OPTION_TYPE,
+            _STRIKE,
+            _MATURITY,
             FieldSpec(
-                name="option_type",
+                name="cash_amount",
+                json_type="number",
+                required=False,
+                exclusive_minimum=0.0,
+                description="Fixed amount paid per contract when in the money.",
+            ),
+            _NOTIONAL,
+        ),
+    ),
+    TypeSpec(
+        type_id=InstrumentKind.ASIAN_OPTION.value,
+        kind=InstrumentKind.ASIAN_OPTION,
+        python_type=AsianOption,
+        payoff_requirement=PayoffRequirement.PATH,
+        description="Option on an average of the underlier over the contract's life.",
+        fields=(
+            _INSTRUMENT_ID,
+            _UNDERLIER,
+            _OPTION_TYPE,
+            _OPTIONAL_STRIKE,
+            FieldSpec(
+                name="averaging_method",
                 json_type="string",
                 required=True,
-                enum_cls=OptionType,
-                description="Call or put. The short 'c'/'p' flags are not wire format.",
+                enum_cls=AveragingMethod,
+                description="Whether the average is arithmetic or geometric.",
             ),
+            _STRIKE_CONVENTION,
+            _POSITIVE_MATURITY,
+            _SETTLEMENT,
+            _NOTIONAL,
+        ),
+    ),
+    TypeSpec(
+        type_id=InstrumentKind.BARRIER_OPTION.value,
+        kind=InstrumentKind.BARRIER_OPTION,
+        python_type=BarrierOption,
+        payoff_requirement=PayoffRequirement.PATH,
+        description="Option that knocks in or out when the underlier touches a barrier.",
+        fields=(
+            _INSTRUMENT_ID,
+            _UNDERLIER,
+            _OPTION_TYPE,
+            _STRIKE,
             FieldSpec(
-                name="strike",
+                name="barrier",
                 json_type="number",
                 required=True,
                 exclusive_minimum=0.0,
-                description="Strike price; strictly positive.",
+                description=(
+                    "Monitored level; strictly positive. Never compared against spot, "
+                    "which is market state rather than a contract term."
+                ),
             ),
-            _MATURITY,
+            FieldSpec(
+                name="barrier_type",
+                json_type="string",
+                required=True,
+                enum_cls=BarrierType,
+                description="Barrier direction and knock sense.",
+            ),
+            _POSITIVE_MATURITY,
             _SETTLEMENT,
+            _NOTIONAL,
+        ),
+    ),
+    TypeSpec(
+        type_id=InstrumentKind.LOOKBACK_OPTION.value,
+        kind=InstrumentKind.LOOKBACK_OPTION,
+        python_type=LookbackOption,
+        payoff_requirement=PayoffRequirement.PATH,
+        description="Option settled against the highest or lowest level the underlier reached.",
+        fields=(
+            _INSTRUMENT_ID,
+            _UNDERLIER,
+            _OPTION_TYPE,
+            _OPTIONAL_STRIKE,
+            _STRIKE_CONVENTION,
+            _POSITIVE_MATURITY,
+            _SETTLEMENT,
+            _NOTIONAL,
+        ),
+    ),
+    TypeSpec(
+        type_id=InstrumentKind.VARIANCE_SWAP.value,
+        kind=InstrumentKind.VARIANCE_SWAP,
+        python_type=VarianceSwap,
+        payoff_requirement=PayoffRequirement.PATH,
+        description="Swap paying realized variance against a level agreed at inception.",
+        fields=(
+            _INSTRUMENT_ID,
+            _UNDERLIER,
+            FieldSpec(
+                name="strike_variance",
+                json_type="number",
+                required=True,
+                minimum=0.0,
+                description="Agreed variance level, the square of a volatility. Non-negative.",
+            ),
+            _POSITIVE_MATURITY,
             _NOTIONAL,
         ),
     ),

@@ -1,0 +1,36 @@
+src/fast_vollib/_typing.py:34: error: Variable "fast_vollib._typing.Float1D" is not valid as a type  [valid-type]
+src/fast_vollib/_typing.py:34: note: See https://mypy.readthedocs.io/en/stable/common_issues.html#variables-vs-type-aliases
+src/fast_vollib/backends/numba_backend.py:396: error: "object" not callable  [operator]
+src/fast_vollib/backends/numba_backend.py:409: error: "object" not callable  [operator]
+src/fast_vollib/backends/numba_backend.py:422: error: "object" not callable  [operator]
+src/fast_vollib/backends/numba_backend.py:443: error: "object" not callable  [operator]
+src/fast_vollib/backends/numba_backend.py:482: error: "object" not callable  [operator]
+src/fast_vollib/backends/torch_backend.py:108: error: "object" has no attribute "numel"  [attr-defined]
+src/fast_vollib/backends/torch_backend.py:111: error: Value of type "object" is not indexable  [index]
+src/fast_vollib/backends/torch_backend.py:202: error: Name "torch" is not defined  [name-defined]
+src/fast_vollib/backends/torch_backend.py:25: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/fast_vollib/backends/torch_backend.py:93: error: Name "torch" is not defined  [name-defined]
+src/fast_vollib/config.py:37: error: Incompatible return value type (got "str | None", expected "Literal['auto', 'numpy', 'torch', 'jax', 'numba']")  [return-value]
+src/fast_vollib/diagnostics/plots.py:121: error: Unsupported left operand type for / ("generic[Any]")  [operator]
+src/fast_vollib/diagnostics/plots.py:121: error: Unsupported operand types for / ("generic[Any]" and "ndarray[tuple[int, ...], dtype[generic[Any]]]")  [operator]
+src/fast_vollib/diagnostics/plots.py:121: error: Unsupported operand types for / ("ndarray[tuple[int, ...], dtype[generic[Any]]]" and "generic[Any]")  [operator]
+src/fast_vollib/diagnostics/plots.py:121: error: Unsupported operand types for / ("ndarray[tuple[int, ...], dtype[generic[Any]]]" and "ndarray[tuple[int, ...], dtype[generic[Any]]]")  [operator]
+src/fast_vollib/diagnostics/plots.py:121: error: Unsupported operand types for < ("int" and "generic[Any]")  [operator]
+src/fast_vollib/diagnostics/plots.py:121: error: Unsupported operand types for > ("ndarray[tuple[int, ...], dtype[generic[Any]]]" and "int")  [operator]
+src/fast_vollib/diagnostics/plots.py:121: note: Both left and right operands are unions
+src/fast_vollib/diagnostics/plots.py:121: note: Left operand is of type "Any | generic[Any] | ndarray[tuple[int, ...], dtype[generic[Any]]]"
+src/fast_vollib/jackel/jackel_iv.py:1728: error: Incompatible types in assignment (expression has type "ndarray[tuple[int, ...], dtype[Any]]", variable has type "ndarray[tuple[int], dtype[Any]]")  [assignment]
+src/fast_vollib/jackel/torch_backend.py:236: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src/fast_vollib/surface/grid.py:77: error: Incompatible types in assignment (expression has type "None", variable has type "ArrayNS")  [assignment]
+src/fast_vollib/surface/metrics.py:245: error: Dict entry 1 has incompatible type "str": "bool"; expected "str": "dict[str, Any]"  [dict-item]
+src/fast_vollib/surface/metrics.py:246: error: Dict entry 2 has incompatible type "str": "int"; expected "str": "dict[str, Any]"  [dict-item]
+src/fast_vollib/surface/metrics.py:302: error: Unsupported left operand type for / ("generic[Any]")  [operator]
+src/fast_vollib/surface/metrics.py:302: error: Unsupported operand types for / ("generic[Any]" and "ndarray[tuple[int, ...], dtype[generic[Any]]]")  [operator]
+src/fast_vollib/surface/metrics.py:302: error: Unsupported operand types for / ("ndarray[tuple[int, ...], dtype[generic[Any]]]" and "generic[Any]")  [operator]
+src/fast_vollib/surface/metrics.py:302: error: Unsupported operand types for / ("ndarray[tuple[int, ...], dtype[generic[Any]]]" and "ndarray[tuple[int, ...], dtype[generic[Any]]]")  [operator]
+src/fast_vollib/surface/metrics.py:302: error: Unsupported operand types for < ("int" and "generic[Any]")  [operator]
+src/fast_vollib/surface/metrics.py:302: error: Unsupported operand types for > ("ndarray[tuple[int, ...], dtype[generic[Any]]]" and "int")  [operator]
+src/fast_vollib/surface/metrics.py:302: note: Both left and right operands are unions
+src/fast_vollib/surface/metrics.py:302: note: Left operand is of type "Any | generic[Any] | ndarray[tuple[int, ...], dtype[generic[Any]]]"
+src/fast_vollib/utils/broadcast.py:34: error: "object" has no attribute "detach"  [attr-defined]
+src/fast_vollib/utils/broadcast.py:34: note: Error code "attr-defined" not covered by "type: ignore" comment
