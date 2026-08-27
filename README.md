@@ -40,6 +40,21 @@ modeled on `py_vollib_vectorized`.
 
 ## What's New?
 
+**[Upcoming] v0.2.0 — Processes, simulation, and instruments.** The next
+fast-vollib release will jump to 0.2.0 with three major new public modules that
+extend the library from pricing kernels to typed contracts and Monte Carlo
+workflows:
+
+- **`fast_vollib.processes`** provides stateless stochastic-process dynamics,
+  beginning with exact geometric Brownian motion on regular or irregular time
+  grids.
+- **`fast_vollib.simulation`** provides validated, backend-native scenarios and
+  an explicit Monte Carlo engine with standard errors, antithetic sampling, and
+  PyTorch/JAX automatic differentiation.
+- **`fast_vollib.instruments`** provides immutable contract objects, columnar
+  option batches, market-input adapters, payoffs, serialization, and capability
+  discovery while keeping the existing functional pricing API canonical.
+
 **v0.1.8 — Differentiable Jäckel implied volatility.** `fast_vollib.jackel` now
 ships autograd wrappers around the machine-precision "Let's Be Rational" solver
 for PyTorch and JAX:
