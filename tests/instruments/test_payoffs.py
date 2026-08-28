@@ -272,6 +272,21 @@ def test_digital_preserves_the_numpy_dtype(dtype_name: str) -> None:
     assert payoff(DIGITAL_CALL, terminal).dtype == terminal.dtype
 
 
+def test_fractional_digital_scale_preserves_numpy_float32() -> None:
+    digital = BinaryOption(
+        underlier="ACME",
+        option_type="call",
+        strike=100.0,
+        maturity=1.0,
+        cash_amount=0.3,
+        notional=0.1,
+    )
+    terminal = TERMINAL.astype(np.float32)
+    result = payoff(digital, terminal)
+    assert result.dtype == terminal.dtype
+    np.testing.assert_allclose(result, np.array([0.0, 0.0, 0.03], dtype=np.float32))
+
+
 @pytest.mark.parametrize("dtype_name", ["float32", "float64"])
 def test_digital_preserves_torch_dtype_and_device(dtype_name: str) -> None:
     torch = pytest.importorskip("torch", reason="torch not installed")
@@ -298,6 +313,25 @@ def test_digital_keeps_the_graph_and_differentiates_to_zero() -> None:
     result.sum().backward()
     assert terminal.grad is not None
     torch.testing.assert_close(terminal.grad, torch.zeros(2, dtype=torch.float64))
+
+
+def test_fractional_digital_scale_keeps_the_float32_torch_graph() -> None:
+    torch = pytest.importorskip("torch", reason="torch not installed")
+    digital = BinaryOption(
+        underlier="ACME",
+        option_type="call",
+        strike=100.0,
+        maturity=1.0,
+        cash_amount=0.3,
+        notional=0.1,
+    )
+    terminal = torch.tensor([80.0, 125.0], dtype=torch.float32, requires_grad=True)
+    result = payoff(digital, terminal)
+    assert result.dtype == terminal.dtype
+    assert result.requires_grad
+    result.sum().backward()
+    assert terminal.grad is not None
+    torch.testing.assert_close(terminal.grad, torch.zeros(2, dtype=torch.float32))
 
 
 def test_digital_jax_value_and_zero_gradient() -> None:

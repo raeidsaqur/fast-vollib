@@ -167,9 +167,8 @@ def _binary_option_payoff(instrument: BinaryOption, terminal_state: Any) -> Any:
         in_the_money = terminal_state > instrument.strike
     else:
         in_the_money = terminal_state < instrument.strike
-    return (
-        instrument.notional * instrument.cash_amount * _indicator(ns, in_the_money, terminal_state)
-    )
+    scale = ns.scalar(instrument.notional * instrument.cash_amount, like=terminal_state)
+    return scale * _indicator(ns, in_the_money, terminal_state)
 
 
 def _require_positive_path(ns: Any, values: Any, *, operation: str) -> None:
