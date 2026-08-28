@@ -47,9 +47,9 @@ def test_docs_are_wired_into_the_navigation() -> None:
 
 def test_changelog_records_the_feature() -> None:
     changelog = (REPO_ROOT / "docs" / "changelog.md").read_text(encoding="utf-8")
-    unreleased = changelog.split("## [Unreleased]", 1)[1].split("## [0.1.8]", 1)[0]
-    assert "instruments" in unreleased
-    assert "v0.2.0" in unreleased
+    release = changelog.split("## [0.2.0] — 2026-08-28", 1)[1].split("## [0.1.8]", 1)[0]
+    assert "instruments" in release
+    assert "fast_vollib.simulation" in release
 
 
 @pytest.mark.parametrize(

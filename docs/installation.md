@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- Python **3.11** or later
+- Python **3.10** or later
 - NumPy ≥ 1.26, SciPy ≥ 1.13 (pulled in automatically)
 
 ---
@@ -21,7 +21,8 @@ uv add fast-vollib
 
 ## TestPyPI development snapshots
 
-Development builds are published to TestPyPI with VCS-derived versions such as `0.1.2.dev3`.
+Development builds are published to TestPyPI with VCS-derived versions such as
+`0.2.1.devN` after the v0.2.0 release.
 
 ### pip
 

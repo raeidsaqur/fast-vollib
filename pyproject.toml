@@ -1,7 +1,7 @@
 [project]
 name = "fast-vollib"
 dynamic = ["version"]
-description = "Modern Black, Black-Scholes, and Black-Scholes-Merton pricing and implied volatility with NumPy, PyTorch, and JAX backends."
+description = "Fast derivatives pricing, implied volatility, typed instruments, and Monte Carlo simulation with NumPy, PyTorch, and JAX."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [

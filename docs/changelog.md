@@ -13,9 +13,13 @@ separate changelog entries.
 
 ## [Unreleased]
 
-### v0.2.0 — instruments
+## [0.2.0] — 2026-08-28
 
-#### Added
+This is the next stable release after v0.1.8. No v0.1.9 release was cut: the
+new public instrument, process, and simulation layers warrant a minor-version
+boundary.
+
+### Added
 
 - **`fast_vollib.instruments`** — a nominal layer over the functional API:
   contract objects, columnar batches, market inputs, backend-native payoffs, and
@@ -123,7 +127,7 @@ separate changelog entries.
   versus path dispatch, every payoff convention, the estimator, and a
   differentiability table that separates tape retention from useful gradients.
 
-#### Changed
+### Changed
 
 - `fast_vollib.instruments` resolves through a module-level `__getattr__`, so a
   bare `import fast_vollib` does not pay for it; `fast_vollib.processes` and
@@ -135,7 +139,13 @@ separate changelog entries.
   tested against NumPy's answer in every installed namespace. Existing
   operations are unchanged.
 
-#### Deprecated
+### Fixed
+
+- Binary-option payoff scaling is constructed in the caller's array namespace,
+  preserving float32 dtype, device placement, and the autodiff graph for
+  fractional cash and notional terms.
+
+### Deprecated
 
 - The Halley-with-bisection implied-volatility route (`solver="halley"`,
   `fast_implied_volatility`) in favour of the Jäckel solver, which is more
@@ -402,6 +412,13 @@ behaviour across NumPy, PyTorch, and JAX.
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
+[0.2.0]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.8...v0.2.0
+[0.1.8]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.7...v0.1.8
+[0.1.7]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/raeidsaqur/fast-vollib/releases/tag/v0.1.0

@@ -9,8 +9,8 @@
 <h1 align="center">fast-vollib</h1>
 
 <p align="center">
-  Accelerated Black-Scholes pricing, implied volatility, and Greeks library with pluggable
-  NumPy, PyTorch, and JAX backends.
+  Accelerated derivatives pricing, implied volatility, typed instruments, and Monte Carlo
+  simulation with NumPy, PyTorch, and JAX backends.
 </p>
 
 <p align="center">
@@ -31,19 +31,20 @@
   </a>
 </p>
 
-**fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library for Black, Black-Scholes, and
-Black-Scholes-Merton option pricing, implied volatility solving, and Greeks —
-with pluggable NumPy, PyTorch, and JAX backends and a compatibility-first API
-modeled on `py_vollib_vectorized`.
+**fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library
+for Black, Black-Scholes, and Black-Scholes-Merton pricing, implied volatility,
+Greeks, typed derivative contracts, and explicit Monte Carlo workflows. It has
+pluggable NumPy, PyTorch, and JAX backends and a compatibility-first functional
+API modeled on `py_vollib_vectorized`.
 
 ---
 
 ## What's New?
 
-**[Upcoming] v0.2.0 — Processes, simulation, and instruments.** The next
-fast-vollib release will jump to 0.2.0 with three major new public modules that
-extend the library from pricing kernels to typed contracts and Monte Carlo
-workflows:
+**v0.2.0 — Processes, simulation, and instruments.** This release extends the
+library from pricing kernels to typed contracts and Monte Carlo workflows. It
+is the next stable release after v0.1.8; no v0.1.9 release was cut. Three major
+public modules are included:
 
 - **`fast_vollib.processes`** provides stateless stochastic-process dynamics,
   beginning with exact geometric Brownian motion on regular or irregular time
@@ -54,6 +55,11 @@ workflows:
 - **`fast_vollib.instruments`** provides immutable contract objects, columnar
   option batches, market-input adapters, payoffs, serialization, and capability
   discovery while keeping the existing functional pricing API canonical.
+
+See the [v0.2.0 changelog](https://raeidsaqur.github.io/fast-vollib/changelog/#020-2026-08-28),
+[instrument guide](https://raeidsaqur.github.io/fast-vollib/instruments/), and
+[simulation guide](https://raeidsaqur.github.io/fast-vollib/simulation/) for the
+complete contracts and examples.
 
 **v0.1.8 — Differentiable Jäckel implied volatility.** `fast_vollib.jackel` now
 ships autograd wrappers around the machine-precision "Let's Be Rational" solver
@@ -130,6 +136,9 @@ and the [changelog](https://raeidsaqur.github.io/fast-vollib/changelog/) for det
 - **DataFrame-native** — `price_dataframe` works directly on a `pandas.DataFrame`
 - **Drop-in compatibility** — `patch_py_vollib()` and `patch_py_vollib_vectorized()` patch the scalar and vectorized upstream namespaces
 - **Surface arbitrage harness** — `fast_vollib.surface` scores generated IV surfaces for static arbitrage with normalized, cross-model metrics and a differentiable training penalty ([guide](https://raeidsaqur.github.io/fast-vollib/surface/))
+- **Typed instruments** — immutable vanilla, digital, Asian, barrier, lookback, and variance-swap contracts with strict serialization and columnar option batches
+- **Processes and scenarios** — backend-native GBM paths on regular or irregular grids, preserving NumPy, PyTorch, and JAX semantics
+- **Explicit Monte Carlo** — opt-in valuation with standard errors, antithetic sampling, capability discovery, and no silent analytic/Monte Carlo fallback
 
 ---
 
@@ -149,8 +158,8 @@ pip install "fast-vollib[torch,jax]"   # both backends
 
 ### Development snapshots from TestPyPI
 
-Stable releases are published from Git tags to PyPI. Development snapshots are
-available via to TestPyPI versions such as `0.1.2.dev3`.
+Stable releases are published from Git tags to PyPI. After v0.2.0, development
+snapshots from `main` use TestPyPI versions such as `0.2.1.devN`.
 
 ```bash
 pip install --pre \
@@ -308,10 +317,10 @@ uv run mkdocs serve         # local docs server → http://localhost:8000
 
 ### Release model
 
-- Tagged releases like `v0.1.2` publish stable builds to PyPI.
-- PRs on `main` publish development snapshots to TestPyPI.
+- Tagged releases like `v0.2.0` publish stable builds to PyPI.
+- Pushes to `main` publish development snapshots to TestPyPI.
 - The package version is derived from Git tags with `hatch-vcs`, so version
-  strings are no longer maintained manually in source files for each release
+  strings are no longer maintained manually in source files for each release.
 
 ---
 

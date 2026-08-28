@@ -1,6 +1,9 @@
 # fast-vollib
 
-**fast-vollib** is a fast, modern Python library for Black, Black-Scholes, and Black-Scholes-Merton option pricing, implied volatility solving, and Greeks — with pluggable NumPy, PyTorch, and JAX backends.
+**fast-vollib** is a fast, modern Python library for Black, Black-Scholes, and
+Black-Scholes-Merton pricing, implied volatility, Greeks, typed derivative
+contracts, and explicit Monte Carlo workflows — with pluggable NumPy, PyTorch,
+and JAX backends.
 
 Stable tagged releases are published to PyPI. Development snapshots from each
 `main` commit are published to TestPyPI with VCS-derived `.devN` versions.
@@ -25,6 +28,8 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 - **Drop-in compatibility** — separate patch helpers for `py_vollib` and `py_vollib_vectorized`
 - **Automatic backend selection** — prefers CUDA-capable PyTorch > JAX > NumPy
 - **Opt-in shape-aware typing** — `jaxtyping` + `beartype` annotations on every public entry point; zero runtime cost unless enabled, and never applied inside `torch.compile` / Triton / Numba / JAX-jit hot paths
+- **Typed instruments** — immutable vanilla and path-dependent contracts, strict serialization, and columnar option batches
+- **Processes and simulation** — backend-native GBM scenarios plus explicit Monte Carlo valuation, standard errors, and antithetic sampling
 
 ---
 
@@ -78,6 +83,8 @@ greeks = fast_vollib.get_all_greeks(
 | [Quick Start](quickstart.md) | More complete worked examples |
 | [Backend Selection](backends.md) | How to choose between NumPy, PyTorch, and JAX |
 | [Jäckel IV Solver](jackel.md) | Machine-precision IV — algorithm, API, and GPU benchmarks |
+| [Instruments](instruments.md) | Typed contracts, batches, payoffs, adapters, and capabilities |
+| [Simulation](simulation.md) | Processes, scenarios, path-dependent payoffs, and Monte Carlo valuation |
 | [Compatibility](compatibility.md) | Drop-in `py_vollib` replacement guide |
 | [Benchmarks](benchmarks.md) | Performance numbers and how to reproduce them |
 | [API Reference](api.md) | Complete function signatures and parameters |

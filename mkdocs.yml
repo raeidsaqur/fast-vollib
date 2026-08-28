@@ -1,7 +1,7 @@
 site_name: fast-vollib
 site_description: >-
-  Fast, CUDA Kernel-Fused Black, Black-Scholes, and Black-Scholes-Merton pricing and
-  implied-volatility library with NumPy, PyTorch, and JAX backends.
+  Fast derivatives pricing, implied volatility, typed instruments, and Monte Carlo
+  simulation with NumPy, PyTorch, and JAX backends.
 site_author: Raeid Saqur
 repo_name: fast-vollib
 repo_url: https://github.com/raeidsaqur/fast-vollib
