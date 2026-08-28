@@ -1,0 +1,43 @@
+{
+  "upload_type": "software",
+  "title": "fast-vollib: accelerated derivatives pricing, implied volatility, and Monte Carlo simulation with NumPy, PyTorch, and JAX",
+  "description": "<p><strong>fast-vollib</strong> is an accelerated &mdash; kernel-fused, optimized &mdash; Python library for Black, Black-Scholes, and Black-Scholes-Merton pricing, implied volatility, Greeks, typed derivative contracts, and explicit Monte Carlo workflows. It provides pluggable NumPy, PyTorch, and JAX backends and a compatibility-first functional API modeled on <code>py_vollib_vectorized</code>.</p><p>Documentation: <a href=\"https://raeidsaqur.github.io/fast-vollib/\">raeidsaqur.github.io/fast-vollib</a></p>",
+  "license": "mit",
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Saqur, Raeid",
+      "affiliation": "Mathematical Institute, University of Oxford",
+      "orcid": "0000-0002-6330-5480"
+    }
+  ],
+  "keywords": [
+    "implied volatility",
+    "Black-Scholes",
+    "derivatives pricing",
+    "Greeks",
+    "Monte Carlo",
+    "quantitative finance",
+    "GPU acceleration",
+    "PyTorch",
+    "JAX",
+    "NumPy"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://pypi.org/project/fast-vollib/",
+      "relation": "isIdenticalTo",
+      "scheme": "url"
+    },
+    {
+      "identifier": "https://raeidsaqur.github.io/fast-vollib/",
+      "relation": "isDocumentedBy",
+      "scheme": "url"
+    },
+    {
+      "identifier": "arXiv:2604.27210",
+      "relation": "isSupplementTo",
+      "scheme": "arxiv"
+    }
+  ]
+}

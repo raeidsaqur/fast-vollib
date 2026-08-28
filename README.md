@@ -29,6 +29,11 @@
   <a href="https://raeidsaqur.github.io/fast-vollib/">
     <img src="https://github.com/raeidsaqur/fast-vollib/actions/workflows/docs.yml/badge.svg" alt="Docs" />
   </a>
+  <!-- Zenodo DOI: uncomment and fill in CONCEPT_DOI after the first archived release
+  <a href="https://doi.org/10.5281/zenodo.CONCEPT_DOI">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.CONCEPT_DOI.svg" alt="DOI" />
+  </a>
+  -->
 </p>
 
 **fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library
@@ -347,6 +352,11 @@ If you use **fast-vollib** in your work, please cite:
       url={https://arxiv.org/abs/2604.27210},
 }
 ```
+
+Machine-readable citation metadata lives in [`CITATION.cff`](CITATION.cff), which
+also powers GitHub's **Cite this repository** button. Each tagged release is
+archived on Zenodo with its own DOI; the badge above resolves to the concept DOI
+covering all versions.
 
 ---
 
