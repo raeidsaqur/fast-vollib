@@ -13,6 +13,25 @@ separate changelog entries.
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-08-28
+
+Packaging and citation metadata only. No API, behaviour, or numerical changes.
+
+### Added
+
+- `CITATION.cff` — machine-readable citation metadata (CFF 1.2.0), which also
+  enables GitHub's **Cite this repository** button.
+- `.zenodo.json` — deposit metadata for the Zenodo–GitHub integration, so each
+  tagged release is archived and assigned a DOI.
+- `.github/FUNDING.yml`.
+
+### Changed
+
+- `README.md` — citation section now points at `CITATION.cff`; placeholder for
+  the Zenodo concept-DOI badge added to the badge row.
+- `.gitignore` — expanded macOS Finder entries (`.DS_Store`, `._*`, `Icon?`,
+  and friends).
+
 ## [0.2.0] — 2026-08-28
 
 This is the next stable release after v0.1.8. No v0.1.9 release was cut: the
@@ -412,6 +431,7 @@ behaviour across NumPy, PyTorch, and JAX.
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
+[0.2.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.8...v0.2.0
 [0.1.8]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.6...v0.1.7
