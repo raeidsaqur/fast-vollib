@@ -29,11 +29,9 @@
   <a href="https://raeidsaqur.github.io/fast-vollib/">
     <img src="https://github.com/raeidsaqur/fast-vollib/actions/workflows/docs.yml/badge.svg" alt="Docs" />
   </a>
-  <!-- Zenodo DOI: uncomment and fill in CONCEPT_DOI after the first archived release
-  <a href="https://doi.org/10.5281/zenodo.CONCEPT_DOI">
-    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.CONCEPT_DOI.svg" alt="DOI" />
+  <a href="https://doi.org/10.5281/zenodo.22150802">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22150802.svg" alt="DOI" />
   </a>
-  -->
 </p>
 
 **fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library
@@ -353,10 +351,24 @@ If you use **fast-vollib** in your work, please cite:
 }
 ```
 
+To cite the software itself (archived on Zenodo):
+
+```bibtex
+@software{saqur_fast_vollib,
+      author    = {Raeid Saqur},
+      title     = {fast-vollib},
+      year      = {2026},
+      publisher = {Zenodo},
+      doi       = {10.5281/zenodo.22150802},
+      url       = {https://doi.org/10.5281/zenodo.22150802},
+}
+```
+
 Machine-readable citation metadata lives in [`CITATION.cff`](CITATION.cff), which
 also powers GitHub's **Cite this repository** button. Each tagged release is
 archived on Zenodo with its own DOI; the badge above resolves to the concept DOI
-covering all versions.
+`10.5281/zenodo.22150802`, which always points at the latest version. Cite a
+specific version's DOI instead if you need exact reproducibility.
 
 ---
 

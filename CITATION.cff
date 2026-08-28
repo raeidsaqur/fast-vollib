@@ -14,9 +14,14 @@ authors:
     orcid: "https://orcid.org/0000-0002-6330-5480"
     affiliation: "Mathematical Institute, University of Oxford"
 version: 0.2.1
+doi: "10.5281/zenodo.22150802"
 date-released: 2026-08-28
 license: MIT
 repository-code: "https://github.com/raeidsaqur/fast-vollib"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22150802"
+    description: "Concept DOI — always resolves to the latest version"
 url: "https://raeidsaqur.github.io/fast-vollib/"
 keywords:
   - implied-volatility
