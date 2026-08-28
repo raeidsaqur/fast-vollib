@@ -39,34 +39,39 @@ except ImportError:  # pragma: no cover - fallback for source trees without buil
         __version__ = "0.0.0"
 
 if TYPE_CHECKING:  # pragma: no cover - import-time cost is the point of the guard
-    from . import instruments
+    from . import instruments, processes, simulation
+
+#: Subpackages resolved on first attribute access rather than at import.
+_LAZY_SUBPACKAGES = ("instruments", "processes", "simulation")
 
 
 def __getattr__(name: str):
-    """Expose ``fast_vollib.instruments`` without importing it at startup.
+    """Expose the object-layer subpackages without importing them at startup.
 
-    The instruments package is an optional API surface; charging every bare
-    ``import fast_vollib`` for it would be a regression for the functional API,
-    which is what most callers want. Resolving it here keeps
-    ``fast_vollib.instruments`` working as an attribute while deferring the
-    import to first use. ``import fast_vollib.instruments`` is unaffected.
+    They are optional API surfaces; charging every bare ``import fast_vollib``
+    for them would be a regression for the functional API, which is what most
+    callers want. Resolving them here keeps ``fast_vollib.instruments`` and its
+    neighbours working as attributes while deferring the import to first use.
+    ``import fast_vollib.simulation`` is unaffected.
     """
-    if name == "instruments":
+    if name in _LAZY_SUBPACKAGES:
         import importlib
 
-        module = importlib.import_module(".instruments", __name__)
+        module = importlib.import_module(f".{name}", __name__)
         globals()[name] = module
         return module
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def __dir__() -> list[str]:
-    return sorted([*globals(), "instruments"])
+    return sorted({*globals(), *_LAZY_SUBPACKAGES})
 
 
 __all__ = [
     "get_all_greeks",
     "instruments",
+    "processes",
+    "simulation",
     "get_backend",
     "patch_py_vollib",
     "patch_py_vollib_vectorized",

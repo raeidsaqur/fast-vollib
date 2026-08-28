@@ -16,8 +16,9 @@ apart.
 Examples
 --------
 >>> from fast_vollib.instruments import instrument_type, instrument_types
->>> sorted(instrument_types())
-['asset', 'european_option', 'forward', 'future']
+>>> sorted(instrument_types())  # doctest: +NORMALIZE_WHITESPACE
+['asian_option', 'asset', 'barrier_option', 'binary_option', 'european_option',
+ 'forward', 'future', 'lookback_option', 'variance_swap']
 >>> info = instrument_type("european_option")
 >>> info.python_type.__name__, info.schema_version
 ('EuropeanOption', 1)

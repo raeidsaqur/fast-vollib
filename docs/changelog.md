@@ -62,13 +62,87 @@ separate changelog entries.
   `fast_vollib.surface._xp`, which keeps working as a re-export shim.
 - **Documentation** — `docs/instruments.md`, including a capability table
   generated from the registry and the differentiability table.
+- **`fast_vollib.processes`** — stochastic dynamics holding parameters and
+  nothing else: no random state, no path buffer, no device, no contract.
+    - `GBM(drift, volatility)` and `GBM.risk_neutral(rate, volatility,
+      dividend_yield=0.0)`, sampling the closed-form log transition on an
+      arbitrary, possibly irregular grid rather than stepping the SDE, so the
+      grid controls only how often a path is observed and contributes no
+      discretization bias. The first state is the initial state bit for bit and
+      zero volatility gives the deterministic path exactly. Parameters are
+      stored as the objects the caller passed, so gradients reach them.
+    - `StochasticProcess`, the structural protocol `simulate()` drives.
+- **`fast_vollib.simulation`** — scenarios and explicit Monte Carlo valuation.
+    - `simulate(underlier, process, *, initial_state, time_grid, n_paths, rng,
+      antithetic=False)` returning a `Scenario`. Pure, contract-agnostic, and
+      native: it attaches nothing to the underlier or the process and performs
+      no maturity check, because a scenario may be evaluated against several
+      contracts.
+    - `Scenario` and `Scenario.from_states` — an execution value, frozen,
+      identity-hashed, and deliberately not serializable. NumPy buffers a
+      caller supplies are copied and marked read-only; buffers `simulate()`
+      allocates are frozen in place. Native state arrays are stored undetached,
+      so the tape survives and the arrays stay mutable by whoever else holds
+      them; the small grid is converted when needed to match the state dtype.
+    - `MonteCarloEngine` and `MCResult`. Concrete and asked for by name: no
+      registry selects it, no analytic adapter falls back to it, and it never
+      substitutes for a closed form. `market.rate` discounts and never rewrites
+      a drift, and `market.volatility` is not read at all, because the process
+      owns volatility. Everything is validated before a path is drawn, the RNG
+      included. `supports(type)` reports a route; `supports(instance)` also
+      applies positive-maturity eligibility.
+    - Estimator reporting the sample mean and the standard error of that mean,
+      with antithetic sampling averaging each matched pair first and dividing
+      by the number of pairs, which `effective_samples` reports.
+    - Typed errors `SimulationError`, `SimulationValidationError`,
+      `UnsupportedProcessError`, `ScenarioMismatchError`.
+- **Path-dependent and digital contracts** — `BinaryOption`, `AsianOption`,
+  `BarrierOption`, `LookbackOption`, and `VarianceSwap`, with the vocabularies
+  `BarrierType`, `AveragingMethod`, and `StrikeConvention` and the new
+  `PayoffRequirement.PATH`. Conventions that change what a contract is worth
+  are contract fields: averaging method, strike convention, barrier direction
+  and knock sense. Monitoring is discrete and inclusive at the scenario's own
+  observation times; Asian fixings exclude the valuation date while barrier and
+  lookback monitoring includes both ends; a binary pays nothing at the strike
+  exactly; realized variance is the sum of squared log returns over the year
+  fraction, with no sample-mean subtraction and no factor of 252.
+- **Path payoff dispatch** — `payoff(instrument, scenario)` for path-dependent
+  contracts, with the scenario checking underlier and horizon before any
+  arithmetic. A bare array is refused rather than interpreted, and a terminal
+  contract handed a scenario is pointed at `Scenario.payoff`.
+- **Simulation capabilities** — `CapabilitySet.simulate` and
+  `CapabilitySet.simulation_autodiff`, the latter recording tape retention on
+  installed backends rather than promising useful Greeks for discontinuous
+  payoffs.
+- **`FV_REQUIRE_BACKENDS`** — naming a backend makes a test session refuse to
+  start when it is not installed and turns a skip attributed to it into a
+  failure, so a CI job that installed an optional backend can no longer report
+  green while skipping the tests it exists to run.
+- **Documentation** — `docs/simulation.md`, covering measure, randomness and
+  reproducibility per backend, scenario ownership and mutation, terminal
+  versus path dispatch, every payoff convention, the estimator, and a
+  differentiability table that separates tape retention from useful gradients.
 
 #### Changed
 
 - `fast_vollib.instruments` resolves through a module-level `__getattr__`, so a
-  bare `import fast_vollib` does not pay for it.
+  bare `import fast_vollib` does not pay for it; `fast_vollib.processes` and
+  `fast_vollib.simulation` resolve the same way.
 - `fast_vollib.types` gains `InstrumentKindLiteral`, `ExerciseLiteral`, and
   `IVSolverLiteral`, pinned to the instrument enums by test.
+- `fast_vollib._array_api` gains reductions, cumulative sum, stacking,
+  dtype-aware scalar construction, and tracer-safe concrete-value readers, each
+  tested against NumPy's answer in every installed namespace. Existing
+  operations are unchanged.
+
+#### Deprecated
+
+- The Halley-with-bisection implied-volatility route (`solver="halley"`,
+  `fast_implied_volatility`) in favour of the Jäckel solver, which is more
+  accurate at comparable cost and is the only route with gradient support. The
+  Halley route remains available, tested, and unchanged, serves every backend,
+  and raises no runtime warning; it is for reproducing existing results rather
+  than for new work.
 
 ---
 

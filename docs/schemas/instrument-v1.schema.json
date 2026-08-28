@@ -15,9 +15,152 @@
     },
     {
       "$ref": "#/$defs/european_option"
+    },
+    {
+      "$ref": "#/$defs/binary_option"
+    },
+    {
+      "$ref": "#/$defs/asian_option"
+    },
+    {
+      "$ref": "#/$defs/barrier_option"
+    },
+    {
+      "$ref": "#/$defs/lookback_option"
+    },
+    {
+      "$ref": "#/$defs/variance_swap"
     }
   ],
   "$defs": {
+    "asian_option": {
+      "type": "object",
+      "title": "AsianOption",
+      "description": "Option on an average of the underlier over the contract's life.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "asian_option",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "option_type": {
+          "type": "string",
+          "enum": [
+            "call",
+            "put"
+          ],
+          "description": "Call or put. The short 'c'/'p' flags are not wire format."
+        },
+        "strike": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0.0,
+          "description": "Strike price under a fixed strike convention; null under a floating one, where a level read off the path plays the strike's role."
+        },
+        "averaging_method": {
+          "type": "string",
+          "enum": [
+            "arithmetic",
+            "geometric"
+          ],
+          "description": "Whether the average is arithmetic or geometric."
+        },
+        "strike_convention": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "floating"
+          ],
+          "description": "Whether the strike is agreed at inception or read off the path."
+        },
+        "maturity": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Strictly positive: a path-dependent payoff needs a path."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "physical"
+          ],
+          "description": "How the contract settles at maturity."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "option_type",
+        "averaging_method",
+        "strike_convention",
+        "maturity"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "strike_convention": {
+                "const": "fixed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "strike"
+            ],
+            "properties": {
+              "strike": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strike_convention": {
+                "const": "floating"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "strike": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
     "asset": {
       "type": "object",
       "title": "Asset",
@@ -75,6 +218,162 @@
         "instrument_type",
         "identifier",
         "asset_class"
+      ]
+    },
+    "barrier_option": {
+      "type": "object",
+      "title": "BarrierOption",
+      "description": "Option that knocks in or out when the underlier touches a barrier.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "barrier_option",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "option_type": {
+          "type": "string",
+          "enum": [
+            "call",
+            "put"
+          ],
+          "description": "Call or put. The short 'c'/'p' flags are not wire format."
+        },
+        "strike": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Strike price; strictly positive."
+        },
+        "barrier": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Monitored level; strictly positive. Never compared against spot, which is market state rather than a contract term."
+        },
+        "barrier_type": {
+          "type": "string",
+          "enum": [
+            "up_and_in",
+            "up_and_out",
+            "down_and_in",
+            "down_and_out"
+          ],
+          "description": "Barrier direction and knock sense."
+        },
+        "maturity": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Strictly positive: a path-dependent payoff needs a path."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "physical"
+          ],
+          "description": "How the contract settles at maturity."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "option_type",
+        "strike",
+        "barrier",
+        "barrier_type",
+        "maturity"
+      ]
+    },
+    "binary_option": {
+      "type": "object",
+      "title": "BinaryOption",
+      "description": "Cash-or-nothing digital paying a fixed amount if it finishes in the money.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "binary_option",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "option_type": {
+          "type": "string",
+          "enum": [
+            "call",
+            "put"
+          ],
+          "description": "Call or put. The short 'c'/'p' flags are not wire format."
+        },
+        "strike": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Strike price; strictly positive."
+        },
+        "maturity": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Never a date."
+        },
+        "cash_amount": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Fixed amount paid per contract when in the money."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "option_type",
+        "strike",
+        "maturity"
       ]
     },
     "european_option": {
@@ -310,6 +609,179 @@
       },
       "required": [
         "identifier"
+      ]
+    },
+    "lookback_option": {
+      "type": "object",
+      "title": "LookbackOption",
+      "description": "Option settled against the highest or lowest level the underlier reached.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "lookback_option",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "option_type": {
+          "type": "string",
+          "enum": [
+            "call",
+            "put"
+          ],
+          "description": "Call or put. The short 'c'/'p' flags are not wire format."
+        },
+        "strike": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0.0,
+          "description": "Strike price under a fixed strike convention; null under a floating one, where a level read off the path plays the strike's role."
+        },
+        "strike_convention": {
+          "type": "string",
+          "enum": [
+            "fixed",
+            "floating"
+          ],
+          "description": "Whether the strike is agreed at inception or read off the path."
+        },
+        "maturity": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Strictly positive: a path-dependent payoff needs a path."
+        },
+        "settlement": {
+          "type": "string",
+          "enum": [
+            "cash",
+            "physical"
+          ],
+          "description": "How the contract settles at maturity."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "option_type",
+        "strike_convention",
+        "maturity"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "strike_convention": {
+                "const": "fixed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "strike"
+            ],
+            "properties": {
+              "strike": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "strike_convention": {
+                "const": "floating"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "strike": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variance_swap": {
+      "type": "object",
+      "title": "VarianceSwap",
+      "description": "Swap paying realized variance against a level agreed at inception.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "variance_swap",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "underlier": {
+          "$ref": "#/$defs/instrument_ref",
+          "description": "Reference to the underlier this contract is written on."
+        },
+        "strike_variance": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Agreed variance level, the square of a volatility. Non-negative."
+        },
+        "maturity": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Strictly positive: a path-dependent payoff needs a path."
+        },
+        "notional": {
+          "type": "number",
+          "not": {
+            "const": 0
+          },
+          "description": "Contract multiplier. Non-zero and finite; negative denotes a short position."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "underlier",
+        "strike_variance",
+        "maturity"
       ]
     }
   }

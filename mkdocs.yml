@@ -73,6 +73,7 @@ nav:
       - Differentiable IV: differentiable_iv.md
       - Surface Arbitrage Harness: surface.md
       - Instruments: instruments.md
+      - Simulation: simulation.md
       - Compatibility: compatibility.md
       - Benchmarks: benchmarks.md
   - API Reference: api.md

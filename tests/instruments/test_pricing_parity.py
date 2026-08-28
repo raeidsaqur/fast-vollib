@@ -510,17 +510,29 @@ def test_native_gradient_with_a_notional_scales_the_price_sensitivity() -> None:
     )
 
 
-def test_native_jax_jackel_matches_the_autograd_wrapper() -> None:
+def jax_market(model: str):
+    """A jax-native market for ``model``, in float64 like the torch fixture."""
     jax = pytest.importorskip("jax", reason="jax not installed")
+    jax.config.update("jax_enable_x64", True)
     jnp = jax.numpy
+    unit = direct_price(model, FLAGS, STRIKES, MATURITIES, "numpy")
+    return jax, VanillaMarketInputs(
+        underlying=jnp.asarray(UNDERLYING, dtype=jnp.float64),
+        rate=jnp.asarray(RATE, dtype=jnp.float64),
+        price=jnp.asarray(unit, dtype=jnp.float64),
+        dividend_yield=(
+            jnp.asarray(DIVIDEND, dtype=jnp.float64) if model == "black_scholes_merton" else None
+        ),
+    )
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_native_jax_jackel_matches_the_autograd_wrapper(model: str) -> None:
+    jax, market = jax_market(model)
     from fast_vollib.jackel import implied_volatility_autograd_jax
 
-    unit = direct_price("black_scholes", FLAGS, STRIKES, MATURITIES, "numpy")
-    market = VanillaMarketInputs(
-        underlying=jnp.asarray(UNDERLYING), rate=jnp.asarray(RATE), price=jnp.asarray(unit)
-    )
     got = implied_volatility_instrument(
-        batch(), market, model="black_scholes", solver="jackel", return_native=True
+        batch(), market, model=model, solver="jackel", return_native=True
     )
     expected = implied_volatility_autograd_jax(
         market.price,
@@ -529,44 +541,156 @@ def test_native_jax_jackel_matches_the_autograd_wrapper() -> None:
         MATURITIES,
         market.rate,
         FLAGS,
-        None,
-        model="black_scholes",
+        market.dividend_yield,
+        model=model,
     )
     assert isinstance(got, jax.Array)
     np.testing.assert_array_equal(np.asarray(got), np.asarray(expected))
 
 
-def test_native_jax_gradients_match_the_wrapper() -> None:
-    jax = pytest.importorskip("jax", reason="jax not installed")
+@pytest.mark.parametrize("model", MODELS)
+def test_native_jax_gradients_match_the_wrapper(model: str) -> None:
+    jax, market = jax_market(model)
     jnp = jax.numpy
     from fast_vollib.jackel import implied_volatility_autograd_jax
 
-    unit = jnp.asarray(direct_price("black_scholes", FLAGS, STRIKES, MATURITIES, "numpy"))
+    def through_adapter(price: Any, underlying: Any) -> Any:
+        moved = VanillaMarketInputs(
+            underlying=underlying,
+            rate=market.rate,
+            price=price,
+            dividend_yield=market.dividend_yield,
+        )
+        return implied_volatility_instrument(
+            batch(), moved, model=model, solver="jackel", return_native=True
+        ).sum()
 
-    def through_adapter(price: Any) -> Any:
+    def through_wrapper(price: Any, underlying: Any) -> Any:
+        return implied_volatility_autograd_jax(
+            price,
+            underlying,
+            STRIKES,
+            MATURITIES,
+            market.rate,
+            FLAGS,
+            market.dividend_yield,
+            model=model,
+        ).sum()
+
+    for argnum in (0, 1):
+        adapter_grad = jax.grad(through_adapter, argnums=argnum)(market.price, market.underlying)
+        wrapper_grad = jax.grad(through_wrapper, argnums=argnum)(market.price, market.underlying)
+        assert jnp.all(jnp.isfinite(adapter_grad))
+        np.testing.assert_array_equal(np.asarray(adapter_grad), np.asarray(wrapper_grad))
+
+
+# --- edge behaviour on the native routes --------------------------------------
+
+
+def low_vega_case() -> dict[str, Any]:
+    """Deep-out-of-the-money and short-dated: vega underflows the solver guard.
+
+    The implicit-function gradient is ``1/vega``; the wrappers mask that with
+    NaN rather than returning an exploded number, and the adapter must not
+    reshape that contract into something friendlier.
+    """
+    from fast_vollib.models import fast_black_scholes
+
+    strike, maturity, spot, rate, sigma = 500.0, 0.01, 100.0, 0.02, 0.10
+    price = fast_black_scholes("c", spot, strike, maturity, rate, sigma, return_as="numpy")
+    return {
+        "strike": strike,
+        "maturity": maturity,
+        "spot": np.array([spot]),
+        "rate": np.array([rate]),
+        "price": np.asarray(price, dtype=np.float64).reshape(1),
+    }
+
+
+def low_vega_batch(case: dict[str, Any]) -> EuropeanOptionBatch:
+    return EuropeanOptionBatch.from_arrays(
+        option_type=["c"],
+        strike=[case["strike"]],
+        maturity=case["maturity"],
+        underlier="ACME",
+    )
+
+
+def test_native_torch_low_vega_backward_is_nan() -> None:
+    torch = pytest.importorskip("torch", reason="torch not installed")
+    case = low_vega_case()
+    price = torch.tensor(case["price"], dtype=torch.float64, requires_grad=True)
+    market = VanillaMarketInputs(
+        underlying=torch.tensor(case["spot"], dtype=torch.float64),
+        rate=torch.tensor(case["rate"], dtype=torch.float64),
+        price=price,
+    )
+    iv = implied_volatility_instrument(
+        low_vega_batch(case), market, model="black_scholes", solver="jackel", return_native=True
+    )
+    iv.sum().backward()
+    assert price.grad is not None
+    assert torch.isnan(price.grad).all()
+
+
+def test_native_torch_below_intrinsic_backward_is_nan() -> None:
+    """The forward NaN of an invalid domain must reach the backward pass too."""
+    torch = pytest.importorskip("torch", reason="torch not installed")
+    price = torch.tensor([1e-6] * 4, dtype=torch.float64, requires_grad=True)
+    market = VanillaMarketInputs(
+        underlying=torch.tensor(UNDERLYING, dtype=torch.float64),
+        rate=torch.tensor(RATE, dtype=torch.float64),
+        price=price,
+    )
+    iv = implied_volatility_instrument(
+        batch(), market, model="black_scholes", solver="jackel", return_native=True
+    )
+    assert torch.isnan(iv).any()
+    iv.sum().backward()
+    assert price.grad is not None
+    assert torch.isnan(price.grad).any()
+
+
+def test_native_jax_low_vega_backward_is_nan() -> None:
+    jax = pytest.importorskip("jax", reason="jax not installed")
+    jax.config.update("jax_enable_x64", True)
+    jnp = jax.numpy
+    case = low_vega_case()
+    contracts = low_vega_batch(case)
+
+    def loss(price: Any) -> Any:
         market = VanillaMarketInputs(
-            underlying=jnp.asarray(UNDERLYING), rate=jnp.asarray(RATE), price=price
+            underlying=jnp.asarray(case["spot"], dtype=jnp.float64),
+            rate=jnp.asarray(case["rate"], dtype=jnp.float64),
+            price=price,
+        )
+        return implied_volatility_instrument(
+            contracts, market, model="black_scholes", solver="jackel", return_native=True
+        ).sum()
+
+    grad = jax.grad(loss)(jnp.asarray(case["price"], dtype=jnp.float64))
+    assert jnp.all(jnp.isnan(grad))
+
+
+def test_native_jax_below_intrinsic_forward_and_backward_are_nan() -> None:
+    jax = pytest.importorskip("jax", reason="jax not installed")
+    jax.config.update("jax_enable_x64", True)
+    jnp = jax.numpy
+    below_intrinsic = jnp.asarray([1e-6] * 4, dtype=jnp.float64)
+
+    def evaluate(price: Any) -> Any:
+        market = VanillaMarketInputs(
+            underlying=jnp.asarray(UNDERLYING, dtype=jnp.float64),
+            rate=jnp.asarray(RATE, dtype=jnp.float64),
+            price=price,
         )
         return implied_volatility_instrument(
             batch(), market, model="black_scholes", solver="jackel", return_native=True
-        ).sum()
+        )
 
-    def through_wrapper(price: Any) -> Any:
-        return implied_volatility_autograd_jax(
-            price,
-            jnp.asarray(UNDERLYING),
-            STRIKES,
-            MATURITIES,
-            jnp.asarray(RATE),
-            FLAGS,
-            None,
-            model="black_scholes",
-        ).sum()
-
-    np.testing.assert_array_equal(
-        np.asarray(jax.grad(through_adapter)(unit)),
-        np.asarray(jax.grad(through_wrapper)(unit)),
-    )
+    assert jnp.isnan(evaluate(below_intrinsic)).any()
+    grad = jax.grad(lambda p: evaluate(p).sum())(below_intrinsic)
+    assert jnp.isnan(grad).any()
 
 
 def test_host_output_terminates_the_gradient_path() -> None:
@@ -763,18 +887,30 @@ def test_the_asset_class_never_selects_a_model() -> None:
 
 
 def test_capability_set_agrees_with_what_the_adapters_do() -> None:
+    """Every advertised route is executed, and has to return a usable answer.
+
+    Reaching the call without an exception is too weak a check: a solver that
+    returned all-``NaN`` would satisfy it while being useless. Each advertised
+    ``(model, solver)`` pair therefore has to invert prices the matching kernel
+    produced back to the volatility that produced them.
+    """
     from fast_vollib.instruments import capabilities
 
     caps = capabilities(EuropeanOption)
-    market = observed_market("black")
     for model in PricingModel:
         assert caps.supports_price(model)
-        for solver in IVSolver:
-            assert solver in caps.solvers_for(model)
-    for solver in IVSolver:
-        implied_volatility_instrument(
-            batch(), market, model="black", solver=solver, backend="numpy"
-        )
+        assert caps.supports_greeks(model)
+        assert caps.solvers_for(model) == frozenset(IVSolver)
+
+        market = observed_market(model.value)
+        prices = price_instrument(batch(), pricing_market(), model=model.value, backend="numpy")
+        assert np.all(np.isfinite(prices))
+        for solver in caps.solvers_for(model):
+            recovered = implied_volatility_instrument(
+                batch(), market, model=model.value, solver=solver, backend="numpy"
+            )
+            assert np.all(np.isfinite(recovered)), (model, solver)
+            np.testing.assert_allclose(recovered, VOLATILITY, rtol=1e-6, atol=1e-8)
 
 
 def test_batch_validation_still_applies_through_the_adapter() -> None:
@@ -786,3 +922,256 @@ def test_batch_validation_still_applies_through_the_adapter() -> None:
             pricing_market(),
             model="black",
         )
+
+
+# --- scalar contracts against array markets -----------------------------------
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_scalar_greeks_equal_the_direct_kernel_call(model: str, backend: str) -> None:
+    """Greeks parity is a per-contract claim, not only a per-batch one."""
+    option = scalar()
+    market = VanillaMarketInputs(underlying=100.0, rate=0.02, volatility=0.25, dividend_yield=0.01)
+    got = greeks_instrument(option, market, model=model, backend=backend)
+    expected = get_all_greeks(
+        option.flag,
+        100.0,
+        option.strike,
+        option.maturity,
+        0.02,
+        0.25,
+        0.01 if model == "black_scholes_merton" else None,
+        model=model,
+        return_as="numpy",
+        backend=backend,
+    )
+    assert set(got) == set(expected)
+    for name in expected:
+        np.testing.assert_array_equal(got[name], expected[name], err_msg=name)
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_scalar_contract_prices_against_an_array_market(model: str, backend: str) -> None:
+    """One contract, a vector of market states: the terms broadcast, unchanged."""
+    option = scalar()
+    got = price_instrument(option, pricing_market(), model=model, backend=backend)
+    expected = direct_price(model, option.flag, option.strike, option.maturity, backend)
+    assert np.shape(got) == np.shape(UNDERLYING)
+    np.testing.assert_array_equal(got, expected)
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_scalar_contract_greeks_against_an_array_market(model: str, backend: str) -> None:
+    option = scalar()
+    got = greeks_instrument(option, pricing_market(), model=model, backend=backend)
+    expected = get_all_greeks(
+        option.flag,
+        UNDERLYING,
+        option.strike,
+        option.maturity,
+        RATE,
+        VOLATILITY,
+        DIVIDEND if model == "black_scholes_merton" else None,
+        model=model,
+        return_as="numpy",
+        backend=backend,
+    )
+    assert set(got) == set(expected)
+    for name in expected:
+        assert np.shape(got[name]) == np.shape(UNDERLYING)
+        np.testing.assert_array_equal(got[name], expected[name], err_msg=name)
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("solver", SOLVERS)
+def test_scalar_contract_inverts_against_an_array_market(model: str, solver: str) -> None:
+    option = scalar()
+    unit = direct_price(model, option.flag, option.strike, option.maturity, "numpy")
+    market = VanillaMarketInputs(
+        underlying=UNDERLYING,
+        rate=RATE,
+        price=unit,
+        dividend_yield=DIVIDEND if model == "black_scholes_merton" else None,
+    )
+    recovered = implied_volatility_instrument(
+        option, market, model=model, solver=solver, backend="numpy"
+    )
+    assert np.shape(recovered) == np.shape(UNDERLYING)
+    np.testing.assert_allclose(recovered, VOLATILITY, rtol=1e-6, atol=1e-8)
+
+
+# --- solver coverage across every installed backend ---------------------------
+
+#: The Jäckel solver implements these three; it refuses the rest by design.
+JACKEL_BACKENDS = [name for name in BACKENDS if name in {"numpy", "torch", "jax"}]
+
+#: ``(solver, backend)`` pairs that are supposed to work on this host.
+SOLVER_BACKENDS = [
+    (solver, backend)
+    for solver in SOLVERS
+    for backend in (BACKENDS if solver == "halley" else JACKEL_BACKENDS)
+]
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize(("solver", "backend"), SOLVER_BACKENDS)
+def test_implied_volatility_round_trips_on_every_backend(
+    model: str, solver: str, backend: str
+) -> None:
+    """Every installed backend inverts back to the volatility it was priced at."""
+    market = observed_market(model)
+    recovered = implied_volatility_instrument(
+        batch(), market, model=model, solver=solver, backend=backend
+    )
+    recovered = to_host(recovered)
+    assert np.all(np.isfinite(recovered))
+    np.testing.assert_allclose(recovered, VOLATILITY, rtol=1e-6, atol=1e-8)
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize(("solver", "backend"), SOLVER_BACKENDS)
+def test_scalar_implied_volatility_round_trips_on_every_backend(
+    model: str, solver: str, backend: str
+) -> None:
+    option = scalar()
+    unit = direct_price(model, option.flag, option.strike, option.maturity, "numpy")
+    market = VanillaMarketInputs(
+        underlying=UNDERLYING,
+        rate=RATE,
+        price=unit,
+        dividend_yield=DIVIDEND if model == "black_scholes_merton" else None,
+    )
+    recovered = to_host(
+        implied_volatility_instrument(option, market, model=model, solver=solver, backend=backend)
+    )
+    assert np.all(np.isfinite(recovered))
+    np.testing.assert_allclose(recovered, VOLATILITY, rtol=1e-6, atol=1e-8)
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_halley_equals_the_direct_functional_call_on_every_backend(
+    model: str, backend: str
+) -> None:
+    """Halley remains available and unchanged on every backend it ever served."""
+    market = observed_market(model)
+    got = implied_volatility_instrument(
+        batch(), market, model=model, solver="halley", backend=backend
+    )
+    if model == "black":
+        expected = fast_implied_volatility_black(
+            market.price,
+            UNDERLYING,
+            STRIKES,
+            RATE,
+            MATURITIES,
+            FLAGS,
+            return_as="numpy",
+            backend=backend,
+        )
+    else:
+        expected = fast_implied_volatility(
+            market.price,
+            UNDERLYING,
+            STRIKES,
+            MATURITIES,
+            RATE,
+            FLAGS,
+            q=DIVIDEND if model == "black_scholes_merton" else None,
+            model=model,
+            return_as="numpy",
+            backend=backend,
+        )
+    np.testing.assert_array_equal(got, expected)
+
+
+@pytest.mark.parametrize("model", MODELS)
+@pytest.mark.parametrize("backend", BACKENDS)
+def test_halley_scalar_contract_equals_the_direct_functional_call(model: str, backend: str) -> None:
+    option = scalar()
+    unit = direct_price(model, option.flag, option.strike, option.maturity, "numpy")
+    market = VanillaMarketInputs(
+        underlying=UNDERLYING,
+        rate=RATE,
+        price=unit,
+        dividend_yield=DIVIDEND if model == "black_scholes_merton" else None,
+    )
+    got = implied_volatility_instrument(
+        option, market, model=model, solver="halley", backend=backend
+    )
+    if model == "black":
+        expected = fast_implied_volatility_black(
+            unit,
+            UNDERLYING,
+            option.strike,
+            RATE,
+            option.maturity,
+            option.flag,
+            return_as="numpy",
+            backend=backend,
+        )
+    else:
+        expected = fast_implied_volatility(
+            unit,
+            UNDERLYING,
+            option.strike,
+            option.maturity,
+            RATE,
+            option.flag,
+            q=DIVIDEND if model == "black_scholes_merton" else None,
+            model=model,
+            return_as="numpy",
+            backend=backend,
+        )
+    np.testing.assert_array_equal(got, expected)
+
+
+# --- one fused call per request -----------------------------------------------
+
+
+def test_one_greeks_kernel_call_per_batch(monkeypatch: pytest.MonkeyPatch) -> None:
+    backend_name = get_backend("auto")
+    module = backends.get_module(backend_name)
+    calls = {"n": 0}
+    original = module.greeks
+
+    def counting(*args: Any, **kwargs: Any) -> Any:
+        calls["n"] += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "greeks", counting)
+    greeks_instrument(batch(), pricing_market(), model="black_scholes", backend=backend_name)
+    assert calls["n"] == 1
+
+
+@pytest.mark.parametrize("solver", SOLVERS)
+def test_one_implied_volatility_kernel_call_per_batch(
+    solver: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Both solvers invert a whole batch in a single pass."""
+    import importlib
+
+    module = (
+        backends.get_module("numpy")
+        if solver == "halley"
+        else importlib.import_module("fast_vollib.jackel.numpy_backend")
+    )
+    calls = {"n": 0}
+    original = module.implied_volatility
+
+    def counting(*args: Any, **kwargs: Any) -> Any:
+        calls["n"] += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(module, "implied_volatility", counting)
+    implied_volatility_instrument(
+        batch(),
+        observed_market("black_scholes"),
+        model="black_scholes",
+        solver=solver,
+        backend="numpy",
+    )
+    assert calls["n"] == 1

@@ -36,9 +36,16 @@ jobs:
       - name: Lint (ruff)
         run: uv run ruff check .
 
-      - name: Type-check (mypy)
-        run: uv run mypy src/fast_vollib --ignore-missing-imports
-        continue-on-error: true   # non-blocking until type coverage is complete
+      - name: Format check (ruff)
+        run: uv run ruff format --check .
+
+      # ``mypy src/fast_vollib`` is not clean yet, and making it clean is
+      # separate work. What is enforced is that it does not get worse: the
+      # checker compares diagnostic identities against a checked-in baseline
+      # and fails only on new ones, so a new error cannot hide behind a
+      # removed one.
+      - name: Type-check (mypy, no new diagnostics)
+        run: uv run python scripts/check_mypy_baseline.py
 
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short
@@ -63,6 +70,9 @@ jobs:
         run: uv run pytest tests/ -v --tb=short
         env:
           FAST_VOLLIB_BACKEND: torch
+          # The job installed the torch extra, so a torch test that skips is a
+          # gap in coverage rather than an absent optional dependency.
+          FV_REQUIRE_BACKENDS: torch
 
   test-jax:
     name: pytest / JAX backend
@@ -84,3 +94,4 @@ jobs:
         run: uv run pytest tests/ -v --tb=short
         env:
           FAST_VOLLIB_BACKEND: jax
+          FV_REQUIRE_BACKENDS: jax

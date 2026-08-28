@@ -81,6 +81,37 @@ iv = implied_volatility_instrument(chain, quotes, model="black_scholes",
 notional before inversion, so a quote for 100 contracts inverts to the same
 volatility as a quote for one.
 
+### Path-dependent contracts
+
+An average-rate, barrier, lookback, or variance contract needs the whole
+trajectory rather than its last point, so its payoff takes a
+[`Scenario`](simulation.md):
+
+```python
+from fast_vollib.instruments import AsianOption
+from fast_vollib.processes import GBM
+from fast_vollib.simulation import MonteCarloEngine, simulate
+
+asian = AsianOption(
+    underlier="SPX", option_type="call", strike=5000.0,
+    averaging_method="arithmetic", strike_convention="fixed", maturity=0.75,
+)
+
+result = MonteCarloEngine().price(
+    asian, VanillaMarketInputs(underlying=5100.0, rate=0.04),
+    process=GBM.risk_neutral(rate=0.04, volatility=0.18),
+    n_paths=100_000, n_steps=64, rng=0,
+)
+result.price, result.stderr
+```
+
+`payoff_requirement(instrument)` says which kind of state a contract needs, and
+a bare array handed to a path payoff is refused rather than interpreted — it
+carries no underlier, no observation times, and no way to tell whether its
+horizon is the contract's maturity. See [Simulation](simulation.md) for the
+monitoring, fixing, and variance conventions, which are contract meaning rather
+than numerical settings.
+
 ### Payoffs keep your array type
 
 ```python
@@ -96,7 +127,7 @@ cashflow.sum().backward()
 
 | Layer | What it holds | Key names |
 |---|---|---|
-| Contracts | Terms only: frozen, slotted, keyword-only dataclasses | `Asset`, `Forward`, `Future`, `EuropeanOption`, `InstrumentRef` |
+| Contracts | Terms only: frozen, slotted, keyword-only dataclasses | `Asset`, `Forward`, `Future`, `EuropeanOption`, `BinaryOption`, `AsianOption`, `BarrierOption`, `LookbackOption`, `VarianceSwap`, `InstrumentRef` |
 | Batches | Columnar host arrays; the unit of execution | `EuropeanOptionBatch`, `moneyness`, `log_moneyness`, `time_to_maturity` |
 | Market inputs | Valuation-time observations, never stored on a contract | `VanillaMarketInputs` |
 | Payoffs & adapters | Backend-native payoffs; thin wrappers over the kernels | `payoff`, `price_instrument`, `greeks_instrument`, `implied_volatility_instrument` |
@@ -109,14 +140,19 @@ registry does not have.
 
 <!-- BEGIN generated: instrument capability table -->
 
-| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | Implied volatility |
-|---|---|---|---|---|---|---|
-| `Asset` | `asset` | no | — | — | — | — |
-| `Forward` | `forward` | yes | terminal | — | — | — |
-| `Future` | `future` | yes | terminal | — | — | — |
-| `EuropeanOption` | `european_option` | yes | terminal | black, bs, bsm | black, bs, bsm | black: halley, jackel; bs: halley, jackel; bsm: halley, jackel |
+| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | Implied volatility | Monte Carlo |
+|---|---|---|---|---|---|---|---|
+| `Asset` | `asset` | no | — | — | — | — | no |
+| `Forward` | `forward` | yes | terminal | — | — | — | yes |
+| `Future` | `future` | yes | terminal | — | — | — | no |
+| `EuropeanOption` | `european_option` | yes | terminal | black, bs, bsm | black, bs, bsm | black: halley, jackel; bs: halley, jackel; bsm: halley, jackel | yes |
+| `BinaryOption` | `binary_option` | yes | terminal | — | — | — | yes |
+| `AsianOption` | `asian_option` | yes | path | — | — | — | yes |
+| `BarrierOption` | `barrier_option` | yes | path | — | — | — | yes |
+| `LookbackOption` | `lookback_option` | yes | path | — | — | — | yes |
+| `VarianceSwap` | `variance_swap` | yes | path | — | — | — | yes |
 
-Model abbreviations: `black` = Black-76, `bs` = Black-Scholes, `bsm` = Black-Scholes-Merton. A dash means the operation is not available for that type, and asking for it raises rather than returning an approximation.
+Model abbreviations: `black` = Black-76, `bs` = Black-Scholes, `bsm` = Black-Scholes-Merton. A dash means the operation is not available for that type, and asking for it raises rather than returning an approximation. **Monte Carlo** is a type-level answer: an individual contract is additionally eligible only with a strictly positive maturity, which `MonteCarloEngine.supports(instrument)` applies and is authoritative for an actual request.
 
 <!-- END generated: instrument capability table -->
 
@@ -130,8 +166,20 @@ no mathematics of their own.
 Asking for a price returns an error that says exactly that, rather than an
 option value.
 
-American, Bermudan, barrier, and Asian options are not represented. The
-registry contains only instrument types with supported behaviour.
+The **Monte Carlo** column is a different question from **Price**. `Price` means
+an analytic kernel; Monte Carlo means
+[`MonteCarloEngine`](simulation.md) can simulate the underlier and average the
+payoff. The two never stand in for each other: an analytic request for a type
+with no kernel raises rather than quietly simulating, and a simulated price is
+only ever produced by asking for one by name.
+
+`Future` is the one type with a payoff and no valuation route at all. Its
+terminal formula coincides with a forward's, so simulating it would return a
+plausible number — but a future's economics are a stream of daily variation
+margin, which this library does not model.
+
+American and Bermudan exercise are not represented. The registry contains only
+instrument types with supported behaviour.
 
 ## Differentiability
 
@@ -142,7 +190,8 @@ the backends you actually have installed.
 
 | Path | Differentiable? | Why |
 |---|---|---|
-| `payoff()` on torch/jax input | **Yes**, tested | Pure array-namespace operations; the tape is preserved and never staged through host memory |
+| `payoff()` on torch/jax input | **Yes**, tested | Pure array-namespace operations; the tape is preserved and never staged through host memory. A digital or barrier indicator keeps the graph and differentiates to exactly zero, which is the correct pathwise answer rather than a useful Greek |
+| `MonteCarloEngine.price(..., return_native=True)` | **Yes**, tested | Gradients reach spot, discount rate, process drift, and process volatility on smooth routes; see [Simulation](simulation.md) for which routes those are |
 | `implied_volatility_instrument(solver="jackel")`, native torch/jax input, `return_native=True` | **Yes**, tested | Routes to `jackel.implied_volatility_autograd[_jax]`; implicit-function-theorem gradients w.r.t. price, spot or forward, strike, maturity, rate, and (BSM) dividend yield |
 | The same request with host or formatted output | No | Formatting terminates the gradient path — a documented boundary, not an accident |
 | `implied_volatility_instrument(solver="halley")`, any form | No claim | Inherits the existing backend's host-staging contract |
@@ -189,6 +238,11 @@ host-staged approximation, or in which a barrier is priced as a European.
 with gradient support. It reaches the **full-model** Jäckel wrappers for the
 `numpy`, `torch`, and `jax` backends. Requesting it with `numba` raises and
 names `solver="halley"` as the alternative.
+
+`solver="halley"` is **deprecated**. It remains available, tested, and
+unchanged, it serves every backend, and it raises no runtime warning — but it
+carries no gradient support and is less accurate than the Jäckel route at
+comparable cost. Reach for it to reproduce existing results, not for new work.
 
 The raw `jackel_iv_black` solver consumes an *undiscounted* Black-76 price and a
 forward. Market prices are discounted, so handing one to the raw solver produces
@@ -297,7 +351,10 @@ identity-hashable, and their columns are read-only.
 
 ## Scope
 
-The instruments layer does not represent path-dependent or exotic contracts,
-exercise descriptors, stochastic processes, simulation, Monte Carlo or other
-numerical engines, calibration, or direct construction of an `IVSurface` from
-an instrument batch. The registry lists only the operations that are supported.
+The instruments layer does not represent exercise descriptors beyond European
+exercise, calibration, or direct construction of an `IVSurface` from an
+instrument batch. Stochastic processes and simulation live in
+[`fast_vollib.processes`](simulation.md) and
+[`fast_vollib.simulation`](simulation.md) rather than here: a contract holds
+terms, and neither a process nor a scenario is ever attached to one. The
+registry lists only the operations that are supported.

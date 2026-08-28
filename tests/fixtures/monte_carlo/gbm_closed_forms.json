@@ -1,0 +1,199 @@
+{
+  "description": "Discounted reference values for the Monte Carlo oracles, computed with mpmath at 50 decimal digits from published closed forms. Not produced by any pricing library, and regenerable from the checked-in generator.",
+  "generator": "scripts/generate_mc_reference_fixtures.py",
+  "precision_digits": 50,
+  "library": "mpmath 1.3.0",
+  "market": {
+    "spot": "100.0",
+    "rate": "0.02",
+    "dividend_yield": "0.0",
+    "volatility": "0.25",
+    "maturity": "1.0",
+    "measure": "risk-neutral GBM: drift = rate - dividend_yield",
+    "log_drift": "-0.01125",
+    "log_drift_note": "rate - volatility**2 / 2, deliberately non-zero: at volatility 0.2 it vanishes, which removes the drift term from the geometric-Asian and variance formulas and makes an at-the-money digital call and put equal."
+  },
+  "conventions": {
+    "discounting": "exp(-rate * maturity)",
+    "asian_fixings": "S_1..S_n, evenly spaced, valuation date excluded",
+    "binary": "cash-or-nothing, strict inequality at the strike",
+    "variance": "sum of squared log returns divided by the year fraction"
+  },
+  "cases": [
+    {
+      "instrument": "european_option",
+      "option_type": "call",
+      "strike": "90.0",
+      "value": "16.3977282997402105600627488966"
+    },
+    {
+      "instrument": "european_option",
+      "option_type": "call",
+      "strike": "100.0",
+      "value": "10.8705584905575848332735262254"
+    },
+    {
+      "instrument": "european_option",
+      "option_type": "call",
+      "strike": "110.0",
+      "value": "6.88856221715231414986810386394"
+    },
+    {
+      "instrument": "binary_option",
+      "option_type": "call",
+      "strike": "95.0",
+      "cash_amount": "1.0",
+      "value": "0.552467095455191135923266611513"
+    },
+    {
+      "instrument": "binary_option",
+      "option_type": "call",
+      "strike": "100.0",
+      "cash_amount": "1.0",
+      "value": "0.472508352581872308441052301465"
+    },
+    {
+      "instrument": "binary_option",
+      "option_type": "call",
+      "strike": "105.0",
+      "cash_amount": "1.0",
+      "value": "0.397081282303321431785572718075"
+    },
+    {
+      "instrument": "asian_option",
+      "averaging_method": "geometric",
+      "strike_convention": "fixed",
+      "option_type": "call",
+      "strike": "100.0",
+      "n_steps": 4,
+      "fixings": "S_1..S_n on an even grid; the valuation date is excluded",
+      "value": "7.09198319937233565410624445318"
+    },
+    {
+      "instrument": "asian_option",
+      "averaging_method": "geometric",
+      "strike_convention": "fixed",
+      "option_type": "call",
+      "strike": "100.0",
+      "n_steps": 8,
+      "fixings": "S_1..S_n on an even grid; the valuation date is excluded",
+      "value": "6.48902880584649392940200115904"
+    },
+    {
+      "instrument": "asian_option",
+      "averaging_method": "geometric",
+      "strike_convention": "fixed",
+      "option_type": "call",
+      "strike": "100.0",
+      "n_steps": 32,
+      "fixings": "S_1..S_n on an even grid; the valuation date is excluded",
+      "value": "6.04036567456780203508107745168"
+    },
+    {
+      "instrument": "european_option",
+      "option_type": "put",
+      "strike": "90.0",
+      "value": "4.61560889734818775993601827687"
+    },
+    {
+      "instrument": "european_option",
+      "option_type": "put",
+      "strike": "100.0",
+      "value": "8.89042582123311505535493664796"
+    },
+    {
+      "instrument": "european_option",
+      "option_type": "put",
+      "strike": "110.0",
+      "value": "14.7104162808953973941576553287"
+    },
+    {
+      "instrument": "binary_option",
+      "option_type": "put",
+      "strike": "95.0",
+      "cash_amount": "1.0",
+      "value": "0.427731577851564166297547492712"
+    },
+    {
+      "instrument": "binary_option",
+      "option_type": "put",
+      "strike": "100.0",
+      "cash_amount": "1.0",
+      "value": "0.507690320724882993779761802761"
+    },
+    {
+      "instrument": "binary_option",
+      "option_type": "put",
+      "strike": "105.0",
+      "cash_amount": "1.0",
+      "value": "0.583117391003433870435241386150"
+    },
+    {
+      "instrument": "asian_option",
+      "averaging_method": "geometric",
+      "strike_convention": "fixed",
+      "option_type": "put",
+      "strike": "100.0",
+      "n_steps": 4,
+      "fixings": "S_1..S_n on an even grid; the valuation date is excluded",
+      "value": "6.34249662516783539514823268971"
+    },
+    {
+      "instrument": "asian_option",
+      "averaging_method": "geometric",
+      "strike_convention": "fixed",
+      "option_type": "put",
+      "strike": "100.0",
+      "n_steps": 8,
+      "fixings": "S_1..S_n on an even grid; the valuation date is excluded",
+      "value": "5.88700734157640011748127639451"
+    },
+    {
+      "instrument": "asian_option",
+      "averaging_method": "geometric",
+      "strike_convention": "fixed",
+      "option_type": "put",
+      "strike": "100.0",
+      "n_steps": 32,
+      "fixings": "S_1..S_n on an even grid; the valuation date is excluded",
+      "value": "5.53827582044369070409879842883"
+    },
+    {
+      "instrument": "forward",
+      "delivery_price": "90.0",
+      "value": "11.7821194023920228001267306197"
+    },
+    {
+      "instrument": "forward",
+      "delivery_price": "100.0",
+      "value": "1.98013266932446977791858957747"
+    },
+    {
+      "instrument": "forward",
+      "delivery_price": "110.0",
+      "value": "-7.82185406374308324428955146478"
+    },
+    {
+      "instrument": "variance_swap",
+      "strike_variance": "0.0",
+      "n_steps": 4,
+      "convention": "sum(log(S_i/S_{i-1})**2) / T; no mean adjustment, no 252",
+      "value": "0.0612934311803198029432852119603"
+    },
+    {
+      "instrument": "variance_swap",
+      "strike_variance": "0.0",
+      "n_steps": 16,
+      "convention": "sum(log(S_i/S_{i-1})**2) / T; no mean adjustment, no 252",
+      "value": "0.0612701706063341055274219641256"
+    },
+    {
+      "instrument": "variance_swap",
+      "strike_variance": "0.0",
+      "n_steps": 64,
+      "convention": "sum(log(S_i/S_{i-1})**2) / T; no mean adjustment, no 252",
+      "value": "0.0612643554628376811734561521670"
+    }
+  ],
+  "content_sha256": "1c6fe3b2f090aa3e8703124df302b1ae807f1a626b328a405a67d24df95dc24b"
+}

@@ -379,7 +379,7 @@ def _type_schema(spec: TypeSpec) -> dict[str, Any]:
         properties[field_spec.name] = _field_schema(field_spec)
     required = ["schema_version", "instrument_type"]
     required.extend(field_spec.name for field_spec in spec.fields if field_spec.required)
-    return {
+    schema: dict[str, Any] = {
         "type": "object",
         "title": spec.python_type.__name__,
         "description": spec.description,
@@ -387,6 +387,25 @@ def _type_schema(spec: TypeSpec) -> dict[str, Any]:
         "properties": properties,
         "required": required,
     }
+    # Fixed- and floating-strike records have a relation between two fields
+    # that neither field can express alone. The constructor enforces the same
+    # rule: fixed requires a numeric strike; floating permits an omitted strike
+    # (the decoder's default is None) and requires null when it is present.
+    if {"strike", "strike_convention"}.issubset(spec.field_names):
+        schema["allOf"] = [
+            {
+                "if": {"properties": {"strike_convention": {"const": "fixed"}}},
+                "then": {
+                    "required": ["strike"],
+                    "properties": {"strike": {"type": "number"}},
+                },
+            },
+            {
+                "if": {"properties": {"strike_convention": {"const": "floating"}}},
+                "then": {"properties": {"strike": {"type": "null"}}},
+            },
+        ]
+    return schema
 
 
 def instrument_json_schema() -> dict[str, Any]:
@@ -401,8 +420,8 @@ def instrument_json_schema() -> dict[str, Any]:
     --------
     >>> from fast_vollib.instruments.serialization import instrument_json_schema
     >>> schema = instrument_json_schema()
-    >>> sorted(schema["$defs"])
-    ['asset', 'european_option', 'forward', 'future', 'instrument_ref']
+    >>> "european_option" in schema["$defs"], "instrument_ref" in schema["$defs"]
+    (True, True)
     >>> schema["$defs"]["european_option"]["properties"]["strike"]["exclusiveMinimum"]
     0.0
     """

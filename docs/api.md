@@ -575,15 +575,67 @@ from fast_vollib.instruments import EuropeanOption, VanillaMarketInputs, price_i
 | Group | Names |
 |---|---|
 | Contracts | `Asset`, `Forward`, `Future`, `EuropeanOption`, `InstrumentRef`, `Instrument`, `Derivative` |
+| Digital and path-dependent contracts | `BinaryOption`, `AsianOption`, `BarrierOption`, `LookbackOption`, `VarianceSwap` |
 | Batches and coordinates | `EuropeanOptionBatch`, `moneyness`, `log_moneyness`, `time_to_maturity`, `forward_price` |
 | Market inputs | `VanillaMarketInputs` |
 | Payoffs and adapters | `payoff`, `payoff_requirement`, `price_instrument`, `greeks_instrument`, `implied_volatility_instrument` |
 | Discovery | `instrument_types`, `instrument_type`, `InstrumentTypeInfo`, `capabilities`, `CapabilitySet` |
 | Serialization | `instrument_to_dict`, `instrument_from_dict`, `instrument_to_json`, `instrument_from_json` |
-| Vocabularies | `AssetClass`, `InstrumentKind`, `OptionType`, `ExerciseStyle`, `SettlementType`, `PricingModel`, `IVSolver`, `PayoffRequirement` |
+| Vocabularies | `AssetClass`, `InstrumentKind`, `OptionType`, `ExerciseStyle`, `SettlementType`, `PricingModel`, `IVSolver`, `PayoffRequirement`, `BarrierType`, `AveragingMethod`, `StrikeConvention` |
 | Errors | `InstrumentError`, `InstrumentValidationError`, `UnsupportedInstrumentError`, `UnsupportedModelError`, `UnsupportedSolverError`, `MissingMarketInputError`, `SerializationError` |
 
 The adapters take `model` as a required keyword and never infer it, and they
 never fall back to a different model, engine, solver, or backend. `price_instrument`
 and `greeks_instrument` are **not** differentiable; see
 [Instruments](instruments.md#differentiability) for the full table.
+
+`BinaryOption` has a terminal payoff; the other four need a whole trajectory
+and are evaluated on a `Scenario`. None of the five has an analytic kernel
+here: they are valued by simulation, explicitly requested. See
+[Simulation](simulation.md).
+
+---
+
+## Processes and simulation
+
+`fast_vollib.processes` and `fast_vollib.simulation` are two more lazily
+exposed, optional namespaces. Importing `fast_vollib` alone loads neither, and
+importing either loads no torch, jax, numba, or triton.
+
+```python
+from fast_vollib.processes import GBM
+from fast_vollib.simulation import MonteCarloEngine, Scenario, simulate
+```
+
+| Group | Names |
+|---|---|
+| Processes | `GBM`, `GBM.risk_neutral`, `StochasticProcess` |
+| Scenarios | `Scenario`, `Scenario.from_states`, `simulate` |
+| Pricing | `MonteCarloEngine`, `MonteCarloEngine.supports`, `MonteCarloEngine.price`, `MCResult` |
+| Errors | `SimulationError`, `SimulationValidationError`, `UnsupportedProcessError`, `ScenarioMismatchError` |
+
+### `simulate`
+
+```python
+simulate(underlier, process, *, initial_state, time_grid, n_paths, rng, antithetic=False)
+```
+
+Returns a `Scenario`. Knows no contract and checks no maturity. Pure: nothing
+is attached to the underlier or the process.
+
+### `MonteCarloEngine.price`
+
+```python
+MonteCarloEngine(antithetic=False).price(
+    instrument, market, *, process, n_paths, rng,
+    time_grid=None, n_steps=None, return_native=False,
+)
+```
+
+Returns an `MCResult` carrying `price`, `stderr`, `n_paths`, and
+`effective_samples`. `market.underlying` is the initial spot and `market.rate`
+discounts; `market.volatility` is not read, because the process owns it. Supply
+exactly one of `time_grid` and `n_steps`. The engine never rewrites a drift:
+a risk-neutral price needs a process you made risk-neutral. See
+[Simulation](simulation.md) for the conventions, the estimator, and the
+differentiability table.

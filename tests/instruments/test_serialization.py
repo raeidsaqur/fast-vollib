@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 
 from fast_vollib.instruments import (
+    AsianOption,
     Asset,
     AssetClass,
     EuropeanOption,
@@ -16,6 +17,7 @@ from fast_vollib.instruments import (
     Future,
     InstrumentRef,
     InstrumentValidationError,
+    LookbackOption,
     SerializationError,
     instrument_from_dict,
     instrument_from_json,
@@ -153,7 +155,7 @@ def test_unknown_schema_version_is_rejected(version: Any) -> None:
         instrument_from_dict(option_record(schema_version=version))
 
 
-@pytest.mark.parametrize("type_id", ["american_option", "barrier_option", "", 7, None], ids=str)
+@pytest.mark.parametrize("type_id", ["american_option", "cliquet_option", "", 7, None], ids=str)
 def test_unknown_instrument_type_is_rejected(type_id: Any) -> None:
     with pytest.raises(SerializationError) as excinfo:
         instrument_from_dict(option_record(instrument_type=type_id))
@@ -343,5 +345,38 @@ def test_a_record_the_codec_rejects_also_fails_the_schema() -> None:
     jsonschema = pytest.importorskip("jsonschema")
     schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     for bad in (option_record(barrier=90.0), option_record(strike=-1.0), option_record(notional=0)):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate(bad, schema)
+
+
+@pytest.mark.parametrize(
+    "instrument",
+    [
+        AsianOption(
+            underlier="ACME",
+            option_type="call",
+            strike=100.0,
+            averaging_method="arithmetic",
+            strike_convention="fixed",
+            maturity=1.0,
+        ),
+        LookbackOption(
+            underlier="ACME",
+            option_type="call",
+            strike=100.0,
+            strike_convention="fixed",
+            maturity=1.0,
+        ),
+    ],
+    ids=["asian", "lookback"],
+)
+def test_schema_enforces_the_strike_convention_relation(instrument: Any) -> None:
+    jsonschema = pytest.importorskip("jsonschema")
+    schema = instrument_json_schema()
+    fixed_without_strike = instrument_to_dict(instrument)
+    fixed_without_strike.pop("strike")
+    floating_with_strike = instrument_to_dict(instrument)
+    floating_with_strike["strike_convention"] = "floating"
+    for bad in (fixed_without_strike, floating_with_strike):
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(bad, schema)

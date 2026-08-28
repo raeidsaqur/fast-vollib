@@ -38,6 +38,13 @@ from typing import TYPE_CHECKING, Callable, Mapping
 from .base import Asset, Instrument
 from .enums import IVSolver, PricingModel
 from .errors import UnsupportedInstrumentError
+from .exotics import (
+    AsianOption,
+    BarrierOption,
+    BinaryOption,
+    LookbackOption,
+    VarianceSwap,
+)
 from .forwards import Forward, Future
 from .options import EuropeanOption
 
@@ -63,8 +70,9 @@ class CapabilitySet:
     Attributes
     ----------
     payoff : bool
-        Whether :func:`~fast_vollib.instruments.payoff` can evaluate a terminal
-        cashflow for this type.
+        Whether :func:`~fast_vollib.instruments.payoff` can evaluate a cashflow
+        for this type, from either terminal state or a Scenario as declared by
+        its payoff requirement.
     price : frozenset[PricingModel]
         Models with an analytic pricing kernel.  Empty means
         :func:`~fast_vollib.instruments.price_instrument` raises.
@@ -79,8 +87,19 @@ class CapabilitySet:
         returns a value carrying gradients.  Host-formatted output is never in
         this set: formatting terminates the tape.
     simulate : bool
-        Whether a simulation route exists. Simulation is not currently
-        supported by the instruments package.
+        Whether :class:`fast_vollib.simulation.MonteCarloEngine` has a route
+        for this type. Type-level: an *instance* is additionally eligible only
+        with a strictly positive maturity, which ``MonteCarloEngine.supports``
+        applies and is authoritative for an actual request.
+    simulation_autodiff : frozenset[BackendLiteral]
+        Backends on which a simulated valuation returns a result that still
+        carries an autograd graph. Recorded against what is installed and
+        demonstrated by the test suite.
+
+        This is tape retention, and only that. A digital or barrier payoff
+        keeps a graph whose pathwise derivative is zero almost everywhere and
+        undefined at the boundary, so a gradient that exists is not
+        automatically a Greek worth acting on.
 
     Notes
     -----
@@ -96,6 +115,7 @@ class CapabilitySet:
     )
     native_autodiff: frozenset[tuple[PricingModel, IVSolver, BackendLiteral]] = frozenset()
     simulate: bool = False
+    simulation_autodiff: frozenset[BackendLiteral] = frozenset()
 
     def supports_price(self, model: PricingModel) -> bool:
         """Whether ``model`` has an analytic pricing kernel for this type."""
@@ -112,6 +132,10 @@ class CapabilitySet:
     def supports_native_autodiff(self, model: PricingModel, solver: IVSolver, backend: str) -> bool:
         """Whether that exact combination returns gradient-carrying output."""
         return (model, solver, backend) in self.native_autodiff
+
+    def supports_simulation_autodiff(self, backend: str) -> bool:
+        """Whether a simulated valuation on ``backend`` keeps its autograd graph."""
+        return backend in self.simulation_autodiff
 
 
 def _module_installed(name: str) -> bool:
@@ -137,6 +161,15 @@ def _native_autodiff_combinations() -> frozenset[tuple[PricingModel, IVSolver, B
     return frozenset(combinations)
 
 
+def _simulation_backends() -> frozenset[BackendLiteral]:
+    """Installed backends whose arrays a simulated valuation keeps a graph on."""
+    backends: set[BackendLiteral] = set()
+    for module_name, backend in _AUTODIFF_BACKENDS:
+        if _module_installed(module_name):
+            backends.add(backend)
+    return frozenset(backends)
+
+
 def _european_option_capabilities() -> CapabilitySet:
     return CapabilitySet(
         payoff=True,
@@ -144,17 +177,39 @@ def _european_option_capabilities() -> CapabilitySet:
         greeks=_ALL_MODELS,
         implied_volatility=MappingProxyType({model: _ALL_SOLVERS for model in PricingModel}),
         native_autodiff=_native_autodiff_combinations(),
-        simulate=False,
+        simulate=True,
+        simulation_autodiff=_simulation_backends(),
     )
 
 
-def _terminal_payoff_only_capabilities() -> CapabilitySet:
-    """Linear contracts with a payoff but no analytic pricing adapter.
+def _forward_capabilities() -> CapabilitySet:
+    """A payoff and a simulated valuation, but no analytic pricing adapter.
 
     Pricing a forward is discounting, not a Black formula, and this layer adds
     no math of its own -- so the honest capability is "payoff yes, price no",
     and :func:`~fast_vollib.instruments.price_instrument` says so by name
     instead of returning an option value.
+    """
+    return CapabilitySet(payoff=True, simulate=True, simulation_autodiff=_simulation_backends())
+
+
+def _simulated_only_capabilities() -> CapabilitySet:
+    """A payoff and a simulated valuation, with no analytic kernel in this library.
+
+    Closed forms exist in the literature for several of these types. They are
+    not implemented here, and the capability set says so rather than letting a
+    caller assume that "there is a formula" means "this library evaluates it".
+    """
+    return CapabilitySet(payoff=True, simulate=True, simulation_autodiff=_simulation_backends())
+
+
+def _future_capabilities() -> CapabilitySet:
+    """A terminal payoff, and deliberately no valuation route at all.
+
+    A future's terminal formula coincides with a forward's, so a simulated
+    price would look right. Its economics are a stream of daily variation
+    margin, which is not modelled, so the capability says no rather than
+    letting the coincidence stand in for the contract.
     """
     return CapabilitySet(payoff=True)
 
@@ -166,8 +221,13 @@ def _no_capabilities() -> CapabilitySet:
 
 _CAPABILITY_BUILDERS: dict[type[Instrument], Callable[[], CapabilitySet]] = {
     EuropeanOption: _european_option_capabilities,
-    Forward: _terminal_payoff_only_capabilities,
-    Future: _terminal_payoff_only_capabilities,
+    BinaryOption: _simulated_only_capabilities,
+    AsianOption: _simulated_only_capabilities,
+    BarrierOption: _simulated_only_capabilities,
+    LookbackOption: _simulated_only_capabilities,
+    VarianceSwap: _simulated_only_capabilities,
+    Forward: _forward_capabilities,
+    Future: _future_capabilities,
     Asset: _no_capabilities,
 }
 

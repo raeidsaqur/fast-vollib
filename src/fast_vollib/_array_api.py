@@ -85,6 +85,42 @@ class ArrayNS:
         """A zero array of ``shape`` in this backend (dtype/device of ``like``)."""
         raise NotImplementedError  # pragma: no cover
 
+    def scalar(self, value, like=None):
+        """``value`` as a 0-d array carrying ``like``'s dtype and device.
+
+        Distinct from :meth:`asarray`, which normalizes to the backend's own
+        default precision. A payoff selecting between constants needs the
+        caller's dtype instead, or a float32 path silently returns float64.
+        """
+        raise NotImplementedError  # pragma: no cover
+
+    def cumsum(self, x, axis=None):
+        raise NotImplementedError  # pragma: no cover
+
+    def concatenate(self, arrays, axis=0):
+        raise NotImplementedError  # pragma: no cover
+
+    def stack(self, arrays, axis=0):
+        raise NotImplementedError  # pragma: no cover
+
+    def mean(self, x, axis=None):
+        raise NotImplementedError  # pragma: no cover
+
+    def std(self, x, axis=None, ddof=0):
+        """Standard deviation with an explicit degrees-of-freedom correction.
+
+        Spelled ``ddof`` in numpy and jax and ``correction`` in torch; the
+        estimator in :mod:`fast_vollib.simulation` needs ``ddof=1`` and must
+        not depend on which backend it happens to be running in.
+        """
+        raise NotImplementedError  # pragma: no cover
+
+    def amax(self, x, axis=None):
+        raise NotImplementedError  # pragma: no cover
+
+    def amin(self, x, axis=None):
+        raise NotImplementedError  # pragma: no cover
+
     def to_numpy(self, x) -> np.ndarray:
         raise NotImplementedError  # pragma: no cover
 
@@ -122,6 +158,33 @@ class _NumpyNS(ArrayNS):
 
     def zeros(self, shape, like=None):
         return np.zeros(shape, dtype=np.float64)
+
+    def scalar(self, value, like=None):
+        dtype = getattr(like, "dtype", None)
+        if dtype is not None and np.issubdtype(dtype, np.floating):
+            return np.asarray(value, dtype=dtype)
+        return np.asarray(value, dtype=np.float64)
+
+    def cumsum(self, x, axis=None):
+        return np.cumsum(x, axis=axis)
+
+    def concatenate(self, arrays, axis=0):
+        return np.concatenate(tuple(arrays), axis=axis)
+
+    def stack(self, arrays, axis=0):
+        return np.stack(tuple(arrays), axis=axis)
+
+    def mean(self, x, axis=None):
+        return np.mean(x, axis=axis)
+
+    def std(self, x, axis=None, ddof=0):
+        return np.std(x, axis=axis, ddof=ddof)
+
+    def amax(self, x, axis=None):
+        return np.amax(x, axis=axis)
+
+    def amin(self, x, axis=None):
+        return np.amin(x, axis=axis)
 
     def to_numpy(self, x) -> np.ndarray:
         return np.asarray(x)
@@ -167,6 +230,36 @@ class _TorchNS(ArrayNS):
             return self._m.zeros(shape, dtype=like.dtype, device=like.device)
         return self._m.zeros(shape, dtype=self._m.float64)
 
+    def scalar(self, value, like=None):
+        if like is not None and self._m.is_tensor(like):
+            return self._m.as_tensor(value, dtype=like.dtype, device=like.device)
+        return self._m.as_tensor(value, dtype=self._m.float64)
+
+    def cumsum(self, x, axis=None):
+        if axis is None:
+            return self._m.cumsum(x.reshape(-1), dim=0)
+        return self._m.cumsum(x, dim=axis)
+
+    def concatenate(self, arrays, axis=0):
+        return self._m.cat(tuple(arrays), dim=axis)
+
+    def stack(self, arrays, axis=0):
+        return self._m.stack(tuple(arrays), dim=axis)
+
+    def mean(self, x, axis=None):
+        return self._m.mean(x) if axis is None else self._m.mean(x, dim=axis)
+
+    def std(self, x, axis=None, ddof=0):
+        if axis is None:
+            return self._m.std(x, correction=ddof)
+        return self._m.std(x, dim=axis, correction=ddof)
+
+    def amax(self, x, axis=None):
+        return self._m.amax(x) if axis is None else self._m.amax(x, dim=axis)
+
+    def amin(self, x, axis=None):
+        return self._m.amin(x) if axis is None else self._m.amin(x, dim=axis)
+
     def to_numpy(self, x) -> np.ndarray:
         if self._m.is_tensor(x):
             return x.detach().cpu().numpy()
@@ -206,6 +299,33 @@ class _JaxNS(ArrayNS):
 
     def zeros(self, shape, like=None):
         return self._m.zeros(shape)
+
+    def scalar(self, value, like=None):
+        dtype = getattr(like, "dtype", None)
+        if dtype is not None and self._m.issubdtype(dtype, self._m.floating):
+            return self._m.asarray(value, dtype=dtype)
+        return self._m.asarray(value)
+
+    def cumsum(self, x, axis=None):
+        return self._m.cumsum(x, axis=axis)
+
+    def concatenate(self, arrays, axis=0):
+        return self._m.concatenate(tuple(arrays), axis=axis)
+
+    def stack(self, arrays, axis=0):
+        return self._m.stack(tuple(arrays), axis=axis)
+
+    def mean(self, x, axis=None):
+        return self._m.mean(x, axis=axis)
+
+    def std(self, x, axis=None, ddof=0):
+        return self._m.std(x, axis=axis, ddof=ddof)
+
+    def amax(self, x, axis=None):
+        return self._m.amax(x, axis=axis)
+
+    def amin(self, x, axis=None):
+        return self._m.amin(x, axis=axis)
 
     def to_numpy(self, x) -> np.ndarray:
         return np.asarray(x)
@@ -255,3 +375,58 @@ def get_namespace(*arrays: Any) -> ArrayNS:
 def numpy_namespace() -> ArrayNS:
     """The numpy namespace singleton (used by the report/host path)."""
     return _NUMPY_NS
+
+
+def concrete_float(value: Any) -> float | None:
+    """``value`` as a Python ``float``, or ``None`` if it cannot be read eagerly.
+
+    Validation has two halves that behave differently under a JAX
+    transformation.  Static properties -- shape, rank, dtype -- are known while
+    tracing and can always be checked.  A *value* is not: a tracer has no
+    number in it, and asking for one raises rather than returning something
+    wrong.  Code that validated by calling ``float(x)`` unconditionally would
+    therefore break ``jax.grad`` on a function that was otherwise fine.
+
+    So value checks call this first and skip themselves when it returns
+    ``None``.  Concrete calls -- which is every ordinary one -- still get the
+    full check; a traced call carries the domain precondition instead, because
+    a library cannot raise a Python exception from inside a trace.
+
+    torch tensors are read with an explicit synchronization: the number is used
+    only to decide whether to raise, and never enters the returned graph.
+    """
+    if value is None:
+        return None
+    if _is_jax_array(value):
+        import jax
+
+        try:
+            return float(value)
+        except jax.errors.ConcretizationTypeError:
+            return None
+        except (TypeError, ValueError):  # pragma: no cover - non-scalar array
+            return None
+    if _is_torch_tensor(value):
+        try:
+            return float(value.detach().reshape(()))
+        except (RuntimeError, TypeError, ValueError):
+            return None
+    try:
+        as_array = np.asarray(value)
+    except (TypeError, ValueError):  # pragma: no cover - not array-like at all
+        return None
+    numeric = np.issubdtype(as_array.dtype, np.number) or np.issubdtype(as_array.dtype, np.bool_)
+    if as_array.size != 1 or not numeric:
+        return None
+    return float(as_array.reshape(()))
+
+
+def concrete_bool(value: Any) -> bool | None:
+    """``value`` as a Python ``bool``, or ``None`` under a JAX trace.
+
+    The boolean counterpart of :func:`concrete_float`, used for domain checks
+    that reduce an array to one flag -- "are all of these states positive?" --
+    before a payoff that would otherwise return a silent ``NaN``.
+    """
+    as_float = concrete_float(value)
+    return None if as_float is None else bool(as_float)

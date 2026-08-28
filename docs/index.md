@@ -16,7 +16,7 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 ## Features
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
-- **Vectorized IV solver** — Halley's method with bisection fallback; handles large option chains efficiently
+- **Vectorized IV solver** — the machine-precision Jäckel solver by default, with the deprecated Halley-plus-bisection route retained for compatibility; handles large option chains efficiently
 - **Machine-precision IV** — Jäckel "Let's Be Rational" solver (`jackel/`) with Householder(3)×3; max relative error ~10⁻¹⁴
 - **GPU-fused Jäckel** — single-pass Triton kernel achieving **0.056 ms / 100k** options on H100
 - **Full Greeks** — delta, gamma, theta, rho, vega, and `get_all_greeks` in one call
