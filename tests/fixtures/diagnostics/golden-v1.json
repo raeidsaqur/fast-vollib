@@ -1,0 +1,852 @@
+{
+  "schema": "diagnostics-v1",
+  "config": {
+    "regions": [
+      {
+        "kind": "box",
+        "name": "liquid",
+        "complement_name": "illiquid",
+        "k_min": -0.2,
+        "k_max": 0.2,
+        "T_min": null,
+        "T_max": 0.5,
+        "closed": "both"
+      },
+      {
+        "kind": "box",
+        "name": "wings",
+        "complement_name": null,
+        "k_min": 0.15,
+        "k_max": null,
+        "T_min": null,
+        "T_max": null,
+        "closed": "left"
+      }
+    ],
+    "ragged": {
+      "maturity_decimals": 6,
+      "butterfly_min_unique_strikes": 3,
+      "calendar_min_unique_strikes": 2,
+      "calendar_grid_points": 40,
+      "butterfly_tolerance": 0.0,
+      "calendar_tolerance": 1e-10,
+      "duplicates": "mean_total_variance"
+    },
+    "metadata": {
+      "fixture": "golden-v1",
+      "purpose": "byte-compared wire contract"
+    }
+  },
+  "record_count": 4,
+  "records_included": true,
+  "records": [
+    {
+      "model": "bspline",
+      "split": "extrap_5",
+      "sample_id": "d-902",
+      "fit": {
+        "overall": {
+          "squared_error_sum": 0.0,
+          "absolute_error_sum": 0.0,
+          "valid_prediction_count": 2,
+          "target_count": 2,
+          "invalid_prediction_count": 0,
+          "max_absolute_error": 0.0
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null
+            },
+            "outside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 2,
+              "target_count": 2,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0
+            }
+          },
+          {
+            "name": "wings",
+            "complement_name": null,
+            "descriptor": {
+              "kind": "box",
+              "name": "wings",
+              "complement_name": null,
+              "k_min": 0.15,
+              "k_max": null,
+              "T_min": null,
+              "T_max": null,
+              "closed": "left"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null
+            },
+            "outside": null
+          }
+        ]
+      },
+      "spread": null,
+      "ragged": {
+        "butterfly_checked_nodes": 0,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 1,
+        "butterfly_min_g": null,
+        "calendar_checked_points": 0,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 1,
+        "node_count": 2,
+        "duplicate_group_count": 0,
+        "collapsed_duplicate_points": 0,
+        "max_duplicate_iv_range": null,
+        "nonpositive_total_variance_points": 0,
+        "unusable_points": 0,
+        "max_maturity_bucket_span": 0.0
+      },
+      "grid": null,
+      "quality_status": "complete"
+    },
+    {
+      "model": "prior",
+      "split": "extrap_10",
+      "sample_id": 901,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 0.04000000000000001,
+          "absolute_error_sum": 0.2,
+          "valid_prediction_count": 5,
+          "target_count": 5,
+          "invalid_prediction_count": 0,
+          "max_absolute_error": 0.2
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null
+            },
+            "outside": {
+              "squared_error_sum": 0.04000000000000001,
+              "absolute_error_sum": 0.2,
+              "valid_prediction_count": 5,
+              "target_count": 5,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.2
+            }
+          },
+          {
+            "name": "wings",
+            "complement_name": null,
+            "descriptor": {
+              "kind": "box",
+              "name": "wings",
+              "complement_name": null,
+              "k_min": 0.15,
+              "k_max": null,
+              "T_min": null,
+              "T_max": null,
+              "closed": "left"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 1,
+              "target_count": 1,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0
+            },
+            "outside": null
+          }
+        ]
+      },
+      "spread": null,
+      "ragged": {
+        "butterfly_checked_nodes": 1,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 0,
+        "butterfly_min_g": 1.100259519246318,
+        "calendar_checked_points": 0,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 1,
+        "node_count": 3,
+        "duplicate_group_count": 1,
+        "collapsed_duplicate_points": 1,
+        "max_duplicate_iv_range": 0.01999999999999999,
+        "nonpositive_total_variance_points": 1,
+        "unusable_points": 0,
+        "max_maturity_bucket_span": 0.0
+      },
+      "grid": null,
+      "quality_status": "complete"
+    },
+    {
+      "model": "prior",
+      "split": "unif_10",
+      "sample_id": 900,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 4.300000000000008e-05,
+          "absolute_error_sum": 0.015000000000000013,
+          "valid_prediction_count": 9,
+          "target_count": 10,
+          "invalid_prediction_count": 1,
+          "max_absolute_error": 0.0040000000000000036
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 4.300000000000008e-05,
+              "absolute_error_sum": 0.015000000000000013,
+              "valid_prediction_count": 9,
+              "target_count": 10,
+              "invalid_prediction_count": 1,
+              "max_absolute_error": 0.0040000000000000036
+            },
+            "outside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null
+            }
+          },
+          {
+            "name": "wings",
+            "complement_name": null,
+            "descriptor": {
+              "kind": "box",
+              "name": "wings",
+              "complement_name": null,
+              "k_min": 0.15,
+              "k_max": null,
+              "T_min": null,
+              "T_max": null,
+              "closed": "left"
+            },
+            "inside": {
+              "squared_error_sum": 9.000000000000015e-06,
+              "absolute_error_sum": 0.0030000000000000027,
+              "valid_prediction_count": 2,
+              "target_count": 2,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0030000000000000027
+            },
+            "outside": null
+          }
+        ]
+      },
+      "spread": {
+        "eligible_quote_count": 10,
+        "priced_quote_count": 9,
+        "unpriced_quote_count": 1,
+        "midpoint_squared_error_sum": 0.0,
+        "outside_count": 0,
+        "outside_width_sum": 0.0
+      },
+      "ragged": {
+        "butterfly_checked_nodes": 5,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 0,
+        "butterfly_min_g": 0.9275210008610341,
+        "calendar_checked_points": 40,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 2,
+        "node_count": 9,
+        "duplicate_group_count": 0,
+        "collapsed_duplicate_points": 0,
+        "max_duplicate_iv_range": null,
+        "nonpositive_total_variance_points": 0,
+        "unusable_points": 1,
+        "max_maturity_bucket_span": 0.0
+      },
+      "grid": null,
+      "quality_status": "partial"
+    },
+    {
+      "model": "ssvi",
+      "split": "grid",
+      "sample_id": 1,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 0.0,
+          "absolute_error_sum": 0.0,
+          "valid_prediction_count": 10,
+          "target_count": 10,
+          "invalid_prediction_count": 0,
+          "max_absolute_error": 0.0
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 10,
+              "target_count": 10,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0
+            },
+            "outside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null
+            }
+          }
+        ]
+      },
+      "spread": null,
+      "ragged": {
+        "butterfly_checked_nodes": 6,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 0,
+        "butterfly_min_g": 0.9901742375618785,
+        "calendar_checked_points": 40,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 2,
+        "node_count": 10,
+        "duplicate_group_count": 0,
+        "collapsed_duplicate_points": 0,
+        "max_duplicate_iv_range": null,
+        "nonpositive_total_variance_points": 0,
+        "unusable_points": 0,
+        "max_maturity_bucket_span": 0.0
+      },
+      "grid": {
+        "passed": true,
+        "sas": 0.0,
+        "ndm": 0.0,
+        "ndm_mean": 0.0,
+        "butterfly_fraction": 0.0,
+        "calendar_fraction": 0.0,
+        "calendar_depth_max": 0.0,
+        "vertical_fraction": 0.0,
+        "bound_fraction": 0.0,
+        "violation_count": 0,
+        "native_violation_counts": {
+          "bound": 0,
+          "butterfly": 0,
+          "calendar": 0,
+          "vertical": 0
+        },
+        "interpolation_induced_violation_counts": {
+          "bound": 0,
+          "butterfly": 0,
+          "calendar": 0,
+          "vertical": 0
+        },
+        "quoted_coverage": 1.0,
+        "native_coverage": 1.0,
+        "strike_count": 5,
+        "maturity_count": 2,
+        "tolerance": 1e-06
+      },
+      "quality_status": "complete"
+    }
+  ],
+  "summaries": [
+    {
+      "model": "bspline",
+      "split": "extrap_5",
+      "sample_count": 1,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 0.0,
+          "absolute_error_sum": 0.0,
+          "valid_prediction_count": 2,
+          "target_count": 2,
+          "invalid_prediction_count": 0,
+          "max_absolute_error": 0.0,
+          "rmse": 0.0,
+          "mae": 0.0,
+          "coverage": 1.0,
+          "invalid_rate": 0.0
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null,
+              "rmse": null,
+              "mae": null,
+              "coverage": null,
+              "invalid_rate": null
+            },
+            "outside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 2,
+              "target_count": 2,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0,
+              "rmse": 0.0,
+              "mae": 0.0,
+              "coverage": 1.0,
+              "invalid_rate": 0.0
+            }
+          },
+          {
+            "name": "wings",
+            "complement_name": null,
+            "descriptor": {
+              "kind": "box",
+              "name": "wings",
+              "complement_name": null,
+              "k_min": 0.15,
+              "k_max": null,
+              "T_min": null,
+              "T_max": null,
+              "closed": "left"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null,
+              "rmse": null,
+              "mae": null,
+              "coverage": null,
+              "invalid_rate": null
+            },
+            "outside": null
+          }
+        ]
+      },
+      "spread": null,
+      "ragged": {
+        "butterfly_checked_nodes": 0,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 1,
+        "butterfly_min_g": null,
+        "calendar_checked_points": 0,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 1,
+        "node_count": 2,
+        "duplicate_group_count": 0,
+        "collapsed_duplicate_points": 0,
+        "max_duplicate_iv_range": null,
+        "nonpositive_total_variance_points": 0,
+        "unusable_points": 0,
+        "max_maturity_bucket_span": 0.0,
+        "butterfly_percentage": null,
+        "calendar_percentage": null
+      },
+      "ragged_butterfly_sample_mean": 0.0,
+      "ragged_calendar_sample_mean": 0.0,
+      "quality_status": "complete",
+      "grid": null
+    },
+    {
+      "model": "prior",
+      "split": "extrap_10",
+      "sample_count": 1,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 0.04000000000000001,
+          "absolute_error_sum": 0.2,
+          "valid_prediction_count": 5,
+          "target_count": 5,
+          "invalid_prediction_count": 0,
+          "max_absolute_error": 0.2,
+          "rmse": 0.0894427190999916,
+          "mae": 0.04,
+          "coverage": 1.0,
+          "invalid_rate": 0.0
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null,
+              "rmse": null,
+              "mae": null,
+              "coverage": null,
+              "invalid_rate": null
+            },
+            "outside": {
+              "squared_error_sum": 0.04000000000000001,
+              "absolute_error_sum": 0.2,
+              "valid_prediction_count": 5,
+              "target_count": 5,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.2,
+              "rmse": 0.0894427190999916,
+              "mae": 0.04,
+              "coverage": 1.0,
+              "invalid_rate": 0.0
+            }
+          },
+          {
+            "name": "wings",
+            "complement_name": null,
+            "descriptor": {
+              "kind": "box",
+              "name": "wings",
+              "complement_name": null,
+              "k_min": 0.15,
+              "k_max": null,
+              "T_min": null,
+              "T_max": null,
+              "closed": "left"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 1,
+              "target_count": 1,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0,
+              "rmse": 0.0,
+              "mae": 0.0,
+              "coverage": 1.0,
+              "invalid_rate": 0.0
+            },
+            "outside": null
+          }
+        ]
+      },
+      "spread": null,
+      "ragged": {
+        "butterfly_checked_nodes": 1,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 0,
+        "butterfly_min_g": 1.100259519246318,
+        "calendar_checked_points": 0,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 1,
+        "node_count": 3,
+        "duplicate_group_count": 1,
+        "collapsed_duplicate_points": 1,
+        "max_duplicate_iv_range": 0.01999999999999999,
+        "nonpositive_total_variance_points": 1,
+        "unusable_points": 0,
+        "max_maturity_bucket_span": 0.0,
+        "butterfly_percentage": 0.0,
+        "calendar_percentage": null
+      },
+      "ragged_butterfly_sample_mean": 0.0,
+      "ragged_calendar_sample_mean": 0.0,
+      "quality_status": "complete",
+      "grid": null
+    },
+    {
+      "model": "prior",
+      "split": "unif_10",
+      "sample_count": 1,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 4.300000000000008e-05,
+          "absolute_error_sum": 0.015000000000000013,
+          "valid_prediction_count": 9,
+          "target_count": 10,
+          "invalid_prediction_count": 1,
+          "max_absolute_error": 0.0040000000000000036,
+          "rmse": 0.0021858128414340024,
+          "mae": 0.001666666666666668,
+          "coverage": 0.9,
+          "invalid_rate": 0.1
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 4.300000000000008e-05,
+              "absolute_error_sum": 0.015000000000000013,
+              "valid_prediction_count": 9,
+              "target_count": 10,
+              "invalid_prediction_count": 1,
+              "max_absolute_error": 0.0040000000000000036,
+              "rmse": 0.0021858128414340024,
+              "mae": 0.001666666666666668,
+              "coverage": 0.9,
+              "invalid_rate": 0.1
+            },
+            "outside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null,
+              "rmse": null,
+              "mae": null,
+              "coverage": null,
+              "invalid_rate": null
+            }
+          },
+          {
+            "name": "wings",
+            "complement_name": null,
+            "descriptor": {
+              "kind": "box",
+              "name": "wings",
+              "complement_name": null,
+              "k_min": 0.15,
+              "k_max": null,
+              "T_min": null,
+              "T_max": null,
+              "closed": "left"
+            },
+            "inside": {
+              "squared_error_sum": 9.000000000000015e-06,
+              "absolute_error_sum": 0.0030000000000000027,
+              "valid_prediction_count": 2,
+              "target_count": 2,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0030000000000000027,
+              "rmse": 0.0021213203435596446,
+              "mae": 0.0015000000000000013,
+              "coverage": 1.0,
+              "invalid_rate": 0.0
+            },
+            "outside": null
+          }
+        ]
+      },
+      "spread": {
+        "eligible_quote_count": 10,
+        "priced_quote_count": 9,
+        "unpriced_quote_count": 1,
+        "midpoint_squared_error_sum": 0.0,
+        "outside_count": 0,
+        "outside_width_sum": 0.0,
+        "price_rmse": 0.0,
+        "outside_percentage": 0.0,
+        "mean_miss_width": null
+      },
+      "ragged": {
+        "butterfly_checked_nodes": 5,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 0,
+        "butterfly_min_g": 0.9275210008610341,
+        "calendar_checked_points": 40,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 2,
+        "node_count": 9,
+        "duplicate_group_count": 0,
+        "collapsed_duplicate_points": 0,
+        "max_duplicate_iv_range": null,
+        "nonpositive_total_variance_points": 0,
+        "unusable_points": 1,
+        "max_maturity_bucket_span": 0.0,
+        "butterfly_percentage": 0.0,
+        "calendar_percentage": 0.0
+      },
+      "ragged_butterfly_sample_mean": 0.0,
+      "ragged_calendar_sample_mean": 0.0,
+      "quality_status": "partial",
+      "grid": null
+    },
+    {
+      "model": "ssvi",
+      "split": "grid",
+      "sample_count": 1,
+      "fit": {
+        "overall": {
+          "squared_error_sum": 0.0,
+          "absolute_error_sum": 0.0,
+          "valid_prediction_count": 10,
+          "target_count": 10,
+          "invalid_prediction_count": 0,
+          "max_absolute_error": 0.0,
+          "rmse": 0.0,
+          "mae": 0.0,
+          "coverage": 1.0,
+          "invalid_rate": 0.0
+        },
+        "regions": [
+          {
+            "name": "liquid",
+            "complement_name": "illiquid",
+            "descriptor": {
+              "kind": "box",
+              "name": "liquid",
+              "complement_name": "illiquid",
+              "k_min": -0.2,
+              "k_max": 0.2,
+              "T_min": null,
+              "T_max": 0.5,
+              "closed": "both"
+            },
+            "inside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 10,
+              "target_count": 10,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": 0.0,
+              "rmse": 0.0,
+              "mae": 0.0,
+              "coverage": 1.0,
+              "invalid_rate": 0.0
+            },
+            "outside": {
+              "squared_error_sum": 0.0,
+              "absolute_error_sum": 0.0,
+              "valid_prediction_count": 0,
+              "target_count": 0,
+              "invalid_prediction_count": 0,
+              "max_absolute_error": null,
+              "rmse": null,
+              "mae": null,
+              "coverage": null,
+              "invalid_rate": null
+            }
+          }
+        ]
+      },
+      "spread": null,
+      "ragged": {
+        "butterfly_checked_nodes": 6,
+        "butterfly_violating_nodes": 0,
+        "butterfly_skipped_smiles": 0,
+        "butterfly_min_g": 0.9901742375618785,
+        "calendar_checked_points": 40,
+        "calendar_violating_points": 0,
+        "calendar_skipped_pairs": 0,
+        "smile_count": 2,
+        "node_count": 10,
+        "duplicate_group_count": 0,
+        "collapsed_duplicate_points": 0,
+        "max_duplicate_iv_range": null,
+        "nonpositive_total_variance_points": 0,
+        "unusable_points": 0,
+        "max_maturity_bucket_span": 0.0,
+        "butterfly_percentage": 0.0,
+        "calendar_percentage": 0.0
+      },
+      "ragged_butterfly_sample_mean": 0.0,
+      "ragged_calendar_sample_mean": 0.0,
+      "quality_status": "complete",
+      "grid": {
+        "sample_count": 1,
+        "passed_count": 1,
+        "sas_max": 0.0,
+        "sas_mean": 0.0,
+        "ndm_max": 0.0,
+        "butterfly_fraction_max": 0.0,
+        "calendar_fraction_max": 0.0,
+        "vertical_fraction_max": 0.0,
+        "bound_fraction_max": 0.0,
+        "native_coverage_min": 1.0
+      }
+    }
+  ]
+}

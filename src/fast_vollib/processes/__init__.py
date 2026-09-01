@@ -5,8 +5,11 @@ state, a path buffer, a device, or any knowledge of a contract, so sampling it
 twice cannot change what it means and the same object can be reused across
 scenarios.
 
-:class:`GBM` is the process this library implements and makes numerical claims
-about. :class:`StochasticProcess` is the structural contract
+:class:`GBM` and :class:`Heston` are the processes this library implements and
+makes numerical claims about. They differ in an important way: GBM is sampled
+exactly on any grid, while Heston's square-root variance has no elementary exact
+transition and every scheme carries a discretization bias, which its docstring
+states rather than glosses. :class:`StochasticProcess` is the structural contract
 :func:`fast_vollib.simulation.simulate` drives, so a caller's own dynamics can
 be sampled through the same entry point.
 
@@ -32,5 +35,6 @@ from __future__ import annotations
 
 from .base import StochasticProcess
 from .gbm import GBM
+from .heston import SCHEMES, Heston
 
-__all__ = ["GBM", "StochasticProcess"]
+__all__ = ["SCHEMES", "GBM", "Heston", "StochasticProcess"]

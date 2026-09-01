@@ -1,0 +1,920 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raeidsaqur.github.io/fast-vollib/schemas/diagnostics-v1.schema.json",
+  "title": "fast-vollib diagnostics-v1",
+  "description": "Reproducible implied-volatility surface diagnostics: fit error, spread consistency, sampled-smile arbitrage counts, and rectangular-grid summaries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "config",
+    "record_count",
+    "records_included",
+    "records",
+    "summaries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "diagnostics-v1"
+    },
+    "config": {
+      "$ref": "#/$defs/config"
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "records_included": {
+      "type": "boolean"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/record"
+      }
+    },
+    "summaries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/summary"
+      }
+    }
+  },
+  "$defs": {
+    "box": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name",
+        "complement_name",
+        "k_min",
+        "k_max",
+        "T_min",
+        "T_max",
+        "closed"
+      ],
+      "properties": {
+        "kind": {
+          "const": "box"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complement_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "k_min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "k_max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "T_min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "T_max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "closed": {
+          "enum": [
+            "both",
+            "left",
+            "right",
+            "neither"
+          ]
+        }
+      }
+    },
+    "raggedConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maturity_decimals",
+        "butterfly_min_unique_strikes",
+        "calendar_min_unique_strikes",
+        "calendar_grid_points",
+        "butterfly_tolerance",
+        "calendar_tolerance",
+        "duplicates"
+      ],
+      "properties": {
+        "maturity_decimals": {
+          "type": "integer"
+        },
+        "butterfly_min_unique_strikes": {
+          "type": "integer"
+        },
+        "calendar_min_unique_strikes": {
+          "type": "integer"
+        },
+        "calendar_grid_points": {
+          "type": "integer"
+        },
+        "butterfly_tolerance": {
+          "type": "number"
+        },
+        "calendar_tolerance": {
+          "type": "number"
+        },
+        "duplicates": {
+          "enum": [
+            "mean_total_variance",
+            "error"
+          ]
+        }
+      }
+    },
+    "errorSums": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "squared_error_sum",
+        "absolute_error_sum",
+        "valid_prediction_count",
+        "target_count",
+        "invalid_prediction_count",
+        "max_absolute_error"
+      ],
+      "properties": {
+        "squared_error_sum": {
+          "type": "number"
+        },
+        "absolute_error_sum": {
+          "type": "number"
+        },
+        "valid_prediction_count": {
+          "type": "integer"
+        },
+        "target_count": {
+          "type": "integer"
+        },
+        "invalid_prediction_count": {
+          "type": "integer"
+        },
+        "max_absolute_error": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "errorSumsWithDerived": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "squared_error_sum",
+        "absolute_error_sum",
+        "valid_prediction_count",
+        "target_count",
+        "invalid_prediction_count",
+        "max_absolute_error",
+        "rmse",
+        "mae",
+        "coverage",
+        "invalid_rate"
+      ],
+      "properties": {
+        "squared_error_sum": {
+          "type": "number"
+        },
+        "absolute_error_sum": {
+          "type": "number"
+        },
+        "valid_prediction_count": {
+          "type": "integer"
+        },
+        "target_count": {
+          "type": "integer"
+        },
+        "invalid_prediction_count": {
+          "type": "integer"
+        },
+        "max_absolute_error": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "rmse": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mae": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "invalid_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "spreadSums": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eligible_quote_count",
+        "priced_quote_count",
+        "unpriced_quote_count",
+        "midpoint_squared_error_sum",
+        "outside_count",
+        "outside_width_sum"
+      ],
+      "properties": {
+        "eligible_quote_count": {
+          "type": "integer"
+        },
+        "priced_quote_count": {
+          "type": "integer"
+        },
+        "unpriced_quote_count": {
+          "type": "integer"
+        },
+        "midpoint_squared_error_sum": {
+          "type": "number"
+        },
+        "outside_count": {
+          "type": "integer"
+        },
+        "outside_width_sum": {
+          "type": "number"
+        }
+      }
+    },
+    "spreadSumsWithDerived": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eligible_quote_count",
+        "priced_quote_count",
+        "unpriced_quote_count",
+        "midpoint_squared_error_sum",
+        "outside_count",
+        "outside_width_sum",
+        "price_rmse",
+        "outside_percentage",
+        "mean_miss_width"
+      ],
+      "properties": {
+        "eligible_quote_count": {
+          "type": "integer"
+        },
+        "priced_quote_count": {
+          "type": "integer"
+        },
+        "unpriced_quote_count": {
+          "type": "integer"
+        },
+        "midpoint_squared_error_sum": {
+          "type": "number"
+        },
+        "outside_count": {
+          "type": "integer"
+        },
+        "outside_width_sum": {
+          "type": "number"
+        },
+        "price_rmse": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "outside_percentage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mean_miss_width": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "raggedSums": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "butterfly_checked_nodes",
+        "butterfly_violating_nodes",
+        "butterfly_skipped_smiles",
+        "butterfly_min_g",
+        "calendar_checked_points",
+        "calendar_violating_points",
+        "calendar_skipped_pairs",
+        "smile_count",
+        "node_count",
+        "duplicate_group_count",
+        "collapsed_duplicate_points",
+        "max_duplicate_iv_range",
+        "nonpositive_total_variance_points",
+        "unusable_points",
+        "max_maturity_bucket_span"
+      ],
+      "properties": {
+        "butterfly_checked_nodes": {
+          "type": "integer"
+        },
+        "butterfly_violating_nodes": {
+          "type": "integer"
+        },
+        "butterfly_skipped_smiles": {
+          "type": "integer"
+        },
+        "butterfly_min_g": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calendar_checked_points": {
+          "type": "integer"
+        },
+        "calendar_violating_points": {
+          "type": "integer"
+        },
+        "calendar_skipped_pairs": {
+          "type": "integer"
+        },
+        "smile_count": {
+          "type": "integer"
+        },
+        "node_count": {
+          "type": "integer"
+        },
+        "duplicate_group_count": {
+          "type": "integer"
+        },
+        "collapsed_duplicate_points": {
+          "type": "integer"
+        },
+        "max_duplicate_iv_range": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "nonpositive_total_variance_points": {
+          "type": "integer"
+        },
+        "unusable_points": {
+          "type": "integer"
+        },
+        "max_maturity_bucket_span": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "raggedSumsWithDerived": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "butterfly_checked_nodes",
+        "butterfly_violating_nodes",
+        "butterfly_skipped_smiles",
+        "butterfly_min_g",
+        "calendar_checked_points",
+        "calendar_violating_points",
+        "calendar_skipped_pairs",
+        "smile_count",
+        "node_count",
+        "duplicate_group_count",
+        "collapsed_duplicate_points",
+        "max_duplicate_iv_range",
+        "nonpositive_total_variance_points",
+        "unusable_points",
+        "max_maturity_bucket_span",
+        "butterfly_percentage",
+        "calendar_percentage"
+      ],
+      "properties": {
+        "butterfly_checked_nodes": {
+          "type": "integer"
+        },
+        "butterfly_violating_nodes": {
+          "type": "integer"
+        },
+        "butterfly_skipped_smiles": {
+          "type": "integer"
+        },
+        "butterfly_min_g": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calendar_checked_points": {
+          "type": "integer"
+        },
+        "calendar_violating_points": {
+          "type": "integer"
+        },
+        "calendar_skipped_pairs": {
+          "type": "integer"
+        },
+        "smile_count": {
+          "type": "integer"
+        },
+        "node_count": {
+          "type": "integer"
+        },
+        "duplicate_group_count": {
+          "type": "integer"
+        },
+        "collapsed_duplicate_points": {
+          "type": "integer"
+        },
+        "max_duplicate_iv_range": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "nonpositive_total_variance_points": {
+          "type": "integer"
+        },
+        "unusable_points": {
+          "type": "integer"
+        },
+        "max_maturity_bucket_span": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "butterfly_percentage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "calendar_percentage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "gridSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "passed",
+        "sas",
+        "ndm",
+        "ndm_mean",
+        "butterfly_fraction",
+        "calendar_fraction",
+        "calendar_depth_max",
+        "vertical_fraction",
+        "bound_fraction",
+        "violation_count",
+        "native_violation_counts",
+        "interpolation_induced_violation_counts",
+        "quoted_coverage",
+        "native_coverage",
+        "strike_count",
+        "maturity_count",
+        "tolerance"
+      ],
+      "properties": {
+        "passed": {
+          "type": "boolean"
+        },
+        "sas": {
+          "type": "number"
+        },
+        "ndm": {
+          "type": "number"
+        },
+        "ndm_mean": {
+          "type": "number"
+        },
+        "butterfly_fraction": {
+          "type": "number"
+        },
+        "calendar_fraction": {
+          "type": "number"
+        },
+        "calendar_depth_max": {
+          "type": "number"
+        },
+        "vertical_fraction": {
+          "type": "number"
+        },
+        "bound_fraction": {
+          "type": "number"
+        },
+        "violation_count": {
+          "type": "integer"
+        },
+        "native_violation_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "interpolation_induced_violation_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "quoted_coverage": {
+          "type": "number"
+        },
+        "native_coverage": {
+          "type": "number"
+        },
+        "strike_count": {
+          "type": "integer"
+        },
+        "maturity_count": {
+          "type": "integer"
+        },
+        "tolerance": {
+          "type": "number"
+        }
+      }
+    },
+    "gridGroupSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sample_count",
+        "passed_count",
+        "sas_max",
+        "sas_mean",
+        "ndm_max",
+        "butterfly_fraction_max",
+        "calendar_fraction_max",
+        "vertical_fraction_max",
+        "bound_fraction_max",
+        "native_coverage_min"
+      ],
+      "properties": {
+        "sample_count": {
+          "type": "integer"
+        },
+        "passed_count": {
+          "type": "integer"
+        },
+        "sas_max": {
+          "type": "number"
+        },
+        "sas_mean": {
+          "type": "number"
+        },
+        "ndm_max": {
+          "type": "number"
+        },
+        "butterfly_fraction_max": {
+          "type": "number"
+        },
+        "calendar_fraction_max": {
+          "type": "number"
+        },
+        "vertical_fraction_max": {
+          "type": "number"
+        },
+        "bound_fraction_max": {
+          "type": "number"
+        },
+        "native_coverage_min": {
+          "type": "number"
+        }
+      }
+    },
+    "regionErrors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "complement_name",
+        "descriptor",
+        "inside",
+        "outside"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complement_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "descriptor": {
+          "$ref": "#/$defs/box"
+        },
+        "inside": {
+          "$ref": "#/$defs/errorSums"
+        },
+        "outside": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/errorSums"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "regionSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "complement_name",
+        "descriptor",
+        "inside",
+        "outside"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "complement_name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "descriptor": {
+          "$ref": "#/$defs/box"
+        },
+        "inside": {
+          "$ref": "#/$defs/errorSumsWithDerived"
+        },
+        "outside": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/errorSumsWithDerived"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "fit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall",
+        "regions"
+      ],
+      "properties": {
+        "overall": {
+          "$ref": "#/$defs/errorSums"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/regionErrors"
+          }
+        }
+      }
+    },
+    "fitWithDerived": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overall",
+        "regions"
+      ],
+      "properties": {
+        "overall": {
+          "$ref": "#/$defs/errorSumsWithDerived"
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/regionSummary"
+          }
+        }
+      }
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "split",
+        "sample_id",
+        "fit",
+        "spread",
+        "ragged",
+        "grid",
+        "quality_status"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sample_id": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "fit": {
+          "$ref": "#/$defs/fit"
+        },
+        "spread": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/spreadSums"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ragged": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/raggedSums"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "grid": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/gridSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality_status": {
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "split",
+        "sample_count",
+        "fit",
+        "spread",
+        "ragged",
+        "ragged_butterfly_sample_mean",
+        "ragged_calendar_sample_mean",
+        "quality_status",
+        "grid"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "split": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fit": {
+          "$ref": "#/$defs/fitWithDerived"
+        },
+        "spread": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/spreadSumsWithDerived"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ragged": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/raggedSumsWithDerived"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ragged_butterfly_sample_mean": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "ragged_calendar_sample_mean": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "quality_status": {
+          "enum": [
+            "complete",
+            "partial"
+          ]
+        },
+        "grid": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/gridGroupSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "regions",
+        "ragged",
+        "metadata"
+      ],
+      "properties": {
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/box"
+          }
+        },
+        "ragged": {
+          "$ref": "#/$defs/raggedConfig"
+        },
+        "metadata": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}

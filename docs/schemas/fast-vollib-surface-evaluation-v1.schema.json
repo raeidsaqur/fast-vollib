@@ -1,0 +1,272 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raeidsaqur.github.io/fast-vollib/schemas/fast-vollib-surface-evaluation-v1.schema.json",
+  "title": "fast-vollib surface-evaluation-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "arbitrage",
+    "coverage",
+    "grid",
+    "implied_volatility",
+    "maturities",
+    "price",
+    "regions",
+    "schema",
+    "verification"
+  ],
+  "properties": {
+    "schema": {
+      "const": "fast-vollib-surface-evaluation-v1"
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coverage",
+        "invalid_count",
+        "invalid_rate",
+        "target_count",
+        "valid_count"
+      ],
+      "properties": {
+        "target_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "valid_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "invalid_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "coverage": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "invalid_rate": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "implied_volatility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mae",
+        "max_absolute_error",
+        "rmse",
+        "vega_weighted_rmse",
+        "weighted_rmse"
+      ],
+      "properties": {
+        "rmse": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mae": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "max_absolute_error": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "weighted_rmse": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "vega_weighted_rmse": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "price": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inside_spread_fraction",
+        "mae",
+        "market_source",
+        "rmse"
+      ],
+      "properties": {
+        "rmse": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "mae": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "inside_spread_fraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "market_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "descriptor",
+          "iv_mae",
+          "iv_rmse",
+          "name",
+          "target_count",
+          "valid_count"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "descriptor": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "target_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "valid_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "iv_rmse": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "iv_mae": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "maturities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "iv_mae",
+          "iv_rmse",
+          "maturity",
+          "target_count",
+          "valid_count"
+        ],
+        "properties": {
+          "maturity": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "target_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "valid_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "iv_rmse": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "iv_mae": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "arbitrage": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "verification": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "empirical_finite_grid",
+        "training_penalty",
+        "mathematical_guarantee",
+        "external_claim_unverified",
+        null
+      ]
+    },
+    "grid": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "n_moneyness",
+        "n_maturities",
+        "native_node_fraction"
+      ],
+      "properties": {
+        "n_moneyness": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "n_maturities": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "native_node_fraction": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
