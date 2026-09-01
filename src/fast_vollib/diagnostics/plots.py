@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
     from ..surface.grid import IVSurface
     from ..surface.report import ArbitrageReport
+    from .quotes import SurfaceQuotes
 
 _MISSING_MPL = (
     "fast_vollib.diagnostics requires matplotlib — install the viz extra: "
@@ -209,6 +210,92 @@ def plot_trust_map(
     ax.set_xlabel("maturity $T$")
     ax.set_ylabel("log-moneyness $k$")
     ax.set_title("Round-trip trust map")
+    return fig
+
+
+def plot_smile_fit(
+    truth: "SurfaceQuotes",
+    pred_iv: Any,
+    *,
+    surface_id: Any = None,
+    maturity: float | None = None,
+    maturity_decimals: int = 6,
+    ax=None,
+) -> "Figure":
+    """Observed quotes against a model's prediction on one smile.
+
+    The scattered-quote counterpart of the grid figures above: it plots the
+    truth as markers and the prediction as a line over the same strikes, so a
+    reader can see *where* on the smile a fit error sits rather than only how
+    large it is.
+
+    Parameters
+    ----------
+    truth:
+        The observed quotes.  Rows with a missing observation are dropped.
+    pred_iv:
+        Predicted implied volatilities aligned row-for-row with ``truth``.
+        Values the evaluator would classify as invalid (non-finite or
+        negative) are omitted from the prediction line rather than drawn as a
+        break in it.
+    surface_id, maturity:
+        Which smile to draw.  Both default to the first one present, and the
+        chosen pair is named in the title.
+    maturity_decimals:
+        Decimal places maturities are rounded to when bucketing into smiles.
+    ax:
+        Optional existing axes to draw on.
+    """
+    from .quotes import SurfaceQuotes  # noqa: F401  (documented parameter type)
+
+    plt = _plt()
+    pred = np.asarray(pred_iv, dtype=np.float64)
+    if pred.shape != (truth.n,):
+        raise ValueError(f"pred_iv must have shape ({truth.n},); got {pred.shape}.")
+
+    labels = truth.surface_ids()
+    if not labels:
+        raise ValueError("Cannot plot a smile from an empty quote set.")
+    label = labels[0] if surface_id is None else surface_id
+    if label not in labels:
+        raise ValueError(f"No surface {label!r} in these quotes; have {labels[:5]}.")
+
+    in_surface = np.asarray(truth.surface_id) == label
+    observed = ~np.isnan(np.asarray(truth.iv, dtype=np.float64))
+    buckets = np.round(np.asarray(truth.T, dtype=np.float64), maturity_decimals)
+    available = np.unique(buckets[in_surface & observed])
+    if available.size == 0:
+        raise ValueError(f"Surface {label!r} carries no observed quotes to plot.")
+    chosen = float(available[0]) if maturity is None else round(float(maturity), maturity_decimals)
+    if not np.any(np.isclose(available, chosen, rtol=0.0, atol=0.0)):
+        raise ValueError(
+            f"No maturity {chosen!r} on surface {label!r}; have {available.tolist()[:5]}."
+        )
+
+    rows = in_surface & observed & (buckets == chosen)
+    strikes = np.asarray(truth.k, dtype=np.float64)[rows]
+    order = np.argsort(strikes, kind="stable")
+    strikes = strikes[order]
+    observed_iv = np.asarray(truth.iv, dtype=np.float64)[rows][order]
+    predicted_iv = pred[rows][order]
+
+    fig, ax = _fig_ax(plt, ax)
+    ax.plot(strikes, observed_iv, "o", label="observed", color="#1f77b4")
+    usable = np.isfinite(predicted_iv) & (predicted_iv >= 0.0)
+    if usable.any():
+        ax.plot(strikes[usable], predicted_iv[usable], "-", label="predicted", color="#d62728")
+    if not usable.all():
+        ax.plot(
+            strikes[~usable],
+            observed_iv[~usable],
+            "x",
+            label="unpredicted",
+            color="#7f7f7f",
+        )
+    ax.set_xlabel("log-moneyness $k$")
+    ax.set_ylabel("implied volatility")
+    ax.set_title(f"Smile fit — surface {label}, T = {chosen:g}")
+    ax.legend(loc="best", frameon=False)
     return fig
 
 

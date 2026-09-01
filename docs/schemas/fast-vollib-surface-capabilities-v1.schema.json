@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raeidsaqur.github.io/fast-vollib/schemas/fast-vollib-surface-capabilities-v1.schema.json",
+  "title": "fast-vollib surface-capabilities-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "algorithms",
+    "library",
+    "library_version",
+    "schema"
+  ],
+  "properties": {
+    "schema": {
+      "const": "fast-vollib-surface-capabilities-v1"
+    },
+    "library": {
+      "const": "fast-vollib"
+    },
+    "library_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "algorithms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "available",
+          "configuration_schema",
+          "display_name",
+          "family",
+          "implementation_version",
+          "optional_dependencies",
+          "output",
+          "public_id",
+          "references",
+          "requires_checkpoint",
+          "requires_training",
+          "summary",
+          "support",
+          "supports_arbitrary_points",
+          "supports_temporal_context",
+          "supports_uncertainty",
+          "unavailable_code",
+          "unavailable_reason"
+        ],
+        "properties": {
+          "public_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "family": {
+            "type": "string",
+            "enum": [
+              "calibrator",
+              "conditional",
+              "forecaster",
+              "generative"
+            ]
+          },
+          "output": {
+            "type": "string",
+            "enum": [
+              "definite",
+              "distribution"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "implementation_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "configuration_schema": {
+            "type": "object"
+          },
+          "support": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "backends",
+              "devices",
+              "dtypes",
+              "gradients"
+            ],
+            "properties": {
+              "backends": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "dtypes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "devices": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "gradients": {
+                "type": "boolean"
+              }
+            }
+          },
+          "requires_training": {
+            "type": "boolean"
+          },
+          "requires_checkpoint": {
+            "type": "boolean"
+          },
+          "optional_dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "supports_arbitrary_points": {
+            "type": "boolean"
+          },
+          "supports_temporal_context": {
+            "type": "boolean"
+          },
+          "supports_uncertainty": {
+            "type": "boolean"
+          },
+          "references": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "unavailable_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "optional_dependency",
+              "backend",
+              "checkpoint",
+              null
+            ]
+          },
+          "unavailable_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

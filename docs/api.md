@@ -466,6 +466,217 @@ to `iv`. `penalty_from_surface(surf)` is the `IVSurface` convenience wrapper.
 
 ---
 
+## Surface models
+
+The model-facing half of `fast_vollib.surface`: the value objects a model
+exchanges, the protocols it satisfies, and the machinery that scores it. See
+[Surface Models](surface_models.md) for the design and worked examples.
+
+```python
+from fast_vollib.surface import (
+    SurfacePoints, SurfaceObservations, SurfacePrediction, SurfaceSamples,
+    SurfaceMarket, SurfaceGridSpec, GridIVSurface,
+    materialize_surface, materialize_samples,
+    evaluate_prediction, SurfaceEvaluation, VerificationLevel,
+    list_algorithms, get_algorithm, build_algorithm, capabilities_document,
+)
+```
+
+| Group | Names |
+|---|---|
+| Coordinates | `SurfacePoints`, `CoordinateConvention`, `points_from_strikes`, `points_from_spot_moneyness`, `points_from_forward_delta` |
+| Data | `SurfaceObservations`, `align_predictions`, `SurfacePrediction`, `SurfaceSamples` |
+| Market and mesh | `SurfaceMarket`, `SurfaceGridSpec` |
+| Protocols | `DefiniteIVSurface`, `SurfaceCalibrator`, `ConditionalSurfaceEstimator`, `SurfaceForecaster`, `SurfaceDistribution`, `GenerativeSurfaceModel`, `ForecastHorizon` |
+| Materialization | `materialize_surface`, `materialize_samples`, `GridIVSurface` |
+| Capabilities | `list_algorithms`, `get_algorithm`, `build_algorithm`, `capabilities_document`, `AlgorithmAvailability`, `SurfaceAlgorithmSpec`, `BackendSupport` |
+| Evaluation | `evaluate_prediction`, `SurfaceEvaluation`, `RegionEvaluation`, `MaturityEvaluation`, `VerificationLevel` |
+| Errors | `SurfaceError`, `SurfaceValidationError`, `SurfaceTypeError`, `SurfaceDomainError`, `SurfaceCalibrationError`, `MissingMarketStateError`, `SurfaceAlgorithmUnavailableError` |
+
+### Value objects
+
+```python
+SurfacePoints(k, T, surface_id=None, point_id=None, convention=CoordinateConvention())
+SurfaceObservations(
+    k, T, iv, surface_id=None, point_id=None,
+    bid=None, ask=None, is_call=None, weight=None, price=None,
+    convention=CoordinateConvention(),
+)
+SurfacePrediction(points, iv, sd=None, quantiles=None, quantile_levels=None, valid=None)
+SurfaceSamples(points, iv, valid=None, rng_policy=None)
+```
+
+All arrays are copied and marked read-only. `SurfacePrediction.valid` defaults to
+`isfinite(iv) & (iv > 0)`; `iv` is never sanitized. `SurfaceObservations` is the
+class `fast_vollib.diagnostics` exports as `SurfaceQuotes`, and carries
+`.points`, `.subset`, `.surfaces()`, `.smiles()`, `.has_spread`, `.to_dataframe()`,
+and the `.from_dataframe()` / `.from_points()` / `.from_strikes()` constructors.
+`SurfaceSamples` carries `.sample(i)`, `.mean_prediction()`, and
+`.median_prediction()`.
+
+### Coordinate adapters
+
+```python
+points_from_strikes(K, T, *, forward, surface_id=None, point_id=None,
+                    maturity="year_fraction", market_source=None)
+points_from_spot_moneyness(m, T, *, forward, spot, ...)
+points_from_forward_delta(delta, T, iv, *, is_call=True, ...)
+```
+
+Each returns `SurfacePoints` in canonical `k = log(K / F(T))` with a
+`CoordinateConvention` recording the source coordinate, maturity convention, and
+`market_source`.
+
+### `SurfaceMarket`
+
+```python
+SurfaceMarket(T, forward, rate=0.0, carry=0.0,
+              interpolation="log_linear", extrapolation="flat", source=None)
+SurfaceMarket.flat(*, forward, rate=0.0, carry=0.0, source=None)
+SurfaceMarket.from_spot(*, spot, T, rate=0.0, carry=0.0, source=None)
+```
+
+Lookups: `forward_at(T)`, `rate_at(T)`, `carry_at(T)`, `discount_at(T)`,
+`strikes_at(k, T)`, `to_dict()`. `interpolation` is `"log_linear"` or `"exact"`;
+`extrapolation` is `"flat"` or `"error"`. Never inferred — a computation needing
+a market and given none raises `MissingMarketStateError`.
+
+### `SurfaceGridSpec`
+
+```python
+SurfaceGridSpec(k, T, market=None, topology="shared_moneyness",
+                native_mask=None, name=None)
+SurfaceGridSpec.uniform(*, k_min, k_max, n_k, T, market=None, name=None)
+SurfaceGridSpec.from_strikes(K, T, *, market, name=None)
+grid.to_points(*, surface_id=None, point_ids=True)   # -> SurfacePoints
+```
+
+`topology` is `"shared_moneyness"` or `"fixed_strike"`. Also `Nk`, `Nt`, `shape`,
+`n_nodes`, `shared_k`, `k2d()`, `T2d()`, `to_dict()`, `require_market(what)`.
+
+### Protocols
+
+```python
+DefiniteIVSurface.evaluate(points, *, market=None) -> SurfacePrediction
+SurfaceCalibrator.fit(observations, *, rng=None) -> DefiniteIVSurface
+ConditionalSurfaceEstimator.condition(context, *, rng=None) -> DefiniteIVSurface
+SurfaceForecaster.forecast(history, horizon, *, rng=None)
+    -> DefiniteIVSurface | SurfaceDistribution
+SurfaceDistribution.sample(points, *, n_samples, rng, market=None) -> SurfaceSamples
+GenerativeSurfaceModel.distribution(context, *, horizon=None) -> SurfaceDistribution
+ForecastHorizon(steps=1, step_years=None)
+```
+
+`runtime_checkable` structural protocols — `isinstance` checks that the member
+exists, not that it behaves.
+
+### Materialization
+
+```python
+materialize_surface(surface, grid, *, market=None, surface_id=None, t_index=None) -> IVSurface
+materialize_samples(samples, grid, *, market=None) -> Iterator[IVSurface]
+GridIVSurface(surface, policy="total_variance", extrapolation="invalid")
+```
+
+`policy` is one of `"total_variance"`, `"implied_volatility"`, `"nearest"`;
+`extrapolation` one of `"invalid"`, `"error"`, `"clamp"`. `GridIVSurface` is a
+`DefiniteIVSurface` and adds `native_mask_for(grid, *, decimals=12)`.
+`IVSurface` deliberately has **no** `evaluate()`.
+
+### Capability registry
+
+```python
+list_algorithms(*, family=None, available_only=False) -> tuple[AlgorithmAvailability, ...]
+get_algorithm(public_id) -> AlgorithmAvailability
+build_algorithm(public_id, config=None)      # config validated against a closed schema
+capabilities_document() -> dict
+```
+
+`family` is one of `"calibrator"`, `"conditional"`, `"forecaster"`,
+`"generative"`; `output` one of `"definite"`, `"distribution"`. Unavailable
+entries carry `unavailable_code` in `"optional_dependency"`, `"backend"`,
+`"checkpoint"`. The document serializes as
+`fast-vollib-surface-capabilities-v1`.
+
+### `evaluate_prediction`
+
+```python
+evaluate_prediction(
+    prediction, observations, *,
+    market=None, require_prices=False,
+    grid=None, materialized=None, verification=None,
+    regions=None, maturity_decimals=6,
+) -> SurfaceEvaluation
+```
+
+`SurfaceEvaluation` carries `target_count` / `valid_count` / `invalid_count`,
+`coverage`, `invalid_rate`, `iv_rmse`, `iv_mae`, `max_absolute_iv_error`,
+`weighted_iv_rmse`, `vega_weighted_iv_rmse`, `price_rmse`, `price_mae`,
+`inside_spread_fraction`, `by_region`, `by_maturity`, `arbitrage`,
+`verification`, `native_node_fraction`, `grid_shape`, `market_source`, plus
+`to_dict()` / `to_json()` under `fast-vollib-surface-evaluation-v1`. Supplying
+`grid` also requires `materialized`. An unavailable number is `None`, never a
+zero.
+
+`VerificationLevel` is `EMPIRICAL_FINITE_GRID`, `TRAINING_PENALTY`,
+`MATHEMATICAL_GUARANTEE`, `EXTERNAL_CLAIM_UNVERIFIED`.
+
+### Fitting algorithms
+
+`fast_vollib.surface.fitting` — every entry consumes `SurfaceObservations` and
+returns a `DefiniteIVSurface`.
+
+| Public id | Constructor |
+|---|---|
+| `flat` | `FlatVolatilityCalibrator(objective="implied_volatility", use_weights=True)` |
+| `svi` | `SVICalibrator(objective="total_variance", butterfly_penalty=0.0, n_starts=3, max_iterations=2000, maturity_interpolation="total_variance_linear")` |
+| `ssvi` | `SSVICalibrator(phi_family="power_law", enforce_no_butterfly=True, n_starts=3, max_iterations=4000)` |
+| `spline` | `SplineSurfaceCalibrator(degree_k=3, degree_t=3, n_interior_knots_k=None, n_interior_knots_t=None, smoothing_k=1e-6, smoothing_t=1e-6, use_weights=True)` |
+| `heston` | `HestonCalibrator(objective="implied_volatility", n_starts=4, max_iterations=800, n_nodes=768, diff_step=1e-4)` |
+| `factor-pca` | `FactorSurfaceCalibrator(basis, policy=None, extrapolation="invalid", use_weights=True)` |
+| `persistence` | `PersistenceForecaster(calibrator=FlatVolatilityCalibrator())` |
+| `state-space` | `StateSpaceForecaster(calibrator=..., transition_variance=1e-4, observation_variance=1e-6, initial_variance=1.0)` |
+| `gaussian-field` | `GaussianFieldSurfaceGenerator(calibrator=..., volatility=0.05, length_scale_k=0.25, length_scale_T=1.0)` |
+
+Also exported: `FlatIVSurface`, `SVISurface`, `SVIParameters`, `SVIJumpWings`,
+`SVISmile`, `SVISliceFit`, `SSVISurface`, `PowerLawPhi`, `HestonLikePhi`,
+`SplineIVSurface`, `SplineSmileCalibrator`, `FactorIVSurface`,
+`SurfaceFactorBasis`, `fit_factor_basis`, `FactorPCARecipe`, `HestonIVSurface`,
+`HestonParameters`, the Kalman primitives (`kalman_filter`, `kalman_predict`,
+`kalman_update`, `kalman_smooth`, `LinearGaussianModel`, `GaussianState`,
+`FilteredPath`), the regularization helpers (`solve_penalized_least_squares`,
+`difference_matrix`, `TikhonovPenalty`, `couple_parameter_sequence`), and
+`fit_each`.
+
+### Generative evaluation
+
+```python
+from fast_vollib.surface.generative import (
+    GaussianFieldSurfaceDistribution, GaussianFieldSurfaceGenerator,
+    evaluate_samples, GenerativeArbitrageReport, wilson_interval,
+)
+
+GaussianFieldSurfaceDistribution(base, volatility=0.05,
+                                 length_scale_k=0.25, length_scale_T=1.0)
+evaluate_samples(
+    source, grid, *, n_samples=None, rng=None, market=None,
+    severity_quantiles=(0.5, 0.9, 0.99), summary_surfaces=True,
+    verification=None, tolerance=None,
+) -> GenerativeArbitrageReport
+```
+
+`source` is a `SurfaceDistribution` (then `n_samples` and `rng` are required) or
+already-drawn `SurfaceSamples`. The report carries `any_violation_probability`
+with its Wilson `any_violation_interval` and `any_violation_stderr`,
+`condition_probability` and `condition_expected_fraction` over
+`("butterfly", "calendar", "vertical", "bound")`, `expected_severity`,
+`severity_quantiles`, `worst_severity`, `valid_sample_fraction`,
+`point_coverage`, `mean_surface_metrics`, `median_surface_metrics`, and
+`verification`; `to_dict()` / `to_json()` render
+`fast-vollib-generative-arbitrage-v1`.
+
+---
+
 ## Compatibility
 
 ### `patch_py_vollib`
@@ -639,3 +850,38 @@ exactly one of `time_grid` and `n_steps`. The engine never rewrites a drift:
 a risk-neutral price needs a process you made risk-neutral. See
 [Simulation](simulation.md) for the conventions, the estimator, and the
 differentiability table.
+
+### Heston
+
+```python
+from fast_vollib.processes import Heston
+from fast_vollib.pricing import (
+    heston_call_price, heston_characteristic_function, heston_price,
+)
+
+Heston(kappa, theta, vol_of_vol, rho, drift=0.0)
+Heston.risk_neutral(*, rate, kappa, theta, vol_of_vol, rho, dividend_yield=0.0)
+Heston.sample(*, initial_state, time_grid, n_paths, rng,
+              antithetic=False, scheme="quadratic_exponential")
+```
+
+Two state variables, `('spot', 'variance')`, so a sample is
+`(n_paths, n_times, 2)`. `scheme` is `"quadratic_exponential"` (Andersen's QE) or
+`"full_truncation_euler"`; **neither is exact**, and the bias shrinks with the
+step size without vanishing at any finite one. `feller_ratio` and
+`satisfies_feller` report the Feller condition; it is never enforced. Heston is
+not served by `MonteCarloEngine`, which prices one-state processes only.
+
+```python
+heston_price(*, forward, strike, maturity, v0, kappa, theta, vol_of_vol, rho,
+             is_call=True, discount=1.0, formulation="lewis", n_nodes=768)
+heston_call_price(...)                      # heston_price with is_call=True
+heston_characteristic_function(u, *, maturity, v0, kappa, theta, vol_of_vol, rho)
+```
+
+Host-side float64 Fourier inversion, Gauss-Legendre on a fixed node set, so two
+runs give bitwise identical prices. `formulation` is `"lewis"` (one regular
+integral) or `"gatheral"` (the two-probability decomposition), kept as an
+independent cross-check. The price carries **absolute**, not relative, accuracy;
+`HestonIVSurface` therefore declines low-vega wings rather than inverting noise.
+See [Surface Models](surface_models.md#heston).

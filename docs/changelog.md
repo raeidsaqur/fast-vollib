@@ -13,6 +13,71 @@ separate changelog entries.
 
 ## [Unreleased]
 
+### Added
+
+- **`fast_vollib.surface` model layer** — the counterpart to the existing
+  arbitrage harness: what a *model* produces, rather than how a produced surface
+  is scored. A model joins the ecosystem by returning a **`DefiniteIVSurface`**
+  (an evaluable map from points to implied volatilities) or a
+  **`SurfaceDistribution`** over them, and everything downstream consumes only
+  those two.
+    - **Coordinates and adapters** — `SurfacePoints` in canonical forward
+      log-moneyness `k = log(K / F(T))` and year-fraction `T`, with
+      `points_from_strikes`, `points_from_spot_moneyness`, and
+      `points_from_forward_delta`. Each records a `CoordinateConvention` naming
+      the source coordinate, maturity convention, and market state consumed, so
+      a conversion stays reproducible.
+    - **Market state** — `SurfaceMarket`, a forward / discount / carry term
+      structure with a declared interpolation policy (`log_linear` or `exact`)
+      and provenance. Never inferred: a computation that needs one and lacks it
+      raises `MissingMarketStateError` rather than assuming `F = 1`.
+    - **Value objects** — `SurfaceObservations` (promoted from
+      `diagnostics.SurfaceQuotes`, which remains an alias), `SurfacePrediction`,
+      `SurfaceSamples`, and `SurfaceGridSpec`. All arrays are owned, read-only
+      copies; predictions accept and flag non-finite or non-positive implied
+      volatilities rather than dropping them.
+    - **Four protocols** — `SurfaceCalibrator`, `ConditionalSurfaceEstimator`,
+      `SurfaceForecaster`, and `GenerativeSurfaceModel`, plus `ForecastHorizon`.
+      Four rather than one hierarchy because training, conditioning,
+      forecasting, and sampling are different lifecycles; no protocol means
+      "train on a corpus".
+    - **Materialization** — `materialize_surface`, `materialize_samples`, and
+      `GridIVSurface`, which reads a grid at off-node points under a named
+      `policy` (`total_variance`, `implied_volatility`, `nearest`) and a named
+      `extrapolation`. `IVSurface` deliberately gains no `evaluate()`.
+    - **Capability registry** — `list_algorithms`, `get_algorithm`,
+      `build_algorithm`, and `capabilities_document`, built once from a fixed
+      list (no `register()`), reporting availability with machine-readable
+      reasons and validating configurations against per-algorithm closed
+      schemas.
+    - **Evaluation** — `evaluate_prediction` and `SurfaceEvaluation`, reporting
+      coverage as part of the error (target, valid, and invalid counts are never
+      collapsed) alongside implied-volatility, vega-weighted, price-space, and
+      spread metrics, split `by_region` and `by_maturity`. An attached arbitrage
+      report always carries a `VerificationLevel`.
+    - **Fitting algorithms** — flat, SVI and SVI-JW, SSVI, penalized splines,
+      PCA factor bases, Tikhonov-regularized least squares, a Kalman
+      state-space forecaster, a persistence baseline, and Heston.
+    - **Generative evaluation** — `fast_vollib.surface.generative` with
+      `GaussianFieldSurfaceDistribution` and `evaluate_samples`, which
+      materializes and checks **every** draw rather than a mean surface, and
+      reports each probability with a Monte Carlo standard error and a Wilson
+      interval.
+- **Heston** — `fast_vollib.processes.Heston` (QE and full-truncation-Euler
+  schemes, neither exact; the Feller condition is reported, never enforced),
+  `fast_vollib.pricing.heston_price` (Fourier inversion in two independent
+  formulations, `lewis` and `gatheral`, on a fixed Gauss-Legendre node set), and
+  `HestonIVSurface` / `HestonCalibrator`. The Fourier price carries absolute
+  rather than relative accuracy, so the surface declines low-vega wings instead
+  of inverting noise.
+- **Schemas** — `docs/schemas/fast-vollib-surface-capabilities-v1.schema.json`,
+  `fast-vollib-surface-evaluation-v1.schema.json`, and
+  `fast-vollib-generative-arbitrage-v1.schema.json`, all closed and
+  self-checking.
+- **Documentation** — a new [Surface Models](surface_models.md) user guide, a
+  pointer to it from the arbitrage-harness page, and API-reference entries for
+  the new public surface and Heston namespaces.
+
 ## [0.2.1] — 2026-08-28
 
 Packaging and citation metadata only. No API, behaviour, or numerical changes.

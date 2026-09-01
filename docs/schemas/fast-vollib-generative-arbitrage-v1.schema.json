@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raeidsaqur.github.io/fast-vollib/schemas/fast-vollib-generative-arbitrage-v1.schema.json",
+  "title": "fast-vollib generative-arbitrage-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "any_violation",
+    "conditions",
+    "samples",
+    "schema",
+    "severity",
+    "summary_surfaces",
+    "verification"
+  ],
+  "properties": {
+    "schema": {
+      "const": "fast-vollib-generative-arbitrage-v1"
+    },
+    "samples": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "n_maturities",
+        "n_moneyness",
+        "n_nodes",
+        "n_samples",
+        "point_coverage",
+        "rng_policy",
+        "valid_sample_fraction"
+      ],
+      "properties": {
+        "n_samples": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "n_nodes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "n_moneyness": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "n_maturities": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rng_policy": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "valid_sample_fraction": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "point_coverage": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      }
+    },
+    "any_violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interval_lower",
+        "interval_upper",
+        "probability",
+        "stderr"
+      ],
+      "properties": {
+        "probability": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "stderr": {
+          "type": "number",
+          "minimum": 0.0
+        },
+        "interval_lower": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "interval_upper": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        }
+      }
+    },
+    "severity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expected",
+        "expected_condition_violation_fraction",
+        "quantiles",
+        "worst"
+      ],
+      "properties": {
+        "expected": {
+          "type": "number",
+          "minimum": 0.0
+        },
+        "worst": {
+          "type": "number",
+          "minimum": 0.0
+        },
+        "expected_condition_violation_fraction": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "quantiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "level",
+              "value"
+            ],
+            "properties": {
+              "level": {
+                "type": "number",
+                "exclusiveMinimum": 0.0,
+                "exclusiveMaximum": 1.0
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0.0
+              }
+            }
+          }
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "condition",
+          "expected_fraction",
+          "probability"
+        ],
+        "properties": {
+          "condition": {
+            "type": "string",
+            "enum": [
+              "butterfly",
+              "calendar",
+              "vertical",
+              "bound"
+            ]
+          },
+          "probability": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "expected_fraction": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          }
+        }
+      }
+    },
+    "summary_surfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mean",
+        "median"
+      ],
+      "properties": {
+        "mean": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "median": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "verification": {
+      "type": "string",
+      "enum": [
+        "empirical_finite_grid",
+        "training_penalty",
+        "mathematical_guarantee",
+        "external_claim_unverified"
+      ]
+    }
+  }
+}

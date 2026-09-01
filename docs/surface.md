@@ -133,6 +133,16 @@ from fast_vollib.diagnostics import plot_durrleman_g, plot_density
 fig = plot_durrleman_g(surf)         # matplotlib Figure; caller owns save/show
 ```
 
+## Where the surfaces come from
+
+This page is about *scoring* a surface. The layer that produces one — the
+calibrators, forecasters, and generative models, the value objects they exchange,
+and the two output types everything here consumes — is documented in
+[Surface Models](surface_models.md): `DefiniteIVSurface` and `SurfaceDistribution`,
+the canonical coordinates and their adapters, `materialize_surface` and the
+explicit interpolation policy, the algorithm registry, `evaluate_prediction` and
+its `VerificationLevel`, per-draw generative evaluation, and Heston.
+
 ## References
 
 Roper (2010); Gatheral–Jacquier (2014); Davis–Hobson (2007); Cousot (2007);
