@@ -13,9 +13,9 @@ authors:
     email: raeid.saqur@maths.ox.ac.uk
     orcid: "https://orcid.org/0000-0002-6330-5480"
     affiliation: "Mathematical Institute, University of Oxford"
-version: 0.2.1
+version: 0.2.2
 doi: "10.5281/zenodo.22150802"
-date-released: 2026-08-28
+date-released: 2026-09-01
 license: MIT
 repository-code: "https://github.com/raeidsaqur/fast-vollib"
 identifiers:

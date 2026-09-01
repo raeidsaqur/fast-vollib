@@ -44,6 +44,26 @@ API modeled on `py_vollib_vectorized`.
 
 ## What's New?
 
+**v0.2.2 — IV-surface diagnostics and models.** This release extends the
+surface arbitrage harness into an end-to-end public model layer for producing,
+fitting, evaluating, and sampling implied-volatility surfaces:
+
+- **Surface contracts and coordinates** — definite surfaces, distributions,
+  canonical surface points, explicit market state, grid materialization, and
+  reproducible coordinate conversion.
+- **Fitting and forecasting** — flat, SVI/SVI-JW, SSVI, spline, PCA,
+  Tikhonov, Kalman, persistence, and Heston implementations behind a fixed,
+  machine-readable capability registry.
+- **Evaluation and diagnostics** — coverage-aware deterministic metrics,
+  per-draw generative evaluation, static-arbitrage verification, public JSON
+  schemas, and publication-quality diagnostic plots.
+- **Heston support** — QE and full-truncation simulation, two independent
+  Fourier-pricing formulations, an implied-volatility surface, and calibration.
+
+See the [v0.2.2 changelog](https://raeidsaqur.github.io/fast-vollib/changelog/#022-2026-09-01),
+[Surface Models guide](https://raeidsaqur.github.io/fast-vollib/surface_models/),
+and [Diagnostics guide](https://raeidsaqur.github.io/fast-vollib/diagnostics/).
+
 **v0.2.0 — Processes, simulation, and instruments.** This release extends the
 library from pricing kernels to typed contracts and Monte Carlo workflows. It
 is the next stable release after v0.1.8; no v0.1.9 release was cut. Three major

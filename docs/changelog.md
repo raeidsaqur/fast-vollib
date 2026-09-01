@@ -13,6 +13,8 @@ separate changelog entries.
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-09-01
+
 ### Added
 
 - **`fast_vollib.surface` model layer** — the counterpart to the existing
@@ -496,6 +498,8 @@ behaviour across NumPy, PyTorch, and JAX.
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
+[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.8...v0.2.0
 [0.1.8]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.7...v0.1.8
