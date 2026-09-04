@@ -32,6 +32,21 @@
   <a href="https://doi.org/10.5281/zenodo.22150802">
     <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22150802.svg" alt="DOI" />
   </a>
+  <a href="https://arxiv.org/abs/2604.27210">
+    <img src="https://img.shields.io/badge/arXiv-2604.27210-b31b1b.svg" alt="arXiv paper" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="#backend-selection">
+    <img src="https://img.shields.io/badge/Works_with-NumPy_|_PyTorch_|_JAX-blue.svg" alt="Works with NumPy, PyTorch, and JAX" />
+  </a>
+  <a href="https://x.com/RaeidSaqur">
+    <img src="https://img.shields.io/badge/Follow_on_X-%40RaeidSaqur-000000?logo=x" alt="Follow @RaeidSaqur on X" />
+  </a>
+  <a href="https://www.linkedin.com/in/raeidsaqur/">
+    <img src="https://img.shields.io/badge/LinkedIn-Raeid_Saqur-0A66C2?logo=linkedin" alt="Raeid Saqur on LinkedIn" />
+  </a>
 </p>
 
 **fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library
