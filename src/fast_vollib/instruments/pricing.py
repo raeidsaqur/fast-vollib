@@ -422,7 +422,7 @@ def _jackel_backend_module(backend_name: str, *, requested: BackendLiteral) -> A
     if backend_name in _JACKEL_BACKENDS:
         import importlib
 
-        return importlib.import_module(f"..jackel.{backend_name}_backend", __package__)
+        return importlib.import_module(f"..jackel.{backend_name}_backend", __spec__.parent)
 
     available = ", ".join(_JACKEL_BACKENDS)
     detail = (
