@@ -15,11 +15,20 @@ jobs:
   test:
     name: pytest / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    # Pre-release interpreters must not block merges; the lane still runs so
+    # regressions are visible before the final release lands.
+    continue-on-error: ${{ matrix.experimental == true }}
 
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        experimental: [false]
+        include:
+          # Release candidate. uv resolves "3.15" to the newest available
+          # build, so this lane moves to the final release without a change.
+          - python-version: "3.15"
+            experimental: true
 
     steps:
       - uses: actions/checkout@v4
@@ -82,11 +91,16 @@ jobs:
   test-jax:
     name: pytest / JAX backend / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental == true }}
 
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.14"]
+        experimental: [false]
+        include:
+          - python-version: "3.15"
+            experimental: true
 
     steps:
       - uses: actions/checkout@v4

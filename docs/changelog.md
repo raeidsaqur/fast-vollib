@@ -15,6 +15,15 @@ separate changelog entries.
 
 ### Added
 
+- **Python 3.15 support (release candidate)** — validated against CPython
+  3.15.0rc2 and added the `Programming Language :: Python :: 3.15` classifier.
+  The CI matrix gains 3.15 lanes for the default and JAX backend jobs, marked
+  experimental until the final release. On 3.15 the package requires
+  `numpy>=2.5.2` and `scipy>=1.18.1`, and the `jax` extra requires
+  `jax>=0.11.1`. Dependency markers omit PyTorch, numba, RAPIDS, and pyarrow
+  on 3.15. The Linux `cuda` extra still includes JAX CUDA dependencies, but GPU
+  operation is not validated on this interpreter. The locked pandas version
+  builds from source; the `typecheck` extra uses a beartype 0.23 release candidate.
 - **Python 3.14 support** — added the `Programming Language :: Python :: 3.14`
   classifier and extended the CI matrix to cover 3.14, including the PyTorch and
   JAX backend jobs. On 3.14 the package requires `numpy>=2.3` and the `numba`
@@ -40,6 +49,9 @@ separate changelog entries.
 
 ### Fixed
 
+- **Deprecated module attribute** — the Jäckel backend loader resolved its
+  package through `__package__`, which Python 3.15 deprecates; it now uses
+  `__spec__.parent`.
 - **numpy 2.4+ compatibility** — the trapezoid-rule fallback in
   `fast_vollib.surface.metrics` and `fast_vollib.diagnostics.plots` referenced
   `np.trapz`, which numpy 2.4 removed; the fallback now resolves the function at

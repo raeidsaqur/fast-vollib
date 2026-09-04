@@ -2,8 +2,15 @@
 
 ## Requirements
 
-- Python **3.10** or later
+- Python **3.10** or later (3.15 is supported at the release-candidate stage)
 - NumPy ≥ 1.26, SciPy ≥ 1.13 (pulled in automatically)
+
+> **Python 3.15:** support currently covers the `numpy` and CPU `jax` backends.
+> Dependency markers omit PyTorch, numba, RAPIDS, and pyarrow on this interpreter;
+> requesting an extra does not make those backends available. The `cuda` extra
+> still requests JAX CUDA packages on Linux, but that GPU configuration has not
+> been validated on 3.15. The locked pandas version builds from source and needs
+> a C compiler. The `typecheck` extra uses a beartype 0.23 release candidate.
 
 ---
 
