@@ -15,6 +15,11 @@ separate changelog entries.
 
 ### Added
 
+- **Python 3.14 support** — added the `Programming Language :: Python :: 3.14`
+  classifier and extended the CI matrix to cover 3.14, including the PyTorch and
+  JAX backend jobs. On 3.14 the package requires `numpy>=2.3` and the `numba`
+  extra requires `numba>=0.63`, the first releases with CPython 3.14 wheels;
+  the floors on 3.10–3.13 are unchanged.
 - Fixed-income contracts: `Cashflow`, `FixedIncomeSecurity`, `ZeroCouponBond`,
   and `FixedRateBond`, with explicit payment times and accrual fractions.
 - Cashflow present values against structural discount curves, including flat,
@@ -35,6 +40,13 @@ separate changelog entries.
 
 ### Fixed
 
+- **numpy 2.4+ compatibility** — the trapezoid-rule fallback in
+  `fast_vollib.surface.metrics` and `fast_vollib.diagnostics.plots` referenced
+  `np.trapz`, which numpy 2.4 removed; the fallback now resolves the function at
+  import time.
+- **Heston put-call parity test** — the parity assertion was exact to the bit
+  and failed on aarch64, where the priced values differ from x86_64 in the last
+  ulp; it now allows a few ulps of rounding.
 - Stabilize the Heston characteristic function at small positive vol-of-vol
   without substituting deterministic variance; retain ordinary-parameter
   arithmetic and handle the removable martingale-argument singularity.

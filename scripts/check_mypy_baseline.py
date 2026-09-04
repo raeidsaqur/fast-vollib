@@ -14,10 +14,11 @@ fail.
     uv run python scripts/check_mypy_baseline.py --update  # refresh after fixing
 
 The baseline is environment-stable: it is identical under Python 3.10 with no
-optional backends and under 3.13 with torch and jax installed, because
+optional backends and under 3.14 with torch and jax installed, because
 ``[tool.mypy] python_version`` pins the analysis version and
 ``--ignore-missing-imports`` makes an absent backend indistinguishable from a
-present one here.
+present one here. Newer dependency stubs may resolve baseline diagnostics; those
+are reported as progress, never as failures.
 """
 
 from __future__ import annotations
