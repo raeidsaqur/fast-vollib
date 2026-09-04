@@ -193,7 +193,9 @@ def test_put_call_parity_holds_exactly(parameters) -> None:
             discount=discount,
             **parameters,
         )
-        np.testing.assert_allclose(call - put, discount * (FORWARD - STRIKES), rtol=0, atol=0)
+        # Exact up to rounding: c - (c - x) == x is not a floating-point identity,
+        # and the priced values differ in the last ulp between architectures.
+        np.testing.assert_array_max_ulp(call - put, discount * (FORWARD - STRIKES), maxulp=4)
 
 
 @pytest.mark.parametrize("parameters", [MODERATE, HEAVY, FAST], ids=["moderate", "heavy", "fast"])
