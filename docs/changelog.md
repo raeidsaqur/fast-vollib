@@ -13,6 +13,12 @@ separate changelog entries.
 
 ## [Unreleased]
 
+No unreleased changes.
+
+---
+
+## [0.2.3] — 2026-09-05
+
 ### Added
 
 - **Python 3.15 support (release candidate)** — validated against CPython
@@ -64,6 +70,8 @@ separate changelog entries.
   arithmetic and handle the removable martingale-argument singularity.
 - Keep jump counts and jump sizes on independent JAX random keys.
 - Validate custom Monte Carlo discount factors before multiplying payoffs.
+- Normalize scalar Heston transform returns explicitly while preserving array
+  shapes, and strengthen strict and portable reference-comparison checks.
 
 ### Compatibility
 
@@ -74,8 +82,6 @@ separate changelog entries.
   same-environment seeded reproducibility is checked separately.
 
 ---
-
-
 
 ## [0.2.2] — 2026-09-01
 
@@ -562,7 +568,8 @@ behaviour across NumPy, PyTorch, and JAX.
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
-[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/raeidsaqur/fast-vollib/compare/v0.1.8...v0.2.0

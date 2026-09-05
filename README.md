@@ -59,6 +59,24 @@ API modeled on `py_vollib_vectorized`.
 
 ## What's New?
 
+**v0.2.3 — Fixed-income models and Python support.** This release adds
+fixed-income contracts and stochastic-rate workflows alongside the existing
+equity APIs:
+
+- **Bonds and discount curves** — zero-coupon and fixed-rate bonds, explicit
+  cashflows, and present values using flat, CIR, or interpolated discount curves.
+- **CIR, Bates, and BCC97** — short-rate simulation, composable stochastic
+  variance and lognormal jumps, and European-option Fourier pricing.
+- **Explicit Monte Carlo discounting** — initial state and constant-rate or
+  pathwise short-rate discounting without changing the existing defaults.
+- **Python compatibility** — Python 3.14 support and experimental Python 3.15
+  release-candidate support for the default and JAX backends. PyTorch, numba,
+  RAPIDS, and pyarrow are not included on 3.15; GPU operation is not validated.
+
+See the [v0.2.3 changelog](https://raeidsaqur.github.io/fast-vollib/changelog/#023-2026-09-05),
+[Fixed Income guide](https://raeidsaqur.github.io/fast-vollib/fixed_income/),
+and [Simulation guide](https://raeidsaqur.github.io/fast-vollib/simulation/).
+
 **v0.2.2 — IV-surface diagnostics and models.** This release extends the
 surface arbitrage harness into an end-to-end public model layer for producing,
 fitting, evaluating, and sampling implied-volatility surfaces:
@@ -355,10 +373,15 @@ uv run mkdocs serve         # local docs server → http://localhost:8000
 
 ### Release model
 
-- Tagged releases like `v0.2.0` publish stable builds to PyPI.
+- Pushing a version tag like `v0.2.3` triggers the stable PyPI build.
 - Pushes to `main` publish development snapshots to TestPyPI.
 - The package version is derived from Git tags with `hatch-vcs`, so version
   strings are no longer maintained manually in source files for each release.
+- A GitHub Release adds release notes and downloads to the same existing tag;
+  publishing that release page is separate from the PyPI workflow.
+
+See the [release procedure](CONTRIBUTING.md#release-procedure) for keeping the
+tag, package version, and GitHub Release aligned.
 
 ---
 

@@ -63,6 +63,44 @@ uv run python scripts/check_mypy_baseline.py
 
 ---
 
+## Release procedure
+
+The Git tag identifies the source commit; the GitHub Release supplies the
+announcement and downloads for that tag. The `Release` workflow publishes to
+PyPI on a pushed `v*` tag, not on publication of a GitHub Release. Hatch VCS
+derives the distribution version from the tag: `v0.2.3` produces `0.2.3`.
+
+1. Prepare `release/vX.Y.Z` from up-to-date `main`. Promote the changelog's
+   unreleased changes to the planned version and date, update `CITATION.cff`
+   and the README release summary, and prepare public release notes. Preserve
+   the concept DOI; do not invent a version-specific DOI or edit the generated
+   `src/fast_vollib/_version.py`.
+2. Run lint, formatting, the type-check baseline, tests, schema and reference
+   checks, a strict documentation build, and distribution metadata checks.
+   The untagged branch still has a VCS-derived development version.
+3. Submit the release branch for review and merge it into `main`. If publication
+   moves to another day, update the release date and affected documentation
+   links before merging. Verify CI on the intended merged commit.
+4. Create an annotated `vX.Y.Z` tag on that verified commit in `main`, then push
+   **only that tag**. Check that the `Release` workflow builds the intended
+   version and successfully publishes both distributions to PyPI. A `main`
+   push publishes to TestPyPI separately; that is not the stable release.
+5. Create the GitHub Release using the **existing** `vX.Y.Z` tag, a matching
+   version in the title, and the reviewed notes. With the GitHub CLI, use
+   `gh release create vX.Y.Z --verify-tag --title "vX.Y.Z — <summary>"`
+   together with `--notes-file <notes-file>`. The `--verify-tag` option prevents
+   accidental creation of a tag at a different commit. If attaching wheels or
+   sdists, use the distributions from the successful tag workflow, not a
+   separate local rebuild.
+
+Do not move a published tag to fix a release, and do not use the production
+workflow's manual dispatch on an untagged branch. Keep the version, tag target,
+and published distributions consistent; fixes after publication need a new
+version. Creating the GitHub Release after PyPI succeeds makes the announcement
+accurate, but the two publications are not an atomic operation.
+
+---
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
