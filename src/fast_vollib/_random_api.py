@@ -37,7 +37,7 @@ from typing import Any, Mapping
 
 import numpy as np
 
-from ._simulation_errors import SimulationValidationError
+from ._simulation_errors import SimulationValidationError, UnsupportedProcessError
 
 __all__ = [
     "NAMESPACES",
@@ -48,6 +48,9 @@ __all__ = [
     "resolve_device",
     "resolve_dtype",
     "resolve_namespace",
+    "gamma",
+    "poisson",
+    "split",
     "standard_normal",
 ]
 
@@ -501,3 +504,228 @@ def _concatenate_with_negative(stream: RandomStream, drawn: Any) -> Any:
 
         return jnp.concatenate((drawn, -drawn), axis=0)
     return np.concatenate((drawn, -drawn), axis=0)
+
+
+# --- non-Gaussian draws --------------------------------------------------------
+#
+# Two more laws, added for the exact CIR transition, which needs a Poisson count
+# and a gamma variate where every other sampler in the library needs only
+# normals.  They follow ``standard_normal``'s contract in every respect but one,
+# and the exception is mathematical rather than stylistic.
+#
+# ``standard_normal`` implements antithetic sampling by *mirroring*: the second
+# half is the exact negative of the first.  A negated Poisson count is not a
+# Poisson count and a negated gamma variate is not a gamma variate, so mirroring
+# is unavailable here and the second half is a *duplicate* of the first instead.
+#
+# That is not a weaker version of the same idea; it is what makes the idea work
+# for a mixed draw.  In the exact transition the non-central chi-square is a
+# normal plus an independent chi-square, and a pair of paths that shares its
+# chi-square component while mirroring its normal is a genuine antithetic pair:
+# the shared part cancels out of the difference exactly, leaving the mirrored
+# part to do the variance reduction.  Duplicating rather than redrawing is what
+# makes the sharing exact.
+
+
+def _antithetic_half(shape: tuple[int, ...]) -> tuple[int, ...]:
+    if not shape or shape[0] % 2 != 0:
+        raise SimulationValidationError(
+            f"Antithetic sampling needs an even number of paths; got shape {shape}."
+        )
+    return (shape[0] // 2,) + tuple(shape[1:])
+
+
+def _leading_half(parameter: Any, full_leading: int) -> Any:
+    """A per-path parameter restricted to the paths that are actually drawn.
+
+    Under antithetic sampling only the first half of the rows is drawn, so a
+    parameter carrying one value per path has to be cut down to match.  Cutting
+    it is lossless: every draw taken before this one was either mirrored or
+    duplicated, so the two halves of any per-path quantity are equal by
+    construction and the first half is the whole of the information.
+
+    A scalar, or an array whose leading axis is not the path axis, is left
+    alone -- it broadcasts against either width.
+    """
+    shape = getattr(parameter, "shape", None)
+    if shape and shape[0] == full_leading:
+        return parameter[: full_leading // 2]
+    return parameter
+
+
+def _duplicate(stream: "RandomStream", drawn: Any) -> Any:
+    """The antithetic counterpart of ``_concatenate_with_negative``."""
+    if stream.namespace == "torch":
+        import torch
+
+        return torch.cat((drawn, drawn), dim=0)
+    if stream.namespace == "jax":
+        import jax.numpy as jnp
+
+        return jnp.concatenate((drawn, drawn), axis=0)
+    return np.concatenate((drawn, drawn), axis=0)
+
+
+def poisson(
+    stream: RandomStream, shape: tuple[int, ...], rate: Any, *, antithetic: bool = False
+) -> Any:
+    """Poisson counts of ``shape`` at ``rate``, as floating point.
+
+    The values are whole numbers and the dtype is the stream's floating dtype,
+    not an integer one.  They are counts that go on to be multiplied by
+    non-integers -- a chi-square degrees-of-freedom in the exact CIR transition
+    -- and the three backends disagree about what integer division and integer
+    promotion mean, while they agree exactly about float64.
+
+    Parameters
+    ----------
+    rate : array-like
+        The mean, broadcast against ``shape``.  A per-path rate is ordinary:
+        in a short-rate transition it depends on the state the step starts
+        from.
+    antithetic : bool, default False
+        Duplicate the first half of the rows into the second, per the module
+        note above.  The leading axis must be even.
+
+    Raises
+    ------
+    SimulationValidationError
+        If ``antithetic`` is requested with an odd leading axis.
+    """
+    if antithetic:
+        half = _antithetic_half(tuple(shape))
+        drawn = _draw_poisson(stream, half, _leading_half(rate, shape[0]))
+        return _duplicate(stream, drawn)
+    return _draw_poisson(stream, tuple(shape), rate)
+
+
+def gamma(
+    stream: RandomStream, shape: tuple[int, ...], alpha: Any, *, antithetic: bool = False
+) -> Any:
+    """Gamma variates of ``shape`` with shape parameter ``alpha`` and unit scale.
+
+    Unit scale, because every scale this library needs is applied afterwards by
+    a multiplication the caller can see.  A chi-square with ``k`` degrees of
+    freedom is ``2 * gamma(k / 2)``.
+
+    Parameters
+    ----------
+    alpha : array-like
+        The shape parameter, strictly positive, broadcast against ``shape``.
+    antithetic : bool, default False
+        Duplicate the first half of the rows into the second.
+
+    Raises
+    ------
+    UnsupportedProcessError
+        On torch, which has no public generator-bound gamma sampler.  Raised
+        rather than silently drawing from the global torch stream, which would
+        make a seeded run irreproducible.
+    SimulationValidationError
+        If ``antithetic`` is requested with an odd leading axis.
+    """
+    if stream.namespace == "torch":
+        raise UnsupportedProcessError(
+            "torch has no public generator-bound gamma sampler, so a gamma draw here "
+            "could not honour the generator it was given: torch.distributions.Gamma.sample "
+            "takes no generator and reads the global torch stream, which would make a "
+            "seeded simulation silently irreproducible. Draw on NumPy or JAX, or use a "
+            "scheme that needs only normals ('quadratic_exponential', "
+            "'full_truncation_euler')."
+        )
+    if antithetic:
+        half = _antithetic_half(tuple(shape))
+        drawn = _draw_gamma(stream, half, _leading_half(alpha, shape[0]))
+        return _duplicate(stream, drawn)
+    return _draw_gamma(stream, tuple(shape), alpha)
+
+
+def _float_dtype(stream: RandomStream) -> Any:
+    """The stream's floating dtype, or the backend's default when it has none."""
+    if stream.dtype is not None:
+        return stream.dtype
+    if stream.namespace == "torch":
+        import torch
+
+        return torch.get_default_dtype()
+    if stream.namespace == "jax":
+        import jax.numpy as jnp
+
+        return jnp.zeros(()).dtype
+    return np.float64
+
+
+def _draw_poisson(stream: RandomStream, shape: tuple[int, ...], rate: Any) -> Any:
+    dtype = _float_dtype(stream)
+    if stream.namespace == "numpy":
+        return stream.handle.poisson(lam=rate, size=shape).astype(dtype, copy=False)
+    if stream.namespace == "torch":
+        import torch
+
+        device = stream.device if stream.device is not None else stream.handle.device
+        rates = torch.as_tensor(rate, dtype=dtype, device=device)
+        # ``torch.poisson`` takes the rates rather than a size, so the shape has
+        # to be materialized. ``expand`` would share storage and the sampler
+        # writes an output of the same shape, so it is broadcast into a real
+        # tensor first.
+        rates = torch.broadcast_to(rates, shape).contiguous()
+        return torch.poisson(rates, generator=stream.handle)
+    import jax
+    import jax.numpy as jnp
+
+    counts = jax.random.poisson(stream.handle, jnp.asarray(rate), shape=shape)
+    return counts.astype(dtype)
+
+
+def _draw_gamma(stream: RandomStream, shape: tuple[int, ...], alpha: Any) -> Any:
+    dtype = _float_dtype(stream)
+    if stream.namespace == "numpy":
+        native = dtype if dtype in (np.float32, np.float64) else None
+        if native is None:
+            return stream.handle.standard_gamma(shape=alpha, size=shape).astype(dtype, copy=False)
+        return stream.handle.standard_gamma(shape=alpha, size=shape, dtype=native)
+    import jax
+    import jax.numpy as jnp
+
+    return jax.random.gamma(stream.handle, jnp.asarray(alpha), shape=shape, dtype=dtype)
+
+
+def split(stream: RandomStream, n: int) -> tuple[RandomStream, ...]:
+    """``n`` streams that draw independently of one another.
+
+    The three backends need this for opposite reasons, which is why it is one
+    function rather than a JAX special case at every call site.
+
+    NumPy and torch generators are *stateful*: two draws from one generator are
+    already independent, so the same handle is handed back ``n`` times and
+    nothing is consumed here.  A JAX key is not: drawing twice from one key
+    reproduces the draw, so real child keys are derived with
+    ``jax.random.split``.  The parent must not be drawn from afterwards -- the
+    children are derived from the parent's own output, so a draw from the
+    parent would reuse the randomness the children were built from.
+
+    A sampler that needs more than one block of draws therefore calls this once
+    and uses one child per block.  A sampler that needs exactly one block does
+    not call it at all, and uses the caller's stream directly.
+
+    Raises
+    ------
+    SimulationValidationError
+        If ``n`` is not a positive integer.
+    """
+    if isinstance(n, bool) or not isinstance(n, (int, np.integer)) or int(n) < 1:
+        raise SimulationValidationError(f"split needs a positive integer count; got {n!r}.")
+    n = int(n)
+    if stream.namespace != "jax":
+        return tuple(stream for _ in range(n))
+    import jax
+
+    keys = jax.random.split(stream.handle, n)
+    # Indexing the batch is what turns it back into single keys: a typed batch
+    # has shape ``(n,)`` and each element has scalar shape, while a legacy
+    # uint32 batch has shape ``(n, 2)`` and each element has shape ``(2,)``.
+    # Both are what ``_is_jax_key`` accepts and what ``jax.random`` will draw
+    # from; the batch itself is neither.
+    return tuple(
+        RandomStream("jax", keys[index], stream.device, stream.dtype) for index in range(n)
+    )

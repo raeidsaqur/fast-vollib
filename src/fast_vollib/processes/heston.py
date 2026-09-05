@@ -69,6 +69,10 @@ from .._random_api import (
     standard_normal,
 )
 from .._simulation_errors import SimulationValidationError
+from ._stochastic_volatility import (
+    full_truncation_euler_step,
+    quadratic_exponential_step_with_spot,
+)
 from .gbm import _validate_parameter
 
 __all__ = ["SCHEMES", "Heston"]
@@ -80,9 +84,6 @@ SCHEMES = ("quadratic_exponential", "full_truncation_euler")
 #: The QE switching threshold.  Andersen's analysis puts any value in [1, 2]
 #: within the scheme's accuracy; 1.5 is the value the scheme is usually reported
 #: with, and it is exposed so a caller can see it rather than discover it.
-PSI_CRITICAL = 1.5
-
-_EPS = 1e-300
 
 
 @dataclass(frozen=True, slots=True)
@@ -325,99 +326,36 @@ def _concrete(value: Any) -> float | None:
 
 
 def _qe_step(process: Heston, xp: Any, log_spot: Any, v: Any, dt: Any, normals: Any) -> Any:
-    """One Andersen quadratic-exponential step.
-
-    The variance transition matches the first two moments of the exact
-    non-central chi-squared law.  Where that law is close to a squared normal
-    (``psi <= PSI_CRITICAL``) it is approximated by ``a(b + Z)^2``; where it is
-    close to degenerate at zero it is approximated by an exponential with an atom
-    at zero, sampled by inverting the distribution function at ``U = Phi(Z)``.
-
-    The log-spot uses the martingale-corrected representation obtained by
-    substituting ``sqrt(v) dW^2 = (dv - kappa(theta - v)dt) / xi``, which removes
-    the leading correlation bias that a naive Euler step leaves behind.
-    """
-    kappa = xp.asarray(process.kappa, like=v)
-    theta = xp.asarray(process.theta, like=v)
-    xi = xp.asarray(process.vol_of_vol, like=v)
-    rho = xp.asarray(process.rho, like=v)
-    drift = xp.asarray(process.drift, like=v)
-    dt = xp.asarray(dt, like=v)
-    z_variance = normals[:, 0]
-    z_spot = normals[:, 1]
-
-    decay = xp.exp(-kappa * dt)
-    m = theta + (v - theta) * decay
-    s2 = v * xi * xi * decay * (1.0 - decay) / kappa + theta * xi * xi * (1.0 - decay) ** 2 / (
-        2.0 * kappa
+    """Heston's own parameters, into the shared quadratic-exponential step."""
+    return quadratic_exponential_step_with_spot(
+        xp,
+        log_spot,
+        v,
+        kappa=xp.asarray(process.kappa, like=v),
+        theta=xp.asarray(process.theta, like=v),
+        xi=xp.asarray(process.vol_of_vol, like=v),
+        rho=xp.asarray(process.rho, like=v),
+        drift=xp.asarray(process.drift, like=v),
+        dt=xp.asarray(dt, like=v),
+        z_variance=normals[:, 0],
+        z_spot=normals[:, 1],
     )
-    m_safe = xp.maximum(m, xp.asarray(_EPS, like=m))
-    psi = s2 / (m_safe * m_safe)
-
-    # Quadratic branch: v' = a (b + Z)^2.
-    psi_safe = xp.maximum(psi, xp.asarray(1e-12, like=psi))
-    inverse = 2.0 / psi_safe
-    radicand = xp.maximum(inverse * (inverse - 1.0), xp.asarray(0.0, like=psi))
-    b2 = inverse - 1.0 + xp.sqrt(radicand)
-    b = xp.sqrt(xp.maximum(b2, xp.asarray(0.0, like=b2)))
-    a = m_safe / (1.0 + b2)
-    quadratic = a * (b + z_variance) ** 2
-
-    # Exponential branch: an atom at zero of mass p, then an exponential tail.
-    p = (psi_safe - 1.0) / (psi_safe + 1.0)
-    p = xp.clip(p, 0.0, 1.0 - 1e-12)
-    beta = (1.0 - p) / m_safe
-    u = xp.normcdf(z_variance)
-    tail = (
-        xp.log(
-            xp.maximum(
-                (1.0 - p) / xp.maximum(1.0 - u, xp.asarray(_EPS, like=u)), xp.asarray(1.0, like=u)
-            )
-        )
-        / beta
-    )
-    exponential = xp.where(u <= p, xp.asarray(0.0, like=u), tail)
-
-    v_next = xp.where(psi <= PSI_CRITICAL, quadratic, exponential)
-    v_next = xp.maximum(v_next, xp.asarray(0.0, like=v_next))
-
-    gamma = 0.5
-    k0 = -rho * kappa * theta * dt / xi
-    k1 = gamma * dt * (kappa * rho / xi - 0.5) - rho / xi
-    k2 = gamma * dt * (kappa * rho / xi - 0.5) + rho / xi
-    k3 = gamma * dt * (1.0 - rho * rho)
-    k4 = k3
-    variance_term = xp.maximum(k3 * v + k4 * v_next, xp.asarray(0.0, like=v))
-    log_next = log_spot + drift * dt + k0 + k1 * v + k2 * v_next + xp.sqrt(variance_term) * z_spot
-    return log_next, v_next
 
 
 def _full_truncation_euler_step(
     process: Heston, xp: Any, log_spot: Any, v: Any, dt: Any, normals: Any
 ) -> Any:
-    """One full-truncation Euler step.
-
-    The variance is truncated at zero wherever it enters the coefficients, but
-    the state itself is allowed to go negative and is truncated again on the next
-    step.  Of the naive fixes for the square-root diffusion this is the one with
-    the smallest bias, and it is here as a transparent comparison for the QE
-    scheme rather than as a recommendation.
-    """
-    kappa = xp.asarray(process.kappa, like=v)
-    theta = xp.asarray(process.theta, like=v)
-    xi = xp.asarray(process.vol_of_vol, like=v)
-    rho = xp.asarray(process.rho, like=v)
-    drift = xp.asarray(process.drift, like=v)
-    dt = xp.asarray(dt, like=v)
-    z_variance = normals[:, 0]
-    z_orthogonal = normals[:, 1]
-
-    v_plus = xp.maximum(v, xp.asarray(0.0, like=v))
-    root = xp.sqrt(v_plus * dt)
-    v_next = v + kappa * (theta - v_plus) * dt + xi * root * z_variance
-    z_spot = (
-        rho * z_variance
-        + xp.sqrt(xp.maximum(1.0 - rho * rho, xp.asarray(0.0, like=rho))) * z_orthogonal
+    """Heston's own parameters, into the shared full-truncation Euler step."""
+    return full_truncation_euler_step(
+        xp,
+        log_spot,
+        v,
+        kappa=xp.asarray(process.kappa, like=v),
+        theta=xp.asarray(process.theta, like=v),
+        xi=xp.asarray(process.vol_of_vol, like=v),
+        rho=xp.asarray(process.rho, like=v),
+        drift=xp.asarray(process.drift, like=v),
+        dt=xp.asarray(dt, like=v),
+        z_variance=normals[:, 0],
+        z_orthogonal=normals[:, 1],
     )
-    log_next = log_spot + (drift - 0.5 * v_plus) * dt + root * z_spot
-    return log_next, v_next

@@ -65,8 +65,8 @@ def render_table() -> str:
         BEGIN,
         "",
         "| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | "
-        "Implied volatility | Monte Carlo |",
-        "|---|---|---|---|---|---|---|---|",
+        "Implied volatility | Monte Carlo | Cashflows | Present value |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for info in instrument_types().values():
         caps = info.capabilities
@@ -79,7 +79,9 @@ def render_table() -> str:
             f"| {_models(caps.price)} "
             f"| {_models(caps.greeks)} "
             f"| {_solvers(caps.implied_volatility)} "
-            f"| {'yes' if caps.simulate else 'no'} |"
+            f"| {'yes' if caps.simulate else 'no'} "
+            f"| {'yes' if caps.cashflows else 'no'} "
+            f"| {'yes' if caps.present_value else 'no'} |"
         )
     lines.extend(
         [
@@ -91,7 +93,11 @@ def render_table() -> str:
             "answer: an individual contract is additionally eligible only with "
             "a strictly positive maturity, which "
             "`MonteCarloEngine.supports(instrument)` applies and is "
-            "authoritative for an actual request.",
+            "authoritative for an actual request. **Cashflows** and **present "
+            "value** are the fixed-income route: a security with dated payments "
+            "has no payoff and no option-pricing model, so `cashflows()` reads "
+            "its schedule and `fast_vollib.pricing.present_value()` values it "
+            "against a `DiscountCurve`.",
             "",
             END,
         ]
@@ -110,6 +116,11 @@ def splice(document: str, table: str) -> str:
 def main() -> int:
     document = DOC_PATH.read_text(encoding="utf-8")
     updated = splice(document, render_table())
+    if "--check" in sys.argv[1:]:
+        if updated != document:
+            sys.stderr.write("The instrument capability table is stale.\n")
+            return 1
+        return 0
     if updated == document:
         sys.stdout.write(f"{DOC_PATH} is up to date.\n")
         return 0

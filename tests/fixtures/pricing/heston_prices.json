@@ -1,0 +1,1394 @@
+{
+  "description": "Library-generated numerical regression reference; not an independent oracle.",
+  "generator": "scripts/generate_heston_reference_fixtures.py",
+  "encoding": "float64 as float.hex(); portable checks use scripts/reference_fixtures.py.",
+  "forward": 100.0,
+  "strikes": [
+    60.0,
+    80.0,
+    100.0,
+    130.0,
+    180.0
+  ],
+  "maturities": [
+    0.02,
+    0.05,
+    0.25,
+    1.0,
+    3.0,
+    10.0,
+    30.0
+  ],
+  "discount": 0.97,
+  "parameter_sets": {
+    "moderate": {
+      "v0": 0.04,
+      "kappa": 2.0,
+      "theta": 0.04,
+      "vol_of_vol": 0.3,
+      "rho": -0.7
+    },
+    "heavy": {
+      "v0": 0.09,
+      "kappa": 0.5,
+      "theta": 0.06,
+      "vol_of_vol": 0.9,
+      "rho": -0.9
+    },
+    "fast": {
+      "v0": 0.01,
+      "kappa": 5.0,
+      "theta": 0.02,
+      "vol_of_vol": 0.2,
+      "rho": 0.4
+    }
+  },
+  "axes": "prices[strike]",
+  "cases": [
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366666666431ap+5",
+        "0x1.3666666666434p+4",
+        "0x1.1797ee7f6cbadp+0",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.1a6428f5c28f6p-34",
+        "-0x1.194cccccccccdp-39",
+        "0x1.1797ee7f6cbadp+0",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 0.05,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3666666664fb3p+5",
+        "0x1.36668a7700893p+4",
+        "0x1.b8b52e355b529p+0",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 0.05,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.6b3451eb851ebp-35",
+        "0x1.2084d1166b852p-15",
+        "0x1.b8b52e355b529p+0",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366780968160fp+5",
+        "0x1.388762b11dce2p+4",
+        "0x1.e48e48ae488b0p+1",
+        "0x1.3f2b8093f8f5cp-11",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.1a301afa8f5c2p-11",
+        "0x1.107e255bb3da4p-3",
+        "0x1.e48e48ae488b0p+1",
+        "0x1.d19c17f09ac18p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37d13f9997ebdp+5",
+        "0x1.50085aa96a4b2p+4",
+        "0x1.d8c91b0719badp+2",
+        "0x1.57c902c8f7029p-2",
+        "0x1.c03501a5d1eb8p-14"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6ad93331856dcp-3",
+        "0x1.9a1f44303e4b4p+0",
+        "0x1.d8c91b0719badp+2",
+        "0x1.d6f8bda4bd75ap+4",
+        "0x1.36668269b680cp+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 3.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.40e7e6d4fed3bp+5",
+        "0x1.86825bcdbb5f9p+4",
+        "0x1.98b11a4718dbbp+3",
+        "0x1.bec6c9d601dddp+1",
+        "0x1.64ee93375ec66p-3"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 3.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.50300dd30daa1p+0",
+        "0x1.406fd59d53e4bp+2",
+        "0x1.98b11a4718dbbp+3",
+        "0x1.04b9396a2ceaap+5",
+        "0x1.3718ddb00215cp+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6522000881eccp+5",
+        "0x1.043a3e5ea86fbp+5",
+        "0x1.74df7a10ece2bp+4",
+        "0x1.ba7906dc4ca24p+3",
+        "0x1.66784981dfbb0p+2"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.75dccd10dc32cp+2",
+        "0x1.a41c2cadd4f20p+3",
+        "0x1.74df7a10ece2bp+4",
+        "0x1.576b0e83dff56p+5",
+        "0x1.4ccdeafe84621p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 30.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.b464d06efb527p+5",
+        "0x1.70c282105c65dp+5",
+        "0x1.3a9ef0cd47bffp+5",
+        "0x1.f76fdfeb09b19p+4",
+        "0x1.66802494919ecp+4"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "lewis",
+      "maturity": 30.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.f7f9a82253b02p+3",
+        "0x1.ab1e9dba52655p+4",
+        "0x1.3a9ef0cd47bffp+5",
+        "0x1.e484bcc251a59p+5",
+        "0x1.90066f8b8ace1p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36666666668b6p+5",
+        "0x1.366666666b669p+4",
+        "0x1.1797ee7fc73a4p+0",
+        "0x1.66e6666666666p-40",
+        "0x1.5b61999999999p-37"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.27d9999999999p-38",
+        "0x1.400a147ae147bp-34",
+        "0x1.1797ee7fc73a4p+0",
+        "0x1.d199999999b00p+4",
+        "0x1.366666666691dp+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 0.05,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36666666667abp+5",
+        "0x1.36668a7703d08p+4",
+        "0x1.b8b52e359522dp+0",
+        "0x1.4896666666666p-41",
+        "0x1.8db3333333333p-38"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 0.05,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.44f3333333333p-39",
+        "0x1.2084eb50c28f6p-15",
+        "0x1.b8b52e359522dp+0",
+        "0x1.d199999999a3dp+4",
+        "0x1.36666666667f4p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667809682061p+5",
+        "0x1.388762b11f382p+4",
+        "0x1.e48e48ae54fa8p+1",
+        "0x1.3f2b817c13099p-11",
+        "0x1.f818ccccccccdp-40"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.1a301b9fa451fp-11",
+        "0x1.107e255c68e0fp-3",
+        "0x1.e48e48ae54fa8p+1",
+        "0x1.d19c17f09c91cp+4",
+        "0x1.36666666666e4p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37d13f9998327p+5",
+        "0x1.50085aa96ae42p+4",
+        "0x1.d8c91b071c5eep+2",
+        "0x1.57c902c9285cdp-2",
+        "0x1.c035058829333p-14"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6ad93331cc0e9p-3",
+        "0x1.9a1f443047db9p+0",
+        "0x1.d8c91b071c5eep+2",
+        "0x1.d6f8bda4be3b0p+4",
+        "0x1.36668269b6beep+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 3.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.40e7e6d4fef13p+5",
+        "0x1.86825bcdbb99cp+4",
+        "0x1.98b11a47195f2p+3",
+        "0x1.bec6c9d604535p+1",
+        "0x1.64ee933790f42p-3"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 3.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.50300dd31158fp+0",
+        "0x1.406fd59d54cd8p+2",
+        "0x1.98b11a47195f2p+3",
+        "0x1.04b9396a2d120p+5",
+        "0x1.3718ddb0022eep+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6522000881efap+5",
+        "0x1.043a3e5ea8730p+5",
+        "0x1.74df7a10ece9ep+4",
+        "0x1.ba7906dc4cb01p+3",
+        "0x1.66784981dfe28p+2"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.75dccd10dc4a1p+2",
+        "0x1.a41c2cadd4ff2p+3",
+        "0x1.74df7a10ece9ep+4",
+        "0x1.576b0e83dff8dp+5",
+        "0x1.4ccdeafe84649p+6"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 30.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.b464d06efb496p+5",
+        "0x1.70c282105c5b6p+5",
+        "0x1.3a9ef0cd47b3fp+5",
+        "0x1.f76fdfeb09963p+4",
+        "0x1.6680249491813p+4"
+      ]
+    },
+    {
+      "parameters": "moderate",
+      "formulation": "gatheral",
+      "maturity": 30.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.f7f9a822538c0p+3",
+        "0x1.ab1e9dba52505p+4",
+        "0x1.3a9ef0cd47b3fp+5",
+        "0x1.e484bcc25197ep+5",
+        "0x1.90066f8b8ac6bp+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3666666664ec0p+5",
+        "0x1.3666b1a5d9feep+4",
+        "0x1.a08bd343bd620p+0",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.7a6bd70a3d70ap-35",
+        "0x1.2cfdce61ee148p-14",
+        "0x1.a08bd343bd620p+0",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 0.05,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3666693ca70d0p+5",
+        "0x1.36b200809b5a7p+4",
+        "0x1.44d5dcab703a5p+1",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 0.05,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6b20534a66666p-18",
+        "0x1.2e6868d3d011fp-6",
+        "0x1.44d5dcab703a5p+1",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.374e8fd9c3e06p+5",
+        "0x1.469599b07d013p+4",
+        "0x1.48396ed5fc4b2p+2",
+        "0x1.f042d319328f6p-12",
+        "0x1.1c54ccccccccdp-33"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.d052e6baf404dp-4",
+        "0x1.02f334a169acep+0",
+        "0x1.48396ed5fc4b2p+2",
+        "0x1.d19b89dc6cb2dp+4",
+        "0x1.36666666689f1p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.42561ca4b42bep+5",
+        "0x1.7004b86d62d53p+4",
+        "0x1.ec821bcc5d30ap+2",
+        "0x1.e976f604b20a4p-5",
+        "0x1.1906dad8a6666p-13"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7df6c7c9b8b03p+0",
+        "0x1.ccf29037e376ap+1",
+        "0x1.ec821bcc5d30ap+2",
+        "0x1.d28e55149bf2ap+4",
+        "0x1.3666898741c18p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 3.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4f77ea907d0aap+5",
+        "0x1.9560c59bae403p+4",
+        "0x1.57368aec9be37p+3",
+        "0x1.78596b21503dcp-2",
+        "0x1.a17634dc8ee14p-9"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 3.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.911842a16a438p+1",
+        "0x1.7be97cd51f672p+2",
+        "0x1.57368aec9be37p+3",
+        "0x1.d77aff461eda9p+4",
+        "0x1.3669a952d01f8p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6d2bf5d4991d1p+5",
+        "0x1.f2a10e94ed1edp+4",
+        "0x1.29966ce570410p+4",
+        "0x1.4e2279ec033c3p+2",
+        "0x1.13a7d005e65c2p-3"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.b62c7b7195b58p+2",
+        "0x1.7875505d0d70dp+3",
+        "0x1.29966ce570410p+4",
+        "0x1.12911c0a4d345p+5",
+        "0x1.36f03a4e69599p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 30.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.af0e124d89f27p+5",
+        "0x1.57184c0d1125ap+5",
+        "0x1.0ac77fbaac0b0p+5",
+        "0x1.5ad7a66c88121p+4",
+        "0x1.1a8ce26744c24p+3"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "lewis",
+      "maturity": 30.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.e29eaf9c8e302p+3",
+        "0x1.77ca31b3bbe4dp+4",
+        "0x1.0ac77fbaac0b0p+5",
+        "0x1.9638a00310d5dp+5",
+        "0x1.59b802b34efebp+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36666666611b6p+5",
+        "0x1.3666b1a5dd70ap+4",
+        "0x1.a08bd343fa402p+0",
+        "0x1.6781999999999p-41",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.52c1e147ae148p-33",
+        "0x1.2cfddc28d9999p-14",
+        "0x1.a08bd343fa402p+0",
+        "0x1.d199999999a4dp+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 0.05,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3666693c3112bp+5",
+        "0x1.36b200809d83dp+4",
+        "0x1.44d5dcab83697p+1",
+        "0x1.1bb9999999999p-42",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 0.05,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6ae55626147aep-18",
+        "0x1.2e6868dc759c2p-6",
+        "0x1.44d5dcab83697p+1",
+        "0x1.d1999999999e0p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.374e8febcf5b6p+5",
+        "0x1.469599b07f69ap+4",
+        "0x1.48396ed600280p+2",
+        "0x1.f042d433ed0cdp-12",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.d0530ad1e9ef6p-4",
+        "0x1.02f334a19033dp+0",
+        "0x1.48396ed600280p+2",
+        "0x1.d19b89dc6dcd9p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.42561c704f5a2p+5",
+        "0x1.7004b86d5f3b4p+4",
+        "0x1.ec821bcc5e8ecp+2",
+        "0x1.e976f605825ecp-5",
+        "0x1.190fc27f25999p-13"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7df6c13d1e773p+0",
+        "0x1.ccf29037c6a6cp+1",
+        "0x1.ec821bcc5e8ecp+2",
+        "0x1.d28e55149c5acp+4",
+        "0x1.366689885eb64p+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 3.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4f77ea959147ep+5",
+        "0x1.9560c59bae316p+4",
+        "0x1.57368aec9c0b3p+3",
+        "0x1.78596b2156422p-2",
+        "0x1.a1763506ca800p-9"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 3.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.911842f2ae17ap+1",
+        "0x1.7be97cd51f2c0p+2",
+        "0x1.57368aec9c0b3p+3",
+        "0x1.d77aff461ef2ap+4",
+        "0x1.3669a952d073fp+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6d2bf5d498f9dp+5",
+        "0x1.f2a10e94ed0e9p+4",
+        "0x1.29966ce5702ebp+4",
+        "0x1.4e2279ec02d66p+2",
+        "0x1.13a7d005da8e2p-3"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.b62c7b71949b3p+2",
+        "0x1.7875505d0d505p+3",
+        "0x1.29966ce5702ebp+4",
+        "0x1.12911c0a4d279p+5",
+        "0x1.36f03a4e6953bp+6"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 30.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.af0e124d89e37p+5",
+        "0x1.57184c0d11141p+5",
+        "0x1.0ac77fbaabf7fp+5",
+        "0x1.5ad7a66c87e1dp+4",
+        "0x1.1a8ce267445b3p+3"
+      ]
+    },
+    {
+      "parameters": "heavy",
+      "formulation": "gatheral",
+      "maturity": 30.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.e29eaf9c8df44p+3",
+        "0x1.77ca31b3bbc1dp+4",
+        "0x1.0ac77fbaabf7fp+5",
+        "0x1.9638a00310bdbp+5",
+        "0x1.59b802b34ef1cp+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3666666663533p+5",
+        "0x1.366666665f4afp+4",
+        "0x1.1e257a57ba55dp-1",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.899b999999999p-34",
+        "-0x1.c6de8f5c28f5cp-34",
+        "0x1.1e257a57ba55dp-1",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 0.05,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366666666469ap+5",
+        "0x1.3666666661d7fp+4",
+        "0x1.d157fcc85e5e6p-1",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 0.05,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.fcc3d70a3d70ap-35",
+        "-0x1.239b333333333p-34",
+        "0x1.d157fcc85e5e6p-1",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3666666665805p+5",
+        "0x1.366691fa21610p+4",
+        "0x1.251cb42c623c4p+1",
+        "0x1.2fff832bbd70ap-11",
+        "0x1.67895c28f5c29p-32"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "-0x1.cc24ccccccccdp-36",
+        "0x1.5c9dd7d4b851fp-15",
+        "0x1.251cb42c623c4p+1",
+        "0x1.d19bf9989ff11p+4",
+        "0x1.366666666c049p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36667ab4c2cf2p+5",
+        "0x1.390a99e6b0b62p+4",
+        "0x1.4a78cd8ecbc6bp+2",
+        "0x1.f507ea0470e57p-3",
+        "0x1.22dac1ffa3ae1p-10"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.44e5c68bfd70ap-15",
+        "0x1.5219c02527dd2p-3",
+        "0x1.4a78cd8ecbc6bp+2",
+        "0x1.d583a96da27b6p+4",
+        "0x1.3667894128660p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 3.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36fe0d87b1ee6p+5",
+        "0x1.53fc17553519bp+4",
+        "0x1.298e46936d0c9p+3",
+        "0x1.091ab678acd1cp+1",
+        "0x1.25150b900b80ap-3"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 3.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.2f4e42970ffdcp-4",
+        "0x1.d95b0eeceb34dp+0",
+        "0x1.298e46936d0c9p+3",
+        "0x1.f2bcf068af33dp+4",
+        "0x1.36f8f0ec2e6c2p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.45ecc0ff8e4e7p+5",
+        "0x1.ad83f18ff0ed6p+4",
+        "0x1.11fe4ef805647p+4",
+        "0x1.117ddd023cd89p+3",
+        "0x1.5ea945d3978a9p+1"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.f0cb5324fd017p+0",
+        "0x1.dc762ca62a1c1p+2",
+        "0x1.11fe4ef805647p+4",
+        "0x1.2d2c440d5c02fp+5",
+        "0x1.415bb0950322cp+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 30.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7a0e74f75043ap+5",
+        "0x1.282652c57cec5p+5",
+        "0x1.d4b71853f8aaep+4",
+        "0x1.50b669e6ec3f7p+4",
+        "0x1.97db419e2e965p+3"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "lewis",
+      "maturity": 30.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.0ea03a43a7750p+3",
+        "0x1.19e63f2493724p+4",
+        "0x1.d4b71853f8aaep+4",
+        "0x1.912801c042ec8p+5",
+        "0x1.6961ce9a2c393p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36666666669cbp+5",
+        "0x1.36666666667a8p+4",
+        "0x1.1e257a58b7ea2p-1",
+        "0x1.172d999999999p-39",
+        "0x1.1c1a999999999p-36"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.b28f5c28f5c29p-38",
+        "0x1.420a3d70a3d70p-40",
+        "0x1.1e257a58b7ea2p-1",
+        "0x1.d199999999bc8p+4",
+        "0x1.3666666666ad7p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 0.05,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366666666686cp+5",
+        "0x1.3666666666711p+4",
+        "0x1.d157fcc900d42p-1",
+        "0x1.3666666666666p-40",
+        "0x1.2fa7ccccccccdp-37"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 0.05,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.02fd70a3d70a4p-38",
+        "0x1.5570a3d70a3d7p-41",
+        "0x1.d157fcc900d42p-1",
+        "0x1.d199999999ad0p+4",
+        "0x1.36666666668c5p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366666666670dp+5",
+        "0x1.366691fa236f3p+4",
+        "0x1.251cb42c744e3p+1",
+        "0x1.2fff847e06500p-11",
+        "0x1.9cd0e4ccccccdp-32"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4dae147ae147bp-40",
+        "0x1.5c9de846851ebp-15",
+        "0x1.251cb42c744e3p+1",
+        "0x1.d19bf998a295ap+4",
+        "0x1.366666666cd9ap+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36667ab4c33d3p+5",
+        "0x1.390a99e6b1a67p+4",
+        "0x1.4a78cd8ecfe4ap+2",
+        "0x1.f507ea050c16bp-3",
+        "0x1.22dac260ff966p-10"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.44e5cd6c8a3d7p-15",
+        "0x1.5219c025a005cp-3",
+        "0x1.4a78cd8ecfe4ap+2",
+        "0x1.d583a96da3b1cp+4",
+        "0x1.3667894128c76p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 3.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36fe0d87b222dp+5",
+        "0x1.53fc175535888p+4",
+        "0x1.298e46936e02bp+3",
+        "0x1.091ab678b1577p+1",
+        "0x1.25150b9067942p-3"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 3.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.2f4e429778df6p-4",
+        "0x1.d95b0eecf221fp+0",
+        "0x1.298e46936e02bp+3",
+        "0x1.f2bcf068afc49p+4",
+        "0x1.36f8f0ec2e9a2p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.45ecc0ff8e5dfp+5",
+        "0x1.ad83f18ff1119p+4",
+        "0x1.11fe4ef805879p+4",
+        "0x1.117ddd023d2aep+3",
+        "0x1.5ea945d39954bp+1"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.f0cb5324fef22p+0",
+        "0x1.dc762ca62aac9p+2",
+        "0x1.11fe4ef805879p+4",
+        "0x1.2d2c440d5c179p+5",
+        "0x1.415bb09503310p+6"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 30.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7a0e74f750415p+5",
+        "0x1.282652c57ce89p+5",
+        "0x1.d4b71853f8a26p+4",
+        "0x1.50b669e6ec36fp+4",
+        "0x1.97db419e2e8e0p+3"
+      ]
+    },
+    {
+      "parameters": "fast",
+      "formulation": "gatheral",
+      "maturity": 30.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.0ea03a43a76bcp+3",
+        "0x1.19e63f24936acp+4",
+        "0x1.d4b71853f8a26p+4",
+        "0x1.912801c042e84p+5",
+        "0x1.6961ce9a2c382p+6"
+      ]
+    }
+  ],
+  "content_sha256": "15596fa6418e36b780bbdd2fbbb0721627316df2b2b659cfd0983cb254050bc1"
+}

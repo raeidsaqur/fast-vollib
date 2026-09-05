@@ -820,7 +820,9 @@ from fast_vollib.simulation import MonteCarloEngine, Scenario, simulate
 
 | Group | Names |
 |---|---|
-| Processes | `GBM`, `GBM.risk_neutral`, `StochasticProcess` |
+| Processes | `GBM`, `GBM.risk_neutral`, `Heston`, `Bates`, `BCC97`, `CIRShortRate`, `StochasticProcess` |
+| Components | `HestonVariance`, `ConstantVariance`, `LognormalJumps`, `NoJumps`, `CIRShortRate`, `ConstantShortRate` |
+| Discounting | `DiscountingRule`, `ConstantRateDiscounting`, `PathwiseShortRateDiscounting` |
 | Scenarios | `Scenario`, `Scenario.from_states`, `simulate` |
 | Pricing | `MonteCarloEngine`, `MonteCarloEngine.supports`, `MonteCarloEngine.price`, `MCResult` |
 | Errors | `SimulationError`, `SimulationValidationError`, `UnsupportedProcessError`, `ScenarioMismatchError` |
@@ -839,15 +841,25 @@ is attached to the underlier or the process.
 ```python
 MonteCarloEngine(antithetic=False).price(
     instrument, market, *, process, n_paths, rng,
-    time_grid=None, n_steps=None, return_native=False,
+    time_grid=None, n_steps=None,
+    initial_state=None, discounting=None, return_native=False,
 )
 ```
 
 Returns an `MCResult` carrying `price`, `stderr`, `n_paths`, and
-`effective_samples`. `market.underlying` is the initial spot and `market.rate`
-discounts; `market.volatility` is not read, because the process owns it. Supply
-exactly one of `time_grid` and `n_steps`. The engine never rewrites a drift:
-a risk-neutral price needs a process you made risk-neutral. See
+`effective_samples`. `market.underlying` is the initial spot;
+`market.volatility` is not read, because the process owns it. Supply exactly one
+of `time_grid` and `n_steps`. The engine never rewrites a drift: a risk-neutral
+price needs a process you made risk-neutral.
+
+The process's first state must be `"spot"`. Any others — a variance, a short
+rate — are supplied by name through `initial_state`, which may not carry
+`"spot"` and must carry every other state the process declares.
+
+`discounting` is a `DiscountingRule`. Omitted, the payoff is discounted at
+`market.rate` over the contract's maturity, bit for bit as before. Supplied,
+`market.rate` is **not read at all** and the factor is applied path by path,
+which is what a stochastic-rate model needs. See
 [Simulation](simulation.md) for the conventions, the estimator, and the
 differentiability table.
 
@@ -869,8 +881,8 @@ Two state variables, `('spot', 'variance')`, so a sample is
 `(n_paths, n_times, 2)`. `scheme` is `"quadratic_exponential"` (Andersen's QE) or
 `"full_truncation_euler"`; **neither is exact**, and the bias shrinks with the
 step size without vanishing at any finite one. `feller_ratio` and
-`satisfies_feller` report the Feller condition; it is never enforced. Heston is
-not served by `MonteCarloEngine`, which prices one-state processes only.
+`satisfies_feller` report the Feller condition; it is never enforced. Priced
+through `MonteCarloEngine` it needs `initial_state={"variance": v0}`.
 
 ```python
 heston_price(*, forward, strike, maturity, v0, kappa, theta, vol_of_vol, rho,
@@ -885,3 +897,43 @@ integral) or `"gatheral"` (the two-probability decomposition), kept as an
 independent cross-check. The price carries **absolute**, not relative, accuracy;
 `HestonIVSurface` therefore declines low-vega wings rather than inverting noise.
 See [Surface Models](surface_models.md#heston).
+
+### Bates and BCC97
+
+```python
+from fast_vollib.processes import (
+    BCC97, Bates, CIRShortRate, ConstantShortRate, ConstantVariance,
+    HestonVariance, LognormalJumps, NoJumps,
+)
+from fast_vollib.pricing import bates_price, bcc97_price
+
+Bates(variance, jumps, drift=0.0)                     # ('spot', 'variance')
+Bates.risk_neutral(*, rate, variance, jumps, dividend_yield=0.0)
+BCC97(variance, jumps, rates, dividend_yield=0.0)     # + 'short_rate'
+BCC97.sample(*, initial_state, time_grid, n_paths, rng, antithetic=False,
+             scheme="quadratic_exponential", rate_scheme="quadratic_exponential")
+```
+
+One configurable lattice, not several models: switching a component off is an
+exact reduction, and the ones the arithmetic allows are **bitwise**. `drift`
+means `r - q` *before* jump compensation, which the sampler subtracts itself;
+`BCC97` is risk-neutral by construction and has no `drift` at all, because the
+drift is a state. `scheme` and `rate_scheme` are separate because
+`exact_transition` exists for the square-root rate and not for the variance.
+
+```python
+bates_price(*, forward, strike, maturity, v0, kappa, theta, vol_of_vol, rho,
+            jump_intensity=0.0, mean_log_jump=0.0, jump_volatility=0.0,
+            is_call=True, discount=1.0, formulation="lewis", n_nodes=768)
+
+bcc97_price(*, spot, strike, maturity, v0, kappa, theta, vol_of_vol, rho,
+            jump_intensity=0.0, mean_log_jump=0.0, jump_volatility=0.0,
+            rate_kappa, rate_theta, rate_volatility, initial_rate,
+            dividend_yield=0.0, is_call=True, formulation="lewis", n_nodes=768)
+```
+
+`bcc97_price` takes a **spot** rather than a forward: under a stochastic rate
+the forward and the discount factor are outputs of the model, and
+`bcc97_forward_measure` returns the pair it used. `rate_volatility=0.0` with
+`rate_theta=initial_rate` is a flat deterministic rate, and the price is then
+bitwise `bates_price` at that forward and discount.

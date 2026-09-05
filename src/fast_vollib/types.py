@@ -19,6 +19,8 @@ InstrumentKindLiteral = Literal[
     "barrier_option",
     "lookback_option",
     "variance_swap",
+    "zero_coupon_bond",
+    "fixed_rate_bond",
 ]
 ExerciseLiteral = Literal["european"]
 IVSolverLiteral = Literal["halley", "jackel"]

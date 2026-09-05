@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import math
 import sys
+from typing import Any
 
 import numpy as np
 from scipy.special import erfcx as _sp_erfcx, ndtr as _sp_ndtr, ndtri as _sp_ndtri
@@ -26,6 +27,9 @@ from scipy.special import erfcx as _sp_erfcx, ndtr as _sp_ndtr, ndtri as _sp_ndt
 try:
     import numba as _numba
 
+    # numba >= 0.67 ships type information that declares ``prange`` without
+    # ``__iter__``; annotating the alias keeps parallel loops type-checkable.
+    _prange: Any = _numba.prange
     _NUMBA_AVAILABLE = True
 except ImportError:
     _NUMBA_AVAILABLE = False
@@ -908,7 +912,7 @@ if _NUMBA_AVAILABLE:
         s_out = s.copy()
 
         for _ in range(n_iters):
-            for i in _numba.prange(N):
+            for i in _prange(N):
                 si = s_out[i]
                 s_safe = si if si > 0.0 else tiny
                 xi = x[i]
@@ -996,7 +1000,7 @@ if _NUMBA_AVAILABLE:
         tiny = _NB_TINY
         s_out = np.empty(N)
 
-        for i in _numba.prange(N):
+        for i in _prange(N):
             bi = beta[i]
             bli = b_l[i]
             bci = b_c[i]
@@ -1072,7 +1076,7 @@ if _NUMBA_AVAILABLE:
         b_h = np.empty(N)
         vh_s = np.empty(N)  # v_h_safe
 
-        for i in _numba.prange(N):
+        for i in _prange(N):
             xi = x[i]
             bm = b_max[i]
 
@@ -1144,7 +1148,7 @@ if _NUMBA_AVAILABLE:
         sqrt_fk_out = np.empty(N)
         b_max_out = np.empty(N)
 
-        for i in _numba.prange(N):
+        for i in _prange(N):
             pi = price[i]
             ki = K[i]
             qi = 1.0 if is_call[i] else -1.0
@@ -1180,7 +1184,7 @@ if _NUMBA_AVAILABLE:
         out = np.empty(N)
         inv_sqrt_T = 1.0 / sqrt_T if sqrt_T > 0.0 else 0.0
 
-        for i in _numba.prange(N):
+        for i in _prange(N):
             pi = price[i]
             ki = K[i]
             sh = sigma_hat[i]

@@ -13,6 +13,7 @@ from fast_vollib.instruments import (
     BinaryOption,
     CapabilitySet,
     EuropeanOption,
+    FixedRateBond,
     Forward,
     Future,
     InstrumentKind,
@@ -22,6 +23,7 @@ from fast_vollib.instruments import (
     PricingModel,
     UnsupportedInstrumentError,
     VarianceSwap,
+    ZeroCouponBond,
     capabilities,
     instrument_type,
     instrument_types,
@@ -38,6 +40,8 @@ EXPECTED_TYPES = {
     "barrier_option": BarrierOption,
     "lookback_option": LookbackOption,
     "variance_swap": VarianceSwap,
+    "zero_coupon_bond": ZeroCouponBond,
+    "fixed_rate_bond": FixedRateBond,
 }
 
 
@@ -121,6 +125,10 @@ def test_payoff_requirements_are_declared_per_type() -> None:
         "barrier_option": PayoffRequirement.PATH,
         "lookback_option": PayoffRequirement.PATH,
         "variance_swap": PayoffRequirement.PATH,
+        # A bond's payments are dated rather than terminal, so it is not
+        # evaluated through the payoff dispatcher at all.
+        "zero_coupon_bond": None,
+        "fixed_rate_bond": None,
     }
 
 

@@ -11,6 +11,12 @@ Importing this package pulls in neither torch, jax, numba, nor triton.
 
 from __future__ import annotations
 
+from .discounting import (
+    RULES,
+    ConstantRateDiscounting,
+    DiscountingRule,
+    PathwiseShortRateDiscounting,
+)
 from .errors import (
     ScenarioMismatchError,
     SimulationError,
@@ -22,8 +28,12 @@ from .scenario import Scenario
 from .simulate import simulate
 
 __all__ = [
+    "RULES",
+    "ConstantRateDiscounting",
+    "DiscountingRule",
     "MCResult",
     "MonteCarloEngine",
+    "PathwiseShortRateDiscounting",
     "Scenario",
     "ScenarioMismatchError",
     "SimulationError",

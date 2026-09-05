@@ -21,8 +21,10 @@ import numpy as np
 from .arbitrage import compute_fields
 from .report import ArbitrageReport, ArbitrageViolation
 
-# np.trapezoid is the numpy>=2.0 spelling; np.trapz is the <2.0 alias.
-_trapz = getattr(np, "trapezoid", None) or np.trapz
+try:  # numpy >= 2.0
+    from numpy import trapezoid as _trapz
+except ImportError:  # numpy < 2.0 spelling, removed in numpy 2.4
+    from numpy import trapz as _trapz  # type: ignore[attr-defined, no-redef]
 
 if TYPE_CHECKING:
     from .grid import IVSurface

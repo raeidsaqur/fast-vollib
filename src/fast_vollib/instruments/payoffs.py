@@ -59,6 +59,7 @@ from .exotics import (
     LookbackOption,
     VarianceSwap,
 )
+from .fixed_income import FixedIncomeSecurity
 from .forwards import Forward, Future
 from .options import EuropeanOption
 from .registry import instrument_types
@@ -412,6 +413,13 @@ def _needs_scenario_message(instrument: Instrument, given: Any) -> str:
 
 def _no_payoff_message(instrument: Instrument) -> str:
     cls = type(instrument)
+    if isinstance(instrument, FixedIncomeSecurity):
+        return (
+            f"{cls.__name__} has dated cashflows rather than a payoff: its payments "
+            f"happen at several times, and payoff() maps the state at one horizon to "
+            f"one amount. Read the schedule with cashflows(instrument), and value it "
+            f"with fast_vollib.pricing.present_value(instrument, discount_curve=...)."
+        )
     recognized = any(info.python_type is cls for info in instrument_types().values())
     if recognized:
         return (

@@ -13,6 +13,70 @@ separate changelog entries.
 
 ## [Unreleased]
 
+### Added
+
+- **Python 3.15 support (release candidate)** — validated against CPython
+  3.15.0rc2 and added the `Programming Language :: Python :: 3.15` classifier.
+  The CI matrix gains 3.15 lanes for the default and JAX backend jobs, marked
+  experimental until the final release. On 3.15 the package requires
+  `numpy>=2.5.2` and `scipy>=1.18.1`, and the `jax` extra requires
+  `jax>=0.11.1`. Dependency markers omit PyTorch, numba, RAPIDS, and pyarrow
+  on 3.15. The Linux `cuda` extra still includes JAX CUDA dependencies, but GPU
+  operation is not validated on this interpreter. The locked pandas version
+  builds from source; the `typecheck` extra uses a beartype 0.23 release candidate.
+- **Python 3.14 support** — added the `Programming Language :: Python :: 3.14`
+  classifier and extended the CI matrix to cover 3.14, including the PyTorch and
+  JAX backend jobs. On 3.14 the package requires `numpy>=2.3` and the `numba`
+  extra requires `numba>=0.63`, the first releases with CPython 3.14 wheels;
+  the floors on 3.10–3.13 are unchanged.
+- Fixed-income contracts: `Cashflow`, `FixedIncomeSecurity`, `ZeroCouponBond`,
+  and `FixedRateBond`, with explicit payment times and accrual fractions.
+- Cashflow present values against structural discount curves, including flat,
+  CIR, and log-linear interpolated discount-factor curves.
+- Risk-neutral CIR bond prices, zero and forward rates, and a complex
+  integrated-rate transform, with NumPy, PyTorch and JAX array support.
+- CIR short-rate simulation using full-truncation Euler, quadratic-exponential,
+  or exact transitions. Exact transitions support NumPy and JAX; PyTorch
+  is refused because a public generator-bound gamma sampler is unavailable.
+- Composable Bates and BCC97 processes with Heston or constant variance,
+  Merton compound-Poisson lognormal jumps or no jumps, and CIR or constant rates.
+- Bates and BCC97 European-option pricing through Lewis and Gatheral Fourier
+  inversion. BCC97 uses independent equity/variance and short-rate drivers.
+- Explicit `initial_state` and `discounting` arguments on `MonteCarloEngine.price`,
+  with constant-rate and pathwise short-rate discounting rules.
+- Additive version-1 instrument schemas, public examples, independent analytical
+  checks, and seeded reference fixtures for the new models.
+
+### Fixed
+
+- **Deprecated module attribute** — the Jäckel backend loader resolved its
+  package through `__package__`, which Python 3.15 deprecates; it now uses
+  `__spec__.parent`.
+- **numpy 2.4+ compatibility** — the trapezoid-rule fallback in
+  `fast_vollib.surface.metrics` and `fast_vollib.diagnostics.plots` referenced
+  `np.trapz`, which numpy 2.4 removed; the fallback now resolves the function at
+  import time.
+- **Heston put-call parity test** — the parity assertion was exact to the bit
+  and failed on aarch64, where the priced values differ from x86_64 in the last
+  ulp; it now allows a few ulps of rounding.
+- Stabilize the Heston characteristic function at small positive vol-of-vol
+  without substituting deterministic variance; retain ordinary-parameter
+  arithmetic and handle the removable martingale-argument singularity.
+- Keep jump counts and jump sizes on independent JAX random keys.
+- Validate custom Monte Carlo discount factors before multiplying payoffs.
+
+### Compatibility
+
+- Existing equity instrument roots, pricing-model selectors, and default
+  Monte Carlo discounting are unchanged. Fixed-income securities use
+  `present_value`, not the option-pricing or terminal-payoff routes.
+- Stored numerical references allow documented cross-platform rounding;
+  same-environment seeded reproducibility is checked separately.
+
+---
+
+
+
 ## [0.2.2] — 2026-09-01
 
 ### Added

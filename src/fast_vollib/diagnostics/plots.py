@@ -12,6 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
+try:  # numpy >= 2.0
+    from numpy import trapezoid as _trapz
+except ImportError:  # numpy < 2.0 spelling, removed in numpy 2.4
+    from numpy import trapz as _trapz  # type: ignore[attr-defined, no-redef]
+
 from .._array_api import numpy_namespace
 from ..surface.density import bl_density, durrleman_g
 
@@ -117,9 +122,8 @@ def plot_density(surf: "IVSurface", *, t_index: int = 0, ax=None) -> "Figure":
     ax.plot(K, f, color="C0", lw=1.6)
     ax.axhline(0.0, color="k", lw=0.8, ls="--")
     ax.fill_between(K, f, 0.0, where=f < 0, color="red", alpha=0.3, label="negative mass")
-    trapz = getattr(np, "trapezoid", None) or np.trapz
-    tot = trapz(np.abs(f), K)
-    ndm = trapz(np.maximum(-f, 0.0), K) / tot if tot > 0 else 0.0
+    tot = _trapz(np.abs(f), K)
+    ndm = _trapz(np.maximum(-f, 0.0), K) / tot if tot > 0 else 0.0
     ax.set_xlabel("strike $K$")
     ax.set_ylabel("RND $f(K)$")
     ax.set_title(f"Risk-neutral density (T={T2d[0, t_index]:.3g}, ndm={ndm:.3g})")

@@ -75,6 +75,7 @@ from .errors import (
     UnsupportedModelError,
     UnsupportedSolverError,
 )
+from .fixed_income import FixedIncomeSecurity
 from .options import EuropeanOption
 from .registry import instrument_types
 
@@ -148,6 +149,13 @@ def _terms_of(instrument_or_batch: object) -> _Terms:
 
 def _no_adapter_message(instrument_or_batch: object) -> str:
     cls = type(instrument_or_batch)
+    if isinstance(instrument_or_batch, FixedIncomeSecurity):
+        return (
+            f"{cls.__name__} is a fixed-income security and is not valued by an "
+            f"option-pricing model: it has a schedule of dated payments and a discount "
+            f"curve, not a volatility. Use "
+            f"fast_vollib.pricing.present_value(instrument, discount_curve=...)."
+        )
     recognized = any(info.python_type is cls for info in instrument_types().values())
     if recognized:
         return (
@@ -414,7 +422,7 @@ def _jackel_backend_module(backend_name: str, *, requested: BackendLiteral) -> A
     if backend_name in _JACKEL_BACKENDS:
         import importlib
 
-        return importlib.import_module(f"..jackel.{backend_name}_backend", __package__)
+        return importlib.import_module(f"..jackel.{backend_name}_backend", __spec__.parent)
 
     available = ", ".join(_JACKEL_BACKENDS)
     detail = (

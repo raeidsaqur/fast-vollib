@@ -140,19 +140,21 @@ registry does not have.
 
 <!-- BEGIN generated: instrument capability table -->
 
-| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | Implied volatility | Monte Carlo |
-|---|---|---|---|---|---|---|---|
-| `Asset` | `asset` | no | — | — | — | — | no |
-| `Forward` | `forward` | yes | terminal | — | — | — | yes |
-| `Future` | `future` | yes | terminal | — | — | — | no |
-| `EuropeanOption` | `european_option` | yes | terminal | black, bs, bsm | black, bs, bsm | black: halley, jackel; bs: halley, jackel; bsm: halley, jackel | yes |
-| `BinaryOption` | `binary_option` | yes | terminal | — | — | — | yes |
-| `AsianOption` | `asian_option` | yes | path | — | — | — | yes |
-| `BarrierOption` | `barrier_option` | yes | path | — | — | — | yes |
-| `LookbackOption` | `lookback_option` | yes | path | — | — | — | yes |
-| `VarianceSwap` | `variance_swap` | yes | path | — | — | — | yes |
+| Type | `type_id` | Payoff | Payoff needs | Price | Greeks | Implied volatility | Monte Carlo | Cashflows | Present value |
+|---|---|---|---|---|---|---|---|---|---|
+| `Asset` | `asset` | no | — | — | — | — | no | no | no |
+| `Forward` | `forward` | yes | terminal | — | — | — | yes | no | no |
+| `Future` | `future` | yes | terminal | — | — | — | no | no | no |
+| `EuropeanOption` | `european_option` | yes | terminal | black, bs, bsm | black, bs, bsm | black: halley, jackel; bs: halley, jackel; bsm: halley, jackel | yes | no | no |
+| `BinaryOption` | `binary_option` | yes | terminal | — | — | — | yes | no | no |
+| `AsianOption` | `asian_option` | yes | path | — | — | — | yes | no | no |
+| `BarrierOption` | `barrier_option` | yes | path | — | — | — | yes | no | no |
+| `LookbackOption` | `lookback_option` | yes | path | — | — | — | yes | no | no |
+| `VarianceSwap` | `variance_swap` | yes | path | — | — | — | yes | no | no |
+| `FixedRateBond` | `fixed_rate_bond` | no | — | — | — | — | no | yes | yes |
+| `ZeroCouponBond` | `zero_coupon_bond` | no | — | — | — | — | no | yes | yes |
 
-Model abbreviations: `black` = Black-76, `bs` = Black-Scholes, `bsm` = Black-Scholes-Merton. A dash means the operation is not available for that type, and asking for it raises rather than returning an approximation. **Monte Carlo** is a type-level answer: an individual contract is additionally eligible only with a strictly positive maturity, which `MonteCarloEngine.supports(instrument)` applies and is authoritative for an actual request.
+Model abbreviations: `black` = Black-76, `bs` = Black-Scholes, `bsm` = Black-Scholes-Merton. A dash means the operation is not available for that type, and asking for it raises rather than returning an approximation. **Monte Carlo** is a type-level answer: an individual contract is additionally eligible only with a strictly positive maturity, which `MonteCarloEngine.supports(instrument)` applies and is authoritative for an actual request. **Cashflows** and **present value** are the fixed-income route: a security with dated payments has no payoff and no option-pricing model, so `cashflows()` reads its schedule and `fast_vollib.pricing.present_value()` values it against a `DiscountCurve`.
 
 <!-- END generated: instrument capability table -->
 

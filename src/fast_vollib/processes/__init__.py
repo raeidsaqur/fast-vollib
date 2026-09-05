@@ -5,13 +5,16 @@ state, a path buffer, a device, or any knowledge of a contract, so sampling it
 twice cannot change what it means and the same object can be reused across
 scenarios.
 
-:class:`GBM` and :class:`Heston` are the processes this library implements and
-makes numerical claims about. They differ in an important way: GBM is sampled
-exactly on any grid, while Heston's square-root variance has no elementary exact
-transition and every scheme carries a discretization bias, which its docstring
-states rather than glosses. :class:`StochasticProcess` is the structural contract
-:func:`fast_vollib.simulation.simulate` drives, so a caller's own dynamics can
-be sampled through the same entry point.
+:class:`GBM`, :class:`Heston` and :class:`CIRShortRate` are the processes this
+library implements and makes numerical claims about. They differ in an important
+way: GBM is sampled exactly on any grid, while the square-root diffusion that
+Heston's variance and the CIR short rate both follow has no *elementary* exact
+transition. Its two discretizations carry a bias their docstrings state rather
+than gloss; ``CIRShortRate`` additionally offers ``exact_transition``, which is
+exact at the grid points and, being a draw from the true law rather than a step,
+still says nothing about the path between them. :class:`StochasticProcess` is
+the structural contract :func:`fast_vollib.simulation.simulate` drives, so a
+caller's own dynamics can be sampled through the same entry point.
 
 Importing this package pulls in neither torch, jax, numba, nor triton.
 
@@ -34,7 +37,37 @@ True
 from __future__ import annotations
 
 from .base import StochasticProcess
+from .bates import Bates
+from .bcc97 import BCC97
+from .cir import CIR_SCHEMES, CIRShortRate
+from .components import (
+    ConstantShortRate,
+    ConstantVariance,
+    HestonVariance,
+    JumpComponent,
+    LognormalJumps,
+    NoJumps,
+    ShortRateComponent,
+    VarianceComponent,
+)
 from .gbm import GBM
 from .heston import SCHEMES, Heston
 
-__all__ = ["SCHEMES", "GBM", "Heston", "StochasticProcess"]
+__all__ = [
+    "CIR_SCHEMES",
+    "SCHEMES",
+    "BCC97",
+    "Bates",
+    "CIRShortRate",
+    "ConstantShortRate",
+    "ConstantVariance",
+    "GBM",
+    "Heston",
+    "HestonVariance",
+    "JumpComponent",
+    "LognormalJumps",
+    "NoJumps",
+    "ShortRateComponent",
+    "StochasticProcess",
+    "VarianceComponent",
+]

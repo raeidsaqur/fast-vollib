@@ -75,6 +75,7 @@ nav:
       - Surface Models: surface_models.md
       - Surface-Fit Diagnostics: diagnostics.md
       - Instruments: instruments.md
+      - Fixed Income: fixed_income.md
       - Simulation: simulation.md
       - Compatibility: compatibility.md
       - Benchmarks: benchmarks.md
