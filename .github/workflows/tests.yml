@@ -59,6 +59,11 @@ jobs:
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short
 
+      - name: Check reference policy with strict mode enabled
+        run: uv run pytest tests/test_reference_policy.py -q --tb=short
+        env:
+          FV_STRICT_REFERENCE_FIXTURES: "1"
+
   test-torch:
     name: pytest / PyTorch backend / Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

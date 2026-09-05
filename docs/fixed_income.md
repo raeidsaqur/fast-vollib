@@ -188,7 +188,9 @@ own bitwise gates.
 
 Under the risk-neutral measure,
 
-$$ dr_t = \kappa(\theta - r_t)\,dt + \sigma\sqrt{r_t}\,dW_t^{\mathbb{Q}} $$
+$$
+dr_t = \kappa(\theta - r_t)\,dt + \sigma\sqrt{r_t}\,dW_t^{\mathbb{Q}}
+$$
 
 and the bond price is affine in the state, $P(0,\tau) = A(\tau)e^{-B(\tau)r_0}$,
 given in closed form by equation 23 of Cox, Ingersoll and Ross (1985).
@@ -229,7 +231,9 @@ and a finite-difference sensitivity all walk through.
 
 The fix is to never form the difference. Since $\gamma^2 - \kappa^2 = 2\sigma^2$,
 
-$$ \delta := \gamma - \kappa = \frac{2\sigma^2}{\gamma + \kappa}, $$
+$$
+\delta := \gamma - \kappa = \frac{2\sigma^2}{\gamma + \kappa},
+$$
 
 a quotient of positive quantities that avoids subtractive cancellation; the
 affine base then reduces to $1/(1+x)$ with $x \to 0$, which is what `log1p` is
@@ -279,7 +283,9 @@ uses it. What a closed form cannot carry is a *path*, which is what a payoff
 depending on the realized rate needs — there, the discount factor and the
 payoff are functions of the same path and
 
-$$ E\left[e^{-\int_0^T r_u du} X_T\right] \neq P(0,T)\, E[X_T] $$
+$$
+E\left[e^{-\int_0^T r_u du} X_T\right] \neq P(0,T)\, E[X_T]
+$$
 
 whenever the two are correlated. `fast_vollib.processes.CIRShortRate` samples
 the same dynamics with the same risk-neutral parameters, and
