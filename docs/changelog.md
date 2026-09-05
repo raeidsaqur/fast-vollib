@@ -13,7 +13,13 @@ separate changelog entries.
 
 ## [Unreleased]
 
-No unreleased changes.
+### Fixed
+
+- Enable site-wide MathJax rendering for inline and display equations, with
+  documentation-build regression checks.
+- Execute process-package doctests as part of the test suite.
+- Isolate the portable reference-tolerance test from the strict-mode environment
+  setting, and correct stale comments about small-vol-of-vol stability.
 
 ---
 
