@@ -72,7 +72,7 @@ def heston_characteristic_function(
     theta: float,
     vol_of_vol: float,
     rho: float,
-) -> np.ndarray:
+) -> np.ndarray | np.complex128:
     """``E[exp(i u log(F_T / F_0))]`` under the Heston risk-neutral dynamics.
 
     Parameters
@@ -87,6 +87,8 @@ def heston_characteristic_function(
     Returns
     -------
     The characteristic function at ``u``, complex, shaped like ``u``.
+    Scalar and zero-dimensional inputs return a NumPy complex scalar;
+    inputs with one or more dimensions return an array of the same shape.
 
     Notes
     -----
@@ -137,7 +139,7 @@ def heston_characteristic_function(
         )
         C = kappa * theta * (scaled_minus * maturity - 2.0 * x_scaled * quotient)
         D = scaled_minus * one_minus_exp / (1.0 - g * np.exp(-d * maturity))
-        return np.exp(C + D * v0)
+        return np.asarray(np.exp(C + D * v0))[()]
     # The stable branch: |g| < 1, so 1 - g e^{-dT} never approaches the negative
     # real axis and the principal logarithm never wraps.
     minus = beta - d
@@ -147,7 +149,7 @@ def heston_characteristic_function(
     ratio = (1.0 - g * exponential) / (1.0 - g)
     D = minus / xi2 * (1.0 - exponential) / (1.0 - g * exponential)
     C = kappa * theta / xi2 * (minus * maturity - 2.0 * np.log(ratio))
-    return np.exp(C + D * v0)
+    return np.asarray(np.exp(C + D * v0))[()]
 
 
 def _quadrature_scale(maturity: float, parameters: dict[str, float]) -> float:
@@ -230,7 +232,7 @@ def heston_price(
     }
 
     def transform(u: Any, *, maturity: float) -> np.ndarray:
-        return heston_characteristic_function(u, maturity=maturity, **parameters)
+        return np.asarray(heston_characteristic_function(u, maturity=maturity, **parameters))
 
     return fourier_price(
         forward=forward,

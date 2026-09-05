@@ -103,11 +103,17 @@ def test_a_recorded_refusal_is_still_a_refusal(case: dict[str, Any]) -> None:
         produced(case)
 
 
-def test_the_comparison_would_notice_a_last_bit_change() -> None:
-    """Guards a check that passes because it is comparing nothing."""
+def test_strict_comparison_rejects_a_last_bit_change(monkeypatch) -> None:
+    """Exercise the fixture comparator, not merely float inequality."""
     import math
 
     case = next(c for c in CASES if not c["refused"])
     value = float.fromhex(case["paths_hex"][-1])
-    assert value != math.nextafter(value, math.inf)
+    changed = math.nextafter(value, math.inf)
     assert float.fromhex(float(value).hex()) == value
+    monkeypatch.setenv("FV_STRICT_REFERENCE_FIXTURES", "0")
+    assert_reference_array(changed, value)
+    monkeypatch.setenv("FV_STRICT_REFERENCE_FIXTURES", "1")
+    assert_reference_array(value, value)
+    with pytest.raises(AssertionError):
+        assert_reference_array(changed, value)

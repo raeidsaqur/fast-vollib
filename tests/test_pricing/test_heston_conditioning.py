@@ -51,7 +51,30 @@ def test_martingale_argument_with_nonpositive_beta():
 
 
 @pytest.mark.parametrize("xi", [0.3, 1e-8])
-def test_scalar_transform_preserves_the_numpy_scalar_return(xi):
+@pytest.mark.parametrize("u", [1.0, 1.0 - 0.5j, 0.0, -1j])
+@pytest.mark.parametrize("wrap", [lambda x: x, np.complex128, np.asarray])
+def test_scalar_transform_preserves_the_numpy_scalar_return(xi, u, wrap):
     parameters = dict(maturity=1.0, v0=0.04, kappa=2.0, theta=0.04, vol_of_vol=xi, rho=-0.7)
-    assert isinstance(heston_characteristic_function(1.0, **parameters), np.complexfloating)
-    assert isinstance(heston_characteristic_function([1.0], **parameters), np.ndarray)
+    scalar = heston_characteristic_function(wrap(u), **parameters)
+    array = heston_characteristic_function([u], **parameters)
+    assert isinstance(scalar, np.complex128)
+    assert isinstance(array, np.ndarray)
+    assert array.shape == (1,)
+    np.testing.assert_array_equal(scalar, array[0])
+
+
+@pytest.mark.parametrize("xi", [0.3, 1e-8])
+@pytest.mark.parametrize("shape", [(0,), (1,), (2, 3)])
+def test_array_transform_preserves_shape(xi, shape):
+    actual = heston_characteristic_function(
+        np.ones(shape),
+        maturity=1.0,
+        v0=0.04,
+        kappa=2.0,
+        theta=0.04,
+        vol_of_vol=xi,
+        rho=-0.7,
+    )
+    assert isinstance(actual, np.ndarray)
+    assert actual.shape == shape
+    assert actual.dtype == np.complex128

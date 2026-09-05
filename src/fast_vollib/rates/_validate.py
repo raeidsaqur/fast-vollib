@@ -48,7 +48,9 @@ def ensure_scalar_parameter(
     Parameters
     ----------
     value : object
-        A Python number, a NumPy scalar, or a zero-dimensional native array.
+        A real Python number, a NumPy scalar, or a zero-dimensional native
+        array. Real integer values are accepted as well as floating-point
+        values; the original object is returned without conversion.
     field : str
         Used in the message, so a failure names the parameter.
     positive, non_negative : bool
@@ -57,7 +59,7 @@ def ensure_scalar_parameter(
     Raises
     ------
     RateValidationError
-        If the value is a bool, complex, non-scalar, integer-typed, non-finite,
+        If the value is a bool, complex, non-scalar, non-finite,
         or outside the requested sign domain.
     """
     if isinstance(value, (bool, np.bool_)):

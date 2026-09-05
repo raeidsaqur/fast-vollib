@@ -87,6 +87,13 @@ def test_a_zero_maturity_discounts_to_exactly_one(curve) -> None:
 # --- the flat curve ------------------------------------------------------------
 
 
+@pytest.mark.parametrize("rate", [0, 1, np.int64(0), np.int64(1), np.array(0), np.array(1)])
+def test_integer_rates_are_accepted_without_replacing_the_input(rate) -> None:
+    curve = FlatDiscountCurve(rate=rate)
+    assert curve.rate is rate
+    assert float(curve.discount_factor(0.5)) == float(np.exp(-0.5 * rate))
+
+
 @pytest.mark.parametrize("rate", FLAT_RATES)
 @pytest.mark.parametrize("maturity", MATURITIES)
 def test_the_flat_curve_is_continuously_compounded(rate, maturity) -> None:

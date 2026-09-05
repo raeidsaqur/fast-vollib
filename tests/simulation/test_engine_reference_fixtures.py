@@ -103,15 +103,16 @@ def test_a_default_engine_call_reproduces_its_recorded_price(case: dict[str, Any
     assert result.effective_samples == case["effective_samples"]
 
 
-def test_the_comparison_would_notice_a_last_bit_change() -> None:
-    """Guards a check that passes because it is comparing nothing.
-
-    If ``price_hex`` were being read back through a lossy path, or the
-    assertion above were an ``approx``, perturbing the recorded value by one
-    ulp would still pass. It must not.
-    """
+def test_strict_comparison_rejects_a_last_bit_change(monkeypatch) -> None:
+    """Portable mode permits one ulp; strict mode must reject it."""
     import math
 
     recorded = float.fromhex(CASES[0]["price_hex"])
-    assert recorded != math.nextafter(recorded, math.inf)
+    changed = math.nextafter(recorded, math.inf)
     assert float.fromhex(float(recorded).hex()) == recorded
+    monkeypatch.setenv("FV_STRICT_REFERENCE_FIXTURES", "0")
+    assert_reference_array(changed, recorded)
+    monkeypatch.setenv("FV_STRICT_REFERENCE_FIXTURES", "1")
+    assert_reference_array(recorded, recorded)
+    with pytest.raises(AssertionError):
+        assert_reference_array(changed, recorded)
