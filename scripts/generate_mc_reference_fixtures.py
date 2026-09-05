@@ -227,6 +227,11 @@ def main() -> int:
     path = FIXTURE_DIR / "gbm_closed_forms.json"
     text = render()
     previous = path.read_text(encoding="utf-8") if path.exists() else None
+    if "--check" in sys.argv[1:]:
+        if previous != text:
+            sys.stderr.write("gbm_closed_forms.json is stale.\n")
+            return 1
+        return 0
     if previous == text:
         sys.stdout.write(f"{path} is up to date.\n")
         return 0

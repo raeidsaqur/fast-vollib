@@ -39,6 +39,7 @@ from .exotics import (
     LookbackOption,
     VarianceSwap,
 )
+from .fixed_income import FixedRateBond, ZeroCouponBond
 from .forwards import Forward, Future
 from .options import EuropeanOption
 
@@ -67,7 +68,7 @@ class FieldSpec:
     name : str
         Both the dataclass attribute and the JSON key -- they are deliberately
         the same string, so a record reads like the object it came from.
-    json_type : {"string", "number", "object"}
+    json_type : {"string", "number", "object", "array"}
         The encoded type.
     required : bool
         False when the contract gives the field a default, in which case a
@@ -84,8 +85,23 @@ class FieldSpec:
         Mirrors the runtime "must not be zero" rule for notionals.
     min_length : int, optional
         Minimum string length; mirrors the non-empty-identifier rule.
+    items : FieldSpec, optional
+        Present exactly when ``json_type`` is ``"array"``, describing one
+        element.  A ``FieldSpec`` rather than a new kind of object because an
+        element needs precisely what a field needs -- a type and bounds -- and
+        a second vocabulary for the same thing would drift from the first.
+    min_items : int, optional
+        Minimum array length; mirrors a runtime non-empty rule.
     description : str
         Prose carried into the JSON Schema.
+
+    Notes
+    -----
+    Arrays are the one shape whose *length* is not the whole of its contract:
+    a bond's payment times and accrual fractions must agree in length, and
+    nothing expressible in this spec says so.  That rule lives in the
+    dataclass, which is where it is enforced, and the schema states it in
+    ``description`` rather than pretending to check it.
     """
 
     name: str
@@ -97,6 +113,8 @@ class FieldSpec:
     exclusive_minimum: float | None = None
     non_zero: bool = False
     min_length: int | None = None
+    items: "FieldSpec | None" = None
+    min_items: int | None = None
     description: str = ""
 
 
@@ -204,6 +222,27 @@ _SETTLEMENT = FieldSpec(
     enum_cls=SettlementType,
     description="How the contract settles at maturity.",
 )
+
+_FACE_VALUE = FieldSpec(
+    name="face_value",
+    json_type="number",
+    required=False,
+    exclusive_minimum=0.0,
+    description=(
+        "Principal redeemed at maturity; strictly positive. Distinct from a "
+        "derivative's notional, whose sign denotes a short position."
+    ),
+)
+
+_CURRENCY = FieldSpec(
+    name="currency",
+    json_type="string",
+    required=False,
+    nullable=True,
+    min_length=1,
+    description="Upper-cased currency code. Descriptive; it never selects a curve.",
+)
+
 
 #: Fields of the nested underlier reference object.
 INSTRUMENT_REF_FIELDS: tuple[FieldSpec, ...] = (
@@ -440,6 +479,71 @@ TYPE_SPECS: tuple[TypeSpec, ...] = (
             _NOTIONAL,
         ),
     ),
+    TypeSpec(
+        type_id=InstrumentKind.FIXED_RATE_BOND.value,
+        kind=InstrumentKind.FIXED_RATE_BOND,
+        python_type=FixedRateBond,
+        payoff_requirement=None,
+        description="Periodic fixed coupons with the principal repaid alongside the last.",
+        fields=(
+            _INSTRUMENT_ID,
+            _FACE_VALUE,
+            _CURRENCY,
+            FieldSpec(
+                name="payment_times",
+                json_type="array",
+                required=True,
+                min_items=1,
+                items=FieldSpec(
+                    name="payment_time",
+                    json_type="number",
+                    required=True,
+                    exclusive_minimum=0.0,
+                ),
+                description=(
+                    "Coupon payment times in years, strictly increasing and strictly "
+                    "positive. Must have the same length as accrual_fractions, which "
+                    "the contract enforces and this schema cannot state."
+                ),
+            ),
+            FieldSpec(
+                name="accrual_fractions",
+                json_type="array",
+                required=True,
+                min_items=1,
+                items=FieldSpec(
+                    name="accrual_fraction",
+                    json_type="number",
+                    required=True,
+                    exclusive_minimum=0.0,
+                ),
+                description=(
+                    "Year fraction each coupon accrues over, one per payment. Supplied "
+                    "rather than derived, because deriving it from the payment times "
+                    "would impose a day-count convention the contract does not carry."
+                ),
+            ),
+            FieldSpec(
+                name="coupon_rate",
+                json_type="number",
+                required=True,
+                description=("Annual coupon rate as a decimal. Zero and negative are admissible."),
+            ),
+        ),
+    ),
+    TypeSpec(
+        type_id=InstrumentKind.ZERO_COUPON_BOND.value,
+        kind=InstrumentKind.ZERO_COUPON_BOND,
+        python_type=ZeroCouponBond,
+        payoff_requirement=None,
+        description="Single redemption of face value at maturity; no coupons.",
+        fields=(
+            _INSTRUMENT_ID,
+            _FACE_VALUE,
+            _CURRENCY,
+            _MATURITY,
+        ),
+    ),
 )
 
 _BY_TYPE_ID: dict[str, TypeSpec] = {spec.type_id: spec for spec in TYPE_SPECS}
@@ -456,8 +560,30 @@ def spec_for_type(python_type: type) -> TypeSpec | None:
     return _BY_PYTHON_TYPE.get(python_type)
 
 
+#: The encoded shapes a :class:`FieldSpec` may declare.
+#:
+#: Closed, and checked at import, because a typo in ``json_type`` would fall
+#: through the codec's final ``else`` and encode a number as a string.
+JSON_TYPES = ("string", "number", "object", "array")
+
+
+def _check_field(spec: FieldSpec, *, where: str) -> None:
+    """One field spec is internally consistent, checked when the module loads."""
+    if spec.json_type not in JSON_TYPES:  # pragma: no cover - import-time guard
+        raise RuntimeError(f"{where}.{spec.name} has json_type {spec.json_type!r}.")
+    if (spec.json_type == "array") != (spec.items is not None):  # pragma: no cover
+        raise RuntimeError(
+            f"{where}.{spec.name}: 'items' is required for an array and meaningless "
+            f"for {spec.json_type!r}."
+        )
+    if spec.items is not None:  # pragma: no cover - import-time guard
+        _check_field(spec.items, where=f"{where}.{spec.name}[]")
+
+
 # Guard against a type entry that silently disagrees with the class it names.
 for _spec in TYPE_SPECS:
+    for _field_spec in _spec.fields:
+        _check_field(_field_spec, where=_spec.type_id)
     _dataclass_fields = {f for f in _spec.python_type.__dataclass_fields__}
     if _dataclass_fields != set(_spec.field_names):  # pragma: no cover - import-time guard
         raise RuntimeError(
@@ -465,4 +591,4 @@ for _spec in TYPE_SPECS:
             f"{sorted(_spec.field_names)} but {_spec.python_type.__name__} has "
             f"{sorted(_dataclass_fields)}."
         )
-del _spec, _dataclass_fields
+del _spec, _dataclass_fields, _field_spec

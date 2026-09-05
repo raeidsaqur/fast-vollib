@@ -12,7 +12,7 @@ The split is deliberate and it is four objects, not one:
 | `processes` | Dynamics and parameters — `GBM(drift, volatility)` | Random state, paths, devices, contracts |
 | `simulation` | `Scenario`: the paths one call produced | Terms, engines, market snapshots |
 | `instruments` | Contract terms | Arrays, paths, RNG, engines |
-| `MonteCarloEngine` | The initial spot, the discount factor, the estimator | A measure — see below |
+| `MonteCarloEngine` | The initial state, the discount factor, the estimator | A measure — see below |
 
 Nothing in that chain infers anything about another link. An asset class does
 not choose a process, a process does not choose a measure, and no analytic
@@ -81,8 +81,148 @@ Parameters are stored as the objects you passed. A torch tensor an optimizer is
 stepping stays that tensor, so gradients reach it.
 
 `StochasticProcess` is a structural protocol — `state_names`, `params()`,
-`sample()` — so your own dynamics can be driven by `simulate()`. The numerical
-claims here are about `GBM`, the process this library implements.
+`sample()` — so your own dynamics can be driven by `simulate()`.
+
+### The model lattice
+
+`Bates(variance, jumps, drift)` is not one model but four, and switching a
+component off is a *reduction* rather than a different implementation:
+
+| `variance` | `jumps` | The model this is |
+|---|---|---|
+| `HestonVariance` | `NoJumps` | Heston (1993) |
+| `HestonVariance` | `LognormalJumps` | Bates (1996), SVJ |
+| `ConstantVariance` | `NoJumps` | Black–Scholes–Merton |
+| `ConstantVariance` | `LognormalJumps` | Merton (1976) |
+
+`BCC97(variance, jumps, rates, dividend_yield)` is the same lattice with the
+short rate promoted from a number to a state, so the table gains a column and
+two rows:
+
+| `variance` | `jumps` | `rates` | The model this is |
+|---|---|---|---|
+| any of the four above | | `ConstantShortRate` | that model, unchanged — **bitwise** |
+| `HestonVariance` | `NoJumps` | `CIRShortRate` | SVSI |
+| `HestonVariance` | `LognormalJumps` | `CIRShortRate` | BCC97, SVSI-J |
+
+`BCC97` is risk-neutral by construction and has no `drift` field: the drift *is*
+a state, `r_t − q − λμ_J`. `dividend_yield` is the only level a caller supplies.
+`rho` correlates the spot and the variance; the rate driver is independent of
+both, which is the assumption Bakshi, Cao and Chen make — they call it severe,
+and report that relaxing it did not improve empirical performance.
+
+**The rate quadrature is the discounting quadrature.** The spot step uses
+`0.5 * (r_k + r_{k+1}) * dt`, which is exactly what
+`PathwiseShortRateDiscounting(rule="trapezoid")` accumulates, so the rate
+cancels between the drift and the discount factor path by path rather than only
+in expectation. That is what makes `exp(-int r) * S_T` a martingale in the
+*discretized* model and not merely in its limit.
+
+`scheme` and `rate_scheme` are separate arguments because the two state
+variables do not offer the same set: `exact_transition` exists for the
+square-root rate and not for the variance, whose spot coupling has no exact
+joint transition.
+
+```python
+from fast_vollib.processes import Bates, HestonVariance, LognormalJumps
+
+process = Bates.risk_neutral(
+    rate=0.03, dividend_yield=0.0,
+    variance=HestonVariance(kappa=2.0, theta=0.04, vol_of_vol=0.3, rho=-0.7),
+    jumps=LognormalJumps(jump_intensity=0.5, mean_log_jump=-0.05, jump_volatility=0.2),
+)
+```
+
+A **constant marker stores no level**: `ConstantVariance()` does not hold the
+variance, which comes from `initial_state` like every other state. An API able
+to hold two disagreeing values for one quantity eventually will.
+
+The unions are **closed** — `HestonVariance | ConstantVariance`,
+`LognormalJumps | NoJumps`, `CIRShortRate | ConstantShortRate` — and membership
+is checked before any arithmetic or randomness. A `Heston` process is not
+accepted as a variance component: it carries a drift, and a facade that ignored
+it would price a different model from the one you described.
+
+`drift` means what `Heston.drift` means, `r − q`, **before** jump compensation.
+The sampler subtracts `jumps.drift_compensator` itself, so switching jumps on
+does not require remembering to adjust the drift, and the *same* expression is
+the one the characteristic function carries.
+
+`params()` is flat with dotted keys — `"variance.kappa"`,
+`"jumps.jump_intensity"`, `"drift"` — because the engine validates each value as
+a scalar, and a bare `kappa` would not say which component it came from.
+
+#### The draw-order contract
+
+What makes a reduction checkable is that the randomness does not move when a
+component is switched. Blocks are drawn in a fixed order into fixed **slots**:
+
+| Slot | Block | Drawn when |
+|---|---|---|
+| 0 | diffusion normals `(n_paths, n_steps, 2)` | always — the identical call `Heston` makes |
+| 1 | Poisson counts, then jump normals | `LognormalJumps` only |
+| 2 | the short-rate path | `CIRShortRate` only |
+
+`ConstantVariance` leaves column 0 of block 1 unused rather than drawing a
+narrower block: a block whose shape depended on the configuration would make
+every reduction a different stream.
+
+Slots are assigned by *role*, not by which components are active, so switching
+one off does not renumber the ones after it. On JAX that rests on
+`jax.random.split(k, n)[i]` not depending on `n` — verified for typed and legacy
+keys — which is also what lets a third slot be added without moving these.
+
+The consequences are tested, and they are **bitwise**: `NoJumps` reproduces
+`Heston` exactly under both schemes with and without antithetic pairing,
+`LognormalJumps(jump_intensity=0)` reproduces `NoJumps` exactly, and `BCC97`
+with `ConstantShortRate` reproduces the corresponding `Bates` configuration
+exactly on NumPy, torch and JAX — nothing is drawn from slot 2.
+
+One limit is worth stating, because the JAX guarantee is stronger than the
+other two. On JAX a slot is a derived key, so switching a component off leaves
+*every* other slot untouched: `LognormalJumps(jump_intensity=0)` and `NoJumps`
+give identical rate paths. On NumPy and torch a slot is a position in one
+advancing stream, so skipping a block moves the ones after it — the variance,
+driven by slot 0 alone, is unchanged; the rate path is not.
+
+### The CIR short rate
+
+`CIRShortRate(kappa, theta, volatility)` evolves one state, `"short_rate"`,
+under
+
+```text
+dr = kappa * (theta - r) dt + volatility * sqrt(r) dW
+```
+
+the same square-root diffusion Heston's variance follows, with the same
+risk-neutral parameters as
+[`CIRDiscountCurve`](fixed_income.md#the-cir-term-structure). It exists because
+the analytic curve cannot carry a path, and a payoff whose discount factor and
+whose value depend on the *same* realized rate needs one.
+
+| `scheme` | Bias at the grid points | Backends |
+|---|---|---|
+| `quadratic_exponential` (default) | discretization, small | all |
+| `full_truncation_euler` | discretization, larger — a transparent comparison, not a recommendation | all |
+| `exact_transition` | none | NumPy, JAX |
+
+`exact_transition` draws the non-central chi-square transition law directly
+(Glasserman 2004, §3.4). It is exact **at the grid points** and says nothing
+about the path between them, which is the distinction that lets the two error
+sources be measured apart: run it, and whatever error remains in a
+pathwise-discounted price is quadrature.
+
+It is refused on torch, before any draw, because torch publishes no
+generator-bound gamma sampler — `torch.distributions.Gamma.sample` takes no
+generator and would read the global torch stream, so a "seeded" run would not
+reproduce. The two discretizations need only normals and run everywhere.
+
+`feller_ratio` is reported and never enforced, as on the curve. `volatility`
+must be strictly positive: at zero there is nothing to simulate, and the limit
+is exact in closed form via `process.discount_curve(initial_rate=...)`.
+
+The numerical claims here are about `GBM`, `Heston` and `CIRShortRate`, the
+processes this library implements.
 
 ## Randomness
 
@@ -114,6 +254,116 @@ three different streams, and nothing here claims otherwise.
 **Antithetic sampling** draws `n_paths / 2` normals and places their exact
 negatives in the second half, in order, so path `i` and path `i + n/2` are a
 matched pair. A stateful generator therefore advances by the half-sample count.
+
+For a **non-Gaussian** draw the second half is a *duplicate* rather than a
+mirror: a negated Poisson count is not a Poisson count. That is not a weaker
+version of the same idea — in a mixed draw such as the exact CIR transition,
+a pair that shares its chi-square component while mirroring its normal is a
+genuine antithetic pair, and duplicating is what makes the sharing exact. Where
+a construction contains no normal at all, antithetic is refused rather than
+silently producing two identical halves.
+
+**JAX keys are split, never reused.** A sampler that needs one block of draws
+uses the key you handed it. A sampler that needs more calls `split` once and
+takes one child per block, and never draws from the parent afterwards — the
+children are derived from the parent's own output, so a parent draw alongside
+them would reuse the randomness they were built from. `GBM`, `Heston` and the
+two discretized CIR schemes draw one block; `exact_transition` splits.
+
+## Discounting
+
+Under a deterministic rate the discount factor is a constant, so it commutes
+with the expectation and `MonteCarloEngine` applies it to the average at the
+end. Under a stochastic one it does not commute, because the payoff and the
+factor are functions of the same path:
+
+```text
+E[exp(-int r) * X_T]  !=  E[exp(-int r)] * E[X_T]
+```
+
+A `P(0,T)`-times-expected-payoff shortcut is therefore a different quantity
+rather than an approximation, and it is not offered. `DiscountingRule` is a
+structural protocol with one method, and the two implementations are the two
+things a caller might mean:
+
+| Rule | Factor |
+|---|---|
+| `ConstantRateDiscounting(rate)` | `exp(-rate * time_grid[-1])` — today's behaviour, named |
+| `PathwiseShortRateDiscounting(state_name, rule)` | `exp(-int_0^T r_u du)` from a named simulated state |
+
+```python
+import numpy as np
+from fast_vollib.processes import CIRShortRate
+from fast_vollib.simulation import PathwiseShortRateDiscounting
+
+process = CIRShortRate(kappa=0.3, theta=0.04, volatility=0.1)
+grid = np.linspace(0.0, 2.0, 17)
+paths = process.sample(
+    initial_state={"short_rate": 0.05}, time_grid=grid, n_paths=100_000, rng=0,
+    scheme="exact_transition",
+)
+factors = PathwiseShortRateDiscounting().discount_factors(
+    states=paths, time_grid=grid, state_names=process.state_names,
+)
+factors.mean()          # the zero-coupon bond price, to within its standard error
+```
+
+`rule` is `"trapezoid"` or `"left_riemann"` and is never inferred. The two
+converge at different orders, so a caller comparing runs needs to know which
+one produced a number; `left_riemann` is there to make the remaining
+discretization error measurable, not as a recommendation.
+
+The state is found **by name** in the `state_names` it is handed, never by
+position. A name that is not there is an error listing the ones that are —
+discounting a payoff by a spot instead of a rate produces a number, and the
+number is not a price.
+
+`MonteCarloEngine.price` takes one as the keyword-only `discounting`. Omitted,
+it discounts at `market.rate` over the contract's maturity — bit for bit the
+behaviour of every call written before the argument existed, and semantically
+`ConstantRateDiscounting(market.rate)`. Supplied,
+`market.rate` is **not read at all** — for the reason `market.volatility` is
+never read: two values for one quantity would silently pick one.
+
+## More than one state
+
+A process whose first state is `"spot"` may evolve others, and the engine takes
+them from the keyword-only `initial_state`:
+
+```python
+from fast_vollib.instruments import EuropeanOption, VanillaMarketInputs
+from fast_vollib.processes import BCC97, CIRShortRate, HestonVariance, LognormalJumps
+from fast_vollib.simulation import MonteCarloEngine, PathwiseShortRateDiscounting
+
+option = EuropeanOption(
+    underlier="ACME", option_type="call", strike=100.0, maturity=1.0,
+)
+process = BCC97(
+    variance=HestonVariance(kappa=2.0, theta=0.04, vol_of_vol=0.3, rho=-0.7),
+    jumps=LognormalJumps(jump_intensity=0.5, mean_log_jump=-0.05, jump_volatility=0.2),
+    rates=CIRShortRate(kappa=0.5, theta=0.05, volatility=0.2),
+    dividend_yield=0.01,
+)
+result = MonteCarloEngine().price(
+    option,
+    VanillaMarketInputs(underlying=100.0, rate=None),   # the model supplies the curve
+    process=process,
+    initial_state={"variance": 0.04, "short_rate": 0.03},
+    discounting=PathwiseShortRateDiscounting(),
+    n_paths=200_000, n_steps=64, rng=0,
+)
+```
+
+`initial_state` may not carry `"spot"` — `market.underlying` is where that comes
+from — and may not carry a name the process does not evolve. Every name it
+*does* evolve is required: an engine that defaulted a missing variance would be
+choosing a model on the caller's behalf. A one-state process takes nothing here.
+
+The rate path above drives the drift **and** the discount factor, and it is the
+same path in both roles: `BCC97`'s step integrates the rate with the trapezoid
+that `PathwiseShortRateDiscounting`'s default accumulates. Discounting those
+paths with `"left_riemann"` is a different quantity, not a coarser reading of
+this one.
 
 ## Scenarios
 
@@ -284,9 +534,10 @@ needs more than one pair. (`simulate()` itself permits a single path — it is
 not estimating anything.)
 
 Everything is validated before a single path is drawn, the RNG included. An
-unsupported type, a zero maturity, a multi-state process, a grid that does not
-end at maturity, a non-scalar market input, a mixed array namespace, or an
-unusable generator each raise with the sampling budget untouched.
+unsupported type, a zero maturity, a state the process evolves and
+`initial_state` does not supply, a grid that does not end at maturity, a
+non-scalar market input, a mixed array namespace, or an unusable generator each
+raise with the sampling budget untouched.
 
 ### Zero maturity and futures
 
@@ -340,7 +591,7 @@ catches the whole layer at once.
 | Error | Raised when |
 |---|---|
 | `SimulationValidationError` | An input to sampling is malformed or outside its domain: a bad time grid, a path count, an initial state, a non-scalar market input, a mixed array namespace, a device mismatch, or an RNG the backend cannot use. |
-| `UnsupportedProcessError` | The process is not served or violates the structural contract — a multi-state process handed to `MonteCarloEngine`, missing or invalid state metadata, a missing `sample()`, or a sample with the wrong shape, namespace, dtype, or device. |
+| `UnsupportedProcessError` | The process is not served or violates the structural contract — a process whose first state is not `"spot"` handed to `MonteCarloEngine`, a state it evolves that `initial_state` does not supply, missing or invalid state metadata, a missing `sample()`, or a sample with the wrong shape, namespace, dtype, or device. |
 | `ScenarioMismatchError` | The scenario does not describe the contract: a different underlier, or a horizon that is not the contract's maturity. |
 | `UnsupportedInstrumentError` | The contract type has no route, or the instance is not eligible — a `Future`, or a contract maturing now. |
 | `MissingMarketInputError` | A market field the request needed was not supplied; the message names it. |
@@ -361,8 +612,14 @@ JSON Schema as the rest of the [instruments layer](instruments.md), and
 
 ## Scope
 
-American and Bermudan exercise, stochastic-volatility processes, longstaff-
-schwartz or any other regression method, calibration, control variates,
-quasi-random sequences, importance sampling, streaming or chunked simulation,
-barrier rebates, and contract-level fixing calendars are not implemented. The
-registry and `MonteCarloEngine.supports()` list what is.
+American and Bermudan exercise, longstaff-schwartz or any other regression
+method, calibration, control variates, quasi-random sequences, importance
+sampling, streaming or chunked simulation, barrier rebates, and contract-level
+fixing calendars are not implemented. The registry and
+`MonteCarloEngine.supports()` list what is.
+
+Stochastic volatility, jumps and stochastic rates *are* implemented, as
+components of one configurable lattice — `Heston`, `Bates`, `BCC97`, and every
+reduction between them; see [the process table](#processes) and
+`fast_vollib.pricing.bcc97_price` for the transform each one is checked
+against.

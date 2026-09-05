@@ -26,6 +26,17 @@ def test_the_page_is_wired_into_the_navigation() -> None:
         "MonteCarloEngine",
         "MCResult",
         "GBM",
+        "CIRShortRate",
+        "ConstantShortRate",
+        "Bates",
+        "BCC97",
+        "HestonVariance",
+        "ConstantVariance",
+        "LognormalJumps",
+        "NoJumps",
+        "DiscountingRule",
+        "ConstantRateDiscounting",
+        "PathwiseShortRateDiscounting",
         "StochasticProcess",
         "SimulationValidationError",
         "ScenarioMismatchError",
@@ -44,6 +55,29 @@ def test_the_page_states_the_measure_rule() -> None:
     """The most consequential thing a reader can misunderstand."""
     assert "never used to rewrite a drift" in DOCUMENT
     assert "`market.volatility` is not read" in DOCUMENT
+
+
+def test_the_engine_s_two_new_keywords_are_documented_with_their_rules() -> None:
+    """Both encode a refusal, and a reader who misses it gets a plausible number.
+
+    ``discounting`` omitted must still mean what it always meant, and supplied
+    must mean ``market.rate`` is not consulted; ``initial_state`` must not be a
+    second place to put a spot.
+    """
+    for claim in (
+        "`market.rate` is **not read at all**",
+        'may not carry `"spot"`',
+        "choosing a model on the caller's behalf",
+        "same path in both roles",
+    ):
+        assert claim in DOCUMENT, claim
+
+
+def test_the_slot_guarantee_states_where_it_is_weaker() -> None:
+    """The JAX guarantee is stronger than the NumPy and torch one, and a reader
+    who assumed otherwise would write a reduction test that only passes on JAX."""
+    assert "a slot is a position in one" in DOCUMENT
+    assert "the rate path is not" in DOCUMENT
 
 
 def test_the_page_documents_every_payoff_convention() -> None:

@@ -91,6 +91,13 @@ from .exotics import (
     LookbackOption,
     VarianceSwap,
 )
+from .fixed_income import (
+    Cashflow,
+    FixedIncomeSecurity,
+    FixedRateBond,
+    ZeroCouponBond,
+    cashflows,
+)
 from .forwards import Forward, Future
 from .market import VanillaMarketInputs
 from .options import EuropeanOption
@@ -110,6 +117,11 @@ from .serialization import (
 
 __all__ = [
     "Asset",
+    "Cashflow",
+    "FixedIncomeSecurity",
+    "FixedRateBond",
+    "ZeroCouponBond",
+    "cashflows",
     "AsianOption",
     "AveragingMethod",
     "BarrierOption",

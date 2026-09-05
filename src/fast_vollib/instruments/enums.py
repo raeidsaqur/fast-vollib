@@ -76,6 +76,8 @@ class InstrumentKind(str, Enum):
     BARRIER_OPTION = "barrier_option"
     LOOKBACK_OPTION = "lookback_option"
     VARIANCE_SWAP = "variance_swap"
+    ZERO_COUPON_BOND = "zero_coupon_bond"
+    FIXED_RATE_BOND = "fixed_rate_bond"
 
 
 class BarrierType(str, Enum):

@@ -1,0 +1,468 @@
+{
+  "description": "Library-generated numerical regression reference; not an independent oracle.",
+  "generator": "scripts/generate_engine_reference_fixtures.py",
+  "encoding": "float64 as float.hex(); portable checks use scripts/reference_fixtures.py.",
+  "namespace": "numpy",
+  "dtype": "float64",
+  "market": {
+    "underlying": 100.0,
+    "rate": 0.03
+  },
+  "n_paths": 64,
+  "n_steps": 8,
+  "seed": 20260904,
+  "underlier": "ACME",
+  "process_parameters": {
+    "risk_neutral": {
+      "drift": 0.03,
+      "volatility": 0.2
+    },
+    "physical_drift": {
+      "drift": 0.11,
+      "volatility": 0.45
+    }
+  },
+  "cases": [
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "european_call",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.4ad50406ee9f6p+3",
+      "stderr_hex": "0x1.df6b1cc82bae1p+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "european_put",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.6a265aecaa054p+3",
+      "stderr_hex": "0x1.94342056789bfp+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "forward",
+      "type": "Forward",
+      "price_hex": "0x1.192caa5b8efaep+2",
+      "stderr_hex": "0x1.4ddbbcebb6e8cp+1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "binary_put",
+      "type": "BinaryOption",
+      "price_hex": "0x1.e539073e4a0e8p+1",
+      "stderr_hex": "0x1.316abf8832769p-1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "asian_arithmetic_fixed",
+      "type": "AsianOption",
+      "price_hex": "0x1.a3ffbe693856ap+2",
+      "stderr_hex": "0x1.09aa1c558e283p+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "asian_geometric_floating",
+      "type": "AsianOption",
+      "price_hex": "0x1.354a6e6a83c29p+2",
+      "stderr_hex": "0x1.0dd69baf18568p+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "barrier_up_and_out",
+      "type": "BarrierOption",
+      "price_hex": "0x1.0549e8c90a569p+2",
+      "stderr_hex": "0x1.c23e46cc1e85bp-1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "barrier_down_and_in",
+      "type": "BarrierOption",
+      "price_hex": "0x1.0d608a4e67a76p+2",
+      "stderr_hex": "0x1.2e5bfe2e2cd17p+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "lookback_floating",
+      "type": "LookbackOption",
+      "price_hex": "0x1.a0c4abfaaf74dp+3",
+      "stderr_hex": "0x1.e70e4b13b8999p+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "lookback_fixed",
+      "type": "LookbackOption",
+      "price_hex": "0x1.af73c9c21e626p+3",
+      "stderr_hex": "0x1.38810fa8d5cbcp+0",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": false,
+      "instrument": "variance_swap",
+      "type": "VarianceSwap",
+      "price_hex": "-0x1.9a3195c68d304p-11",
+      "stderr_hex": "0x1.54991b084a131p-9",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "european_call",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.31cb4ddfb6cabp+3",
+      "stderr_hex": "0x1.0b6504d397549p+0",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "european_put",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.8284419fd4ce6p+3",
+      "stderr_hex": "0x1.39da84d333954p-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "forward",
+      "type": "Forward",
+      "price_hex": "0x1.65092e7579896p+1",
+      "stderr_hex": "0x1.5c0875032ddffp-2",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "binary_put",
+      "type": "BinaryOption",
+      "price_hex": "0x1.0fb9892d1f3b5p+2",
+      "stderr_hex": "0x1.272250e2014f9p-2",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "asian_arithmetic_fixed",
+      "type": "AsianOption",
+      "price_hex": "0x1.71b796d6f3d2cp+2",
+      "stderr_hex": "0x1.2ccbc791367b8p-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "asian_geometric_floating",
+      "type": "AsianOption",
+      "price_hex": "0x1.4330957584183p+2",
+      "stderr_hex": "0x1.5410449f50936p-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "barrier_up_and_out",
+      "type": "BarrierOption",
+      "price_hex": "0x1.40d28d6a9082ep+2",
+      "stderr_hex": "0x1.95b4bc8ae1cddp-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "barrier_down_and_in",
+      "type": "BarrierOption",
+      "price_hex": "0x1.5e3df05cb63cdp+2",
+      "stderr_hex": "0x1.d285760553e85p-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "lookback_floating",
+      "type": "LookbackOption",
+      "price_hex": "0x1.a45bc82556174p+3",
+      "stderr_hex": "0x1.f1bf71feb0aebp-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "lookback_fixed",
+      "type": "LookbackOption",
+      "price_hex": "0x1.e65eef7d2e200p+3",
+      "stderr_hex": "0x1.63b25046ee66ep-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "risk_neutral",
+      "antithetic": true,
+      "instrument": "variance_swap",
+      "type": "VarianceSwap",
+      "price_hex": "-0x1.d828332231c91p-10",
+      "stderr_hex": "0x1.ccfa25333ba03p-9",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "european_call",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.b14765155c018p+4",
+      "stderr_hex": "0x1.5c0832f1414f3p+2",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "european_put",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.135c3fecbb5f9p+4",
+      "stderr_hex": "0x1.4c4fa99a82bc8p+1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "forward",
+      "type": "Forward",
+      "price_hex": "0x1.ddf240e44914dp+3",
+      "stderr_hex": "0x1.ab827aca76039p+2",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "binary_put",
+      "type": "BinaryOption",
+      "price_hex": "0x1.0fb9892d1f3b5p+2",
+      "stderr_hex": "0x1.368ae5ea6cd61p-1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "asian_arithmetic_fixed",
+      "type": "AsianOption",
+      "price_hex": "0x1.0803956e333a8p+4",
+      "stderr_hex": "0x1.6148bf010599ap+1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "asian_geometric_floating",
+      "type": "AsianOption",
+      "price_hex": "0x1.ba5b6a20b77a9p+3",
+      "stderr_hex": "0x1.b2add3574dcdbp+1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "barrier_up_and_out",
+      "type": "BarrierOption",
+      "price_hex": "0x1.8698d208bbc54p+0",
+      "stderr_hex": "0x1.4c5f5dbc61114p-1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "barrier_down_and_in",
+      "type": "BarrierOption",
+      "price_hex": "0x1.681c41a75e6d8p+3",
+      "stderr_hex": "0x1.17f7dc051d0b4p+1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "lookback_floating",
+      "type": "LookbackOption",
+      "price_hex": "0x1.036803f1074b6p+5",
+      "stderr_hex": "0x1.5ef9c9ea997b3p+2",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "lookback_fixed",
+      "type": "LookbackOption",
+      "price_hex": "0x1.6579a0ea8541ep+4",
+      "stderr_hex": "0x1.1adde994f1e71p+1",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": false,
+      "instrument": "variance_swap",
+      "type": "VarianceSwap",
+      "price_hex": "0x1.3a8a46efb8d09p-3",
+      "stderr_hex": "0x1.af1174525c0d5p-7",
+      "n_paths": 64,
+      "effective_samples": 64
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "european_call",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.83682d721e986p+4",
+      "stderr_hex": "0x1.83ceeaa810eb6p+1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "european_put",
+      "type": "EuropeanOption",
+      "price_hex": "0x1.30fe8878d0e78p+4",
+      "stderr_hex": "0x1.3a940af7777eep+0",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "forward",
+      "type": "Forward",
+      "price_hex": "0x1.48815063c0bd2p+3",
+      "stderr_hex": "0x1.caf99720a5c07p+0",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "binary_put",
+      "type": "BinaryOption",
+      "price_hex": "0x1.196de05c72a20p+2",
+      "stderr_hex": "0x1.041e2276c3b56p-2",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "asian_arithmetic_fixed",
+      "type": "AsianOption",
+      "price_hex": "0x1.cc982a5ada64ep+3",
+      "stderr_hex": "0x1.97356d4fdb296p+0",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "asian_geometric_floating",
+      "type": "AsianOption",
+      "price_hex": "0x1.ac08b06a86105p+3",
+      "stderr_hex": "0x1.029911df59585p+1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "barrier_up_and_out",
+      "type": "BarrierOption",
+      "price_hex": "0x1.98e3783b813f4p+0",
+      "stderr_hex": "0x1.51816327da353p-1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "barrier_down_and_in",
+      "type": "BarrierOption",
+      "price_hex": "0x1.bb66c5fb939d0p+3",
+      "stderr_hex": "0x1.558f7229f9e3dp+0",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "lookback_floating",
+      "type": "LookbackOption",
+      "price_hex": "0x1.f4694a5b56b04p+4",
+      "stderr_hex": "0x1.697e60c2e4646p+1",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "lookback_fixed",
+      "type": "LookbackOption",
+      "price_hex": "0x1.9dcb5ba411873p+4",
+      "stderr_hex": "0x1.438f826f41088p+0",
+      "n_paths": 64,
+      "effective_samples": 32
+    },
+    {
+      "process": "physical_drift",
+      "antithetic": true,
+      "instrument": "variance_swap",
+      "type": "VarianceSwap",
+      "price_hex": "0x1.302eefb4fa67bp-3",
+      "stderr_hex": "0x1.23b64b8a6bbb5p-6",
+      "n_paths": 64,
+      "effective_samples": 32
+    }
+  ],
+  "content_sha256": "69e794891131b3894b06c8192fdecf0b562c64cba73a068785d8f954e9ec4d54"
+}

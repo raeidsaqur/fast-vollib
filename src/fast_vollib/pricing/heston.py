@@ -37,10 +37,11 @@ True
 
 from __future__ import annotations
 
-from functools import lru_cache
 from typing import Any
 
 import numpy as np
+
+from ._fourier import FORMULATIONS, fourier_price
 
 __all__ = [
     "DEFAULT_QUADRATURE_NODES",
@@ -60,12 +61,6 @@ __all__ = [
 #: This is a measured accuracy, not a tolerance the routine chased: the error
 #: falls monotonically in the node count until cancellation dominates near 1e-11.
 DEFAULT_QUADRATURE_NODES = 768
-
-#: The two Fourier formulations.  ``'lewis'`` is one integral whose integrand is
-#: regular at the origin; ``'gatheral'`` is the two-probability decomposition,
-#: whose integrand has a removable singularity there and is kept as an
-#: independent cross-check rather than as the working route.
-FORMULATIONS = ("lewis", "gatheral")
 
 
 def heston_characteristic_function(
@@ -115,9 +110,34 @@ def heston_characteristic_function(
     if vol_of_vol <= 0.0:
         raise ValueError(f"vol_of_vol must be strictly positive; got {vol_of_vol!r}.")
     u = np.asarray(u, dtype=np.complex128)
+    # Avoid the removable 0/0 at the martingale argument when beta <= 0.
+    martingale = u == -1j
+    u = np.where(martingale, 0.0, u)
     xi2 = vol_of_vol * vol_of_vol
     beta = kappa - rho * vol_of_vol * 1j * u
     d = np.sqrt(beta * beta + xi2 * (1j * u + u * u))
+    if vol_of_vol < np.finfo(float).eps ** (1 / 6) * abs(kappa):
+        # Rationalize (beta-d)/xi^2 before the subtraction loses precision.
+        # This evaluates the same stochastic model, not its zero-xi limit.
+        # Keep the established arithmetic at ordinary parameter values.
+        scaled_minus = -(u * u + 1j * u) / (beta + d)
+        g_scaled = scaled_minus / (beta + d)
+        g = xi2 * g_scaled
+        one_minus_exp = -np.expm1(-d * maturity)
+        x_scaled = g_scaled * one_minus_exp / (1.0 - g)
+        x = xi2 * x_scaled
+        small = np.abs(x) < 1e-4
+        # log(1+x)/x has a removable singularity at zero. A short Taylor
+        # series also avoids complex log1p implementations that first add 1.
+        safe_x = np.where(small, 1.0 + 0j, x)
+        quotient = np.where(
+            small,
+            1.0 + x * (-0.5 + x * (1 / 3 + x * (-0.25 + x * (0.2 - x / 6)))),
+            np.log1p(safe_x) / safe_x,
+        )
+        C = kappa * theta * (scaled_minus * maturity - 2.0 * x_scaled * quotient)
+        D = scaled_minus * one_minus_exp / (1.0 - g * np.exp(-d * maturity))
+        return np.exp(C + D * v0)
     # The stable branch: |g| < 1, so 1 - g e^{-dT} never approaches the negative
     # real axis and the principal logarithm never wraps.
     minus = beta - d
@@ -128,36 +148,6 @@ def heston_characteristic_function(
     D = minus / xi2 * (1.0 - exponential) / (1.0 - g * exponential)
     C = kappa * theta / xi2 * (minus * maturity - 2.0 * np.log(ratio))
     return np.exp(C + D * v0)
-
-
-@lru_cache(maxsize=8)
-def _gauss_legendre(n_nodes: int) -> tuple[np.ndarray, np.ndarray]:
-    """Gauss-Legendre nodes and weights on ``(0, 1)``, cached by node count."""
-    from scipy.special import roots_legendre
-
-    nodes, weights = roots_legendre(n_nodes)
-    return 0.5 * (nodes + 1.0), 0.5 * weights
-
-
-def _half_line(n_nodes: int, scale: float) -> tuple[np.ndarray, np.ndarray]:
-    """Quadrature nodes and weights for ``int_0^inf f(u) du`` via ``u = c x/(1 - x)``.
-
-    The substitution maps the half-line to a unit interval; its Jacobian
-    ``c/(1 - x)^2`` is folded into the weights, so a caller integrates by a plain
-    weighted sum of ``f(u)``.
-
-    ``c`` matters, and getting it wrong is the whole difficulty of pricing a
-    short-dated option this way.  The integrand's width is set by the total
-    variance: it decays roughly like ``exp(-w u^2 / 2)`` with ``w = v T``, so the
-    range that carries the integral is ``u ~ 1/sqrt(w)``.  A fixed ``c`` that
-    resolves a one-year option puts almost every node where a one-week option's
-    integrand has already decayed, and the price comes back wrong in the second
-    decimal place.  Scaling ``c`` with ``1/sqrt(w)`` keeps the node density
-    matched to the integrand at every maturity.
-    """
-    x, w = _gauss_legendre(n_nodes)
-    u = scale * x / (1.0 - x)
-    return u, scale * w / (1.0 - x) ** 2
 
 
 def _quadrature_scale(maturity: float, parameters: dict[str, float]) -> float:
@@ -231,22 +221,6 @@ def heston_price(
     >>> bool(abs(lewis - gatheral) < 1e-10)
     True
     """
-    if formulation not in FORMULATIONS:
-        raise ValueError(f"formulation must be one of {FORMULATIONS}; got {formulation!r}.")
-    if n_nodes < 8:
-        raise ValueError(f"n_nodes must be at least 8; got {n_nodes}.")
-    F, K, T, call, df = np.broadcast_arrays(
-        np.asarray(forward, dtype=np.float64),
-        np.asarray(strike, dtype=np.float64),
-        np.asarray(maturity, dtype=np.float64),
-        np.asarray(is_call, dtype=bool),
-        np.asarray(discount, dtype=np.float64),
-    )
-    if not bool(np.all(F > 0.0)) or not bool(np.all(K > 0.0)):
-        raise ValueError("forward and strike must be strictly positive.")
-    if not bool(np.all(T > 0.0)):
-        raise ValueError("maturity must be strictly positive.")
-
     parameters = {
         "v0": v0,
         "kappa": kappa,
@@ -254,23 +228,21 @@ def heston_price(
         "vol_of_vol": vol_of_vol,
         "rho": rho,
     }
-    shape = F.shape
-    call_undiscounted = np.empty(shape, dtype=np.float64)
-    flat_F, flat_K, flat_T = F.reshape(-1), K.reshape(-1), T.reshape(-1)
-    flat_out = call_undiscounted.reshape(-1)
-    # One quadrature per distinct maturity: the characteristic function depends
-    # on T but not on the strike, so a whole smile costs one evaluation of it.
-    for value in np.unique(flat_T):
-        mask = flat_T == value
-        flat_out[mask] = (
-            _lewis_call(flat_F[mask], flat_K[mask], float(value), parameters, n_nodes)
-            if formulation == "lewis"
-            else _gatheral_call(flat_F[mask], flat_K[mask], float(value), parameters, n_nodes)
-        )
-    call_undiscounted = np.maximum(flat_out.reshape(shape), 0.0)
-    # Put-call parity on the undiscounted forward: c - p = F - K.
-    undiscounted = np.where(call, call_undiscounted, call_undiscounted - (F - K))
-    return df * undiscounted
+
+    def transform(u: Any, *, maturity: float) -> np.ndarray:
+        return heston_characteristic_function(u, maturity=maturity, **parameters)
+
+    return fourier_price(
+        forward=forward,
+        strike=strike,
+        maturity=maturity,
+        characteristic_function=transform,
+        quadrature_scale=lambda T: _quadrature_scale(T, parameters),
+        is_call=is_call,
+        discount=discount,
+        formulation=formulation,
+        n_nodes=n_nodes,
+    )
 
 
 def heston_call_price(
@@ -302,56 +274,3 @@ def heston_call_price(
         formulation=formulation,
         n_nodes=n_nodes,
     )
-
-
-def _lewis_call(
-    F: np.ndarray, K: np.ndarray, T: float, parameters: dict[str, float], n_nodes: int
-) -> np.ndarray:
-    """Lewis's single-integral undiscounted forward call.
-
-    ``c = F - sqrt(F K)/pi * int_0^inf Re[e^{-i u k} phi(u - i/2)] / (u^2 + 1/4) du``
-    with ``k = log(K/F)``.  The integrand is regular at ``u = 0`` -- the pole of
-    the two-probability form is what the ``i/2`` shift removes -- so a fixed node
-    set resolves it without special handling near the origin.
-
-    *This returns a price with absolute accuracy, not relative accuracy.*  The
-    expression is ``F`` minus a quantity that approaches ``F`` in the wings, so a
-    deep option's value is the difference of two nearly equal numbers and comes
-    back with an error near ``1e-13 F`` however many nodes are used.  That is
-    fine for a price and fatal for the implied volatility inverted from it, which
-    is why :class:`~fast_vollib.surface.fitting.heston.HestonIVSurface` declines
-    points whose vega is too small to carry that error.
-
-    Rearranging to compute the time value directly does not help, and the reason
-    is worth recording: subtracting the ``phi = 1`` identity leaves an integrand
-    that tends to ``-1/(u^2 + 1/4)``, which decays algebraically rather than
-    exponentially, and Gauss-Legendre on the mapped half-line resolves it far
-    worse than it resolves the original.  The cancellation moves from the
-    subtraction into the quadrature and gets worse, measurably.
-    """
-    u, w = _half_line(n_nodes, _quadrature_scale(T, parameters))
-    phi = heston_characteristic_function(u - 0.5j, maturity=T, **parameters)
-    k = np.log(K / F)
-    kernel = phi / (u * u + 0.25)
-    integral = (np.exp(-1j * np.outer(k, u)) * kernel[None, :]).real @ w
-    return F - np.sqrt(F * K) / np.pi * integral
-
-
-def _gatheral_call(
-    F: np.ndarray, K: np.ndarray, T: float, parameters: dict[str, float], n_nodes: int
-) -> np.ndarray:
-    """The two-probability undiscounted forward call ``F P_1 - K P_2``.
-
-    ``P_j = 1/2 + (1/pi) int_0^inf Re[e^{-i u k} phi_j(u) / (i u)] du`` with
-    ``phi_2 = phi`` and ``phi_1(u) = phi(u - i)`` -- the share-measure shift,
-    which needs no normalization because ``phi(-i) = 1`` exactly for a forward
-    that is a martingale.
-    """
-    u, w = _half_line(n_nodes, _quadrature_scale(T, parameters))
-    phi2 = heston_characteristic_function(u, maturity=T, **parameters)
-    phi1 = heston_characteristic_function(u - 1j, maturity=T, **parameters)
-    k = np.log(K / F)
-    rotation = np.exp(-1j * np.outer(k, u))
-    p1 = 0.5 + (rotation * (phi1 / (1j * u))[None, :]).real @ w / np.pi
-    p2 = 0.5 + (rotation * (phi2 / (1j * u))[None, :]).real @ w / np.pi
-    return F * p1 - K * p2

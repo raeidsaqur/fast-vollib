@@ -18,7 +18,8 @@ Examples
 >>> from fast_vollib.instruments import instrument_type, instrument_types
 >>> sorted(instrument_types())  # doctest: +NORMALIZE_WHITESPACE
 ['asian_option', 'asset', 'barrier_option', 'binary_option', 'european_option',
- 'forward', 'future', 'lookback_option', 'variance_swap']
+ 'fixed_rate_bond', 'forward', 'future', 'lookback_option', 'variance_swap',
+ 'zero_coupon_bond']
 >>> info = instrument_type("european_option")
 >>> info.python_type.__name__, info.schema_version
 ('EuropeanOption', 1)
@@ -56,8 +57,11 @@ class InstrumentTypeInfo:
     schema_version : int
         Version of the serialized record format for this type.
     payoff_requirement : PayoffRequirement or None
-        What state a payoff evaluator needs; ``None`` for types with no payoff
-        (an asset is a description, not a contract).
+        What state a payoff evaluator needs; ``None`` for types not evaluated
+        through the payoff dispatcher: assets, which describe an underlier
+        rather than a contract, and fixed-income securities, whose payments are
+        dated rather than terminal and are read with
+        :func:`~fast_vollib.instruments.cashflows`.
     capabilities : CapabilitySet
         What can be computed for this type, given what is installed.
     description : str

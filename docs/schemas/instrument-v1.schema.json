@@ -30,6 +30,12 @@
     },
     {
       "$ref": "#/$defs/variance_swap"
+    },
+    {
+      "$ref": "#/$defs/fixed_rate_bond"
+    },
+    {
+      "$ref": "#/$defs/zero_coupon_bond"
     }
   ],
   "$defs": {
@@ -447,6 +453,74 @@
         "maturity"
       ]
     },
+    "fixed_rate_bond": {
+      "type": "object",
+      "title": "FixedRateBond",
+      "description": "Periodic fixed coupons with the principal repaid alongside the last.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "fixed_rate_bond",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "face_value": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Principal redeemed at maturity; strictly positive. Distinct from a derivative's notional, whose sign denotes a short position."
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Upper-cased currency code. Descriptive; it never selects a curve."
+        },
+        "payment_times": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0.0
+          },
+          "minItems": 1,
+          "description": "Coupon payment times in years, strictly increasing and strictly positive. Must have the same length as accrual_fractions, which the contract enforces and this schema cannot state."
+        },
+        "accrual_fractions": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "exclusiveMinimum": 0.0
+          },
+          "minItems": 1,
+          "description": "Year fraction each coupon accrues over, one per payment. Supplied rather than derived, because deriving it from the payment times would impose a day-count convention the contract does not carry."
+        },
+        "coupon_rate": {
+          "type": "number",
+          "description": "Annual coupon rate as a decimal. Zero and negative are admissible."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
+        "payment_times",
+        "accrual_fractions",
+        "coupon_rate"
+      ]
+    },
     "forward": {
       "type": "object",
       "title": "Forward",
@@ -781,6 +855,55 @@
         "instrument_type",
         "underlier",
         "strike_variance",
+        "maturity"
+      ]
+    },
+    "zero_coupon_bond": {
+      "type": "object",
+      "title": "ZeroCouponBond",
+      "description": "Single redemption of face value at maturity; no coupons.",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1,
+          "description": "Version of the instrument record format."
+        },
+        "instrument_type": {
+          "type": "string",
+          "const": "zero_coupon_bond",
+          "description": "Discriminator naming the instrument type."
+        },
+        "instrument_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Caller-chosen identity for the record. No valuation meaning."
+        },
+        "face_value": {
+          "type": "number",
+          "exclusiveMinimum": 0.0,
+          "description": "Principal redeemed at maturity; strictly positive. Distinct from a derivative's notional, whose sign denotes a short position."
+        },
+        "currency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "Upper-cased currency code. Descriptive; it never selects a curve."
+        },
+        "maturity": {
+          "type": "number",
+          "minimum": 0.0,
+          "description": "Time to maturity as a year fraction from valuation. Never a date."
+        }
+      },
+      "required": [
+        "schema_version",
+        "instrument_type",
         "maturity"
       ]
     }

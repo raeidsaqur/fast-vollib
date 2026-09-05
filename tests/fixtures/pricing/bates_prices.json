@@ -1,0 +1,2512 @@
+{
+  "description": "Library-generated numerical regression reference; not an independent oracle.",
+  "generator": "scripts/generate_bates_reference_fixtures.py",
+  "encoding": "float64 as float.hex(); portable checks use scripts/reference_fixtures.py.",
+  "forward": 100.0,
+  "strikes": [
+    60.0,
+    80.0,
+    100.0,
+    130.0,
+    180.0
+  ],
+  "maturities": [
+    0.02,
+    0.25,
+    1.0,
+    10.0
+  ],
+  "discount": 0.97,
+  "heston_parameters": {
+    "moderate": {
+      "v0": 0.04,
+      "kappa": 2.0,
+      "theta": 0.04,
+      "vol_of_vol": 0.3,
+      "rho": -0.7
+    },
+    "heavy": {
+      "v0": 0.09,
+      "kappa": 0.5,
+      "theta": 0.06,
+      "vol_of_vol": 0.9,
+      "rho": -0.9
+    },
+    "fast": {
+      "v0": 0.01,
+      "kappa": 5.0,
+      "theta": 0.02,
+      "vol_of_vol": 0.2,
+      "rho": 0.4
+    }
+  },
+  "jump_parameters": {
+    "mild": {
+      "jump_intensity": 0.5,
+      "mean_log_jump": -0.05,
+      "jump_volatility": 0.2
+    },
+    "crash": {
+      "jump_intensity": 0.3,
+      "mean_log_jump": -0.4,
+      "jump_volatility": 0.05
+    },
+    "wild": {
+      "jump_intensity": 5.0,
+      "mean_log_jump": -0.02,
+      "jump_volatility": 0.45
+    }
+  },
+  "axes": "prices[strike]",
+  "cases": [
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366751c345503p+5",
+        "0x1.36a6426506812p+4",
+        "0x1.28cf48da6bb58p+0",
+        "0x1.dd30febd9bb85p-8",
+        "0x1.69f832a35c28fp-14"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.d6b9bdd38f5c2p-12",
+        "0x1.fedff500d6000p-7",
+        "0x1.28cf48da6bb58p+0",
+        "0x1.d1b76ca985735p+4",
+        "0x1.36667d05e990ap+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3688c2669c55dp+5",
+        "0x1.3c46471f8bc5fp+4",
+        "0x1.18f76dd8bee65p+2",
+        "0x1.16d4d998f530ap-3",
+        "0x1.f5581da6415c2p-9"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.12e001af7b8e1p-6",
+        "0x1.77f82e4957e2ep-2",
+        "0x1.18f76dd8bee65p+2",
+        "0x1.d3c7434ccb83fp+4",
+        "0x1.366a5116a1b2ep+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.39614d19031c6p+5",
+        "0x1.5de8075986a3dp+4",
+        "0x1.2016c8d09f373p+3",
+        "0x1.48002e1ac8e49p+0",
+        "0x1.4719d482e91b8p-4"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7d73594e5b006p-2",
+        "0x1.3c0d079901eb7p+1",
+        "0x1.2016c8d09f373p+3",
+        "0x1.e6199c7b4627ep+4",
+        "0x1.36b82cdb8720bp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7c322afba896cp+5",
+        "0x1.26c42a0e57c76p+5",
+        "0x1.c9de22ccf7c64p+4",
+        "0x1.3bc886e8960eap+4",
+        "0x1.5d63a03d544a4p+3"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.172f125508c16p+3",
+        "0x1.1721edb649286p+4",
+        "0x1.c9de22ccf7c64p+4",
+        "0x1.86b1104117d42p+5",
+        "0x1.6212da6e10efbp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366751c347383p+5",
+        "0x1.36a642650aaa3p+4",
+        "0x1.28cf48dab5569p+0",
+        "0x1.dd30ff1314960p-8",
+        "0x1.69f84db429333p-14"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.d6b9c1a39f5c2p-12",
+        "0x1.fedff5221e7aep-7",
+        "0x1.28cf48dab5569p+0",
+        "0x1.d1b76ca98acaep+4",
+        "0x1.36667d05eb41ap+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3688c2669cd72p+5",
+        "0x1.3c46471f8ce22p+4",
+        "0x1.18f76dd8c3c06p+2",
+        "0x1.16d4d999a924dp-3",
+        "0x1.f5581ddfc2719p-9"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.12e001b3860f6p-6",
+        "0x1.77f82e499ef05p-2",
+        "0x1.18f76dd8c3c06p+2",
+        "0x1.d3c7434cccebep+4",
+        "0x1.366a5116a225fp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.39614d1903504p+5",
+        "0x1.5de8075987161p+4",
+        "0x1.2016c8d0a02cap+3",
+        "0x1.48002e1ad1c83p+0",
+        "0x1.4719d4839deafp-4"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7d73594e74eb3p-2",
+        "0x1.3c0d0799057d3p+1",
+        "0x1.2016c8d0a02cap+3",
+        "0x1.e6199c7b46b62p+4",
+        "0x1.36b82cdb874dep+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7c322afba8942p+5",
+        "0x1.26c42a0e57c3ep+5",
+        "0x1.c9de22ccf7beap+4",
+        "0x1.3bc886e896043p+4",
+        "0x1.5d63a03d54381p+3"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.172f125508b6fp+3",
+        "0x1.1721edb649215p+4",
+        "0x1.c9de22ccf7beap+4",
+        "0x1.86b1104117ceep+5",
+        "0x1.6212da6e10ed7p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667558491c0dp+5",
+        "0x1.3797145843f13p+4",
+        "0x1.2ff659b6550f4p+0",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.de3c56b4d6666p-12",
+        "0x1.30adf1dd8acaep-4",
+        "0x1.2ff659b6550f4p+0",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36f823c9dc086p+5",
+        "0x1.457638f42eb9ap+4",
+        "0x1.38f875477961cp+2",
+        "0x1.19f234dc3c7aep-9",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.237ac6eb44014p-4",
+        "0x1.e1fa51b90a66fp-1",
+        "0x1.38f875477961cp+2",
+        "0x1.d1a2692b407b8p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3cfd69a2b44adp+5",
+        "0x1.728551b0f6072p+4",
+        "0x1.54c07ee6be452p+3",
+        "0x1.4321dbc1606edp+0",
+        "0x1.70cbff102eb85p-10"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a5c0cf13791b2p-1",
+        "0x1.e0f75a547d05ap+1",
+        "0x1.54c07ee6be452p+3",
+        "0x1.e5cbb755afa08p+4",
+        "0x1.3667d73265769p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.94078dc3f0e61p+5",
+        "0x1.45e3b5f642140p+5",
+        "0x1.081824ccbe138p+5",
+        "0x1.84a72b6ad8d39p+4",
+        "0x1.dbe7897a0670ap+3"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.76849d7629febp+3",
+        "0x1.556105861dc19p+4",
+        "0x1.081824ccbe138p+5",
+        "0x1.ab20628239369p+5",
+        "0x1.71e35795a7348p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667558493596p+5",
+        "0x1.3797145847671p+4",
+        "0x1.2ff659b692752p+0",
+        "0x1.883e666666666p-41",
+        "0x1.b370666666666p-38"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.de3c59e5f0f5cp-12",
+        "0x1.30adf1e100a52p-4",
+        "0x1.2ff659b692752p+0",
+        "0x1.d199999999a5dp+4",
+        "0x1.366666666681ap+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36f823c9dc6f5p+5",
+        "0x1.457638f42f980p+4",
+        "0x1.38f875477d402p+2",
+        "0x1.19f23500677e6p-9",
+        "0x1.e37c000000000p-40"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.237ac6ec11e33p-4",
+        "0x1.e1fa51b92632ep-1",
+        "0x1.38f875477d402p+2",
+        "0x1.d1a2692b419cdp+4",
+        "0x1.36666666666dfp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3cfd69a2b46f3p+5",
+        "0x1.728551b0f6581p+4",
+        "0x1.54c07ee6bef4bp+3",
+        "0x1.4321dbc166e0cp+0",
+        "0x1.70cbff317fb00p-10"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a5c0cf1382332p-1",
+        "0x1.e0f75a547f8d9p+1",
+        "0x1.54c07ee6bef4bp+3",
+        "0x1.e5cbb755b007ap+4",
+        "0x1.3667d7326597fp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.94078dc3f0deep+5",
+        "0x1.45e3b5f6420c6p+5",
+        "0x1.081824ccbe0a7p+5",
+        "0x1.84a72b6ad8bc5p+4",
+        "0x1.dbe7897a06435p+3"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.76849d7629e1dp+3",
+        "0x1.556105861db25p+4",
+        "0x1.081824ccbe0a7p+5",
+        "0x1.ab206282392afp+5",
+        "0x1.71e35795a72edp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37b2842010b12p+5",
+        "0x1.400dc9ddba63bp+4",
+        "0x1.652e791c3d668p+1",
+        "0x1.2577348ce78c2p+0",
+        "0x1.9d019396b1f1cp-2"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4c1db9aa4ac40p-3",
+        "0x1.34ec6eea7fa8dp-1",
+        "0x1.652e791c3d668p+1",
+        "0x1.e3f10ce268126p+4",
+        "0x1.380367f9fd185p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4e8a1bb919873p+5",
+        "0x1.b73bcfffe2f34p+4",
+        "0x1.206a4a2d8f33bp+4",
+        "0x1.6ec6cebebe498p+3",
+        "0x1.7f3166a0f28e6p+2"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.823b552b320c9p+1",
+        "0x1.01aad332f919cp+3",
+        "0x1.206a4a2d8f33bp+4",
+        "0x1.447e807c7c5f3p+5",
+        "0x1.4e597cd0758f5p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a7221d040da22p+5",
+        "0x1.64a9f0d38dea0p+5",
+        "0x1.3206178a903ebp+5",
+        "0x1.f378d2728c890p+4",
+        "0x1.773d6733aa0bdp+4"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.c2eeda769ceefp+3",
+        "0x1.92ed7b40b56d9p+4",
+        "0x1.3206178a903ebp+5",
+        "0x1.e289360613115p+5",
+        "0x1.9435c03350e95p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6742adb050684p+6",
+        "0x1.62b42909aca54p+6",
+        "0x1.5ed014f85f530p+6",
+        "0x1.59d2d4dff441fp+6",
+        "0x1.52fe141c3259bp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.981ef4fa3a6a2p+5",
+        "0x1.151a8f70130bap+6",
+        "0x1.5ed014f85f530p+6",
+        "0x1.ce393b465aa85p+6",
+        "0x1.44b23d414c600p+7"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37b28420111bfp+5",
+        "0x1.400dc9ddbb4d3p+4",
+        "0x1.652e791c456b0p+1",
+        "0x1.2577348cfa54bp+0",
+        "0x1.9d019397104b8p-2"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4c1db9aab586bp-3",
+        "0x1.34ec6eea9cd9bp-1",
+        "0x1.652e791c456b0p+1",
+        "0x1.e3f10ce2693eep+4",
+        "0x1.380367f9fd76bp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4e8a1bb919920p+5",
+        "0x1.b73bcfffe3074p+4",
+        "0x1.206a4a2d8f499p+4",
+        "0x1.6ec6cebebe79ap+3",
+        "0x1.7f3166a0f3170p+2"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.823b552b32ba3p+1",
+        "0x1.01aad332f941cp+3",
+        "0x1.206a4a2d8f499p+4",
+        "0x1.447e807c7c6b3p+5",
+        "0x1.4e597cd07597dp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a7221d040d9a0p+5",
+        "0x1.64a9f0d38de0bp+5",
+        "0x1.3206178a9033ap+5",
+        "0x1.f378d2728c71fp+4",
+        "0x1.773d6733a9f27p+4"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.c2eeda769cce7p+3",
+        "0x1.92ed7b40b55b0p+4",
+        "0x1.3206178a9033ap+5",
+        "0x1.e28936061305cp+5",
+        "0x1.9435c03350e30p+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.6742adb05062bp+6",
+        "0x1.62b42909ac9edp+6",
+        "0x1.5ed014f85f4bap+6",
+        "0x1.59d2d4dff439cp+6",
+        "0x1.52fe141c324fcp+6"
+      ]
+    },
+    {
+      "heston": "moderate",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.981ef4fa3a5f0p+5",
+        "0x1.151a8f7013053p+6",
+        "0x1.5ed014f85f4bap+6",
+        "0x1.ce393b465aa02p+6",
+        "0x1.44b23d414c5b0p+7"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36676c7ba1e9dp+5",
+        "0x1.36a8d019b32cep+4",
+        "0x1.b0d116bd46ce4p+0",
+        "0x1.f386b53d45666p-8",
+        "0x1.950b84f7051ebp-14"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.06153b836947bp-11",
+        "0x1.09a6cd3319ee1p-6",
+        "0x1.b0d116bd46ce4p+0",
+        "0x1.d1b8d204ed6dfp+4",
+        "0x1.36667fb71eb5dp+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.378da8caa6f80p+5",
+        "0x1.49cfbe9b11af9p+4",
+        "0x1.6c11cd8f36462p+2",
+        "0x1.43f8adc012894p-3",
+        "0x1.2b5c491dcf70ap-8"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.2742644091a36p-3",
+        "0x1.3695834ab4925p+0",
+        "0x1.6c11cd8f36462p+2",
+        "0x1.d4218af519bebp+4",
+        "0x1.366b13d78addap+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4374e41e7c3eap+5",
+        "0x1.796c1326a7837p+4",
+        "0x1.30a9222adcc28p+3",
+        "0x1.ff04c75f13a61p-1",
+        "0x1.f2aa10574967bp-5"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a1cfb702bb06cp+0",
+        "0x1.0c16b30104743p+2",
+        "0x1.30a9222adcc28p+3",
+        "0x1.e191bfd49236cp+4",
+        "0x1.36a4bba8714f9p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7d28d0684f560p+5",
+        "0x1.1afc3a839c89bp+5",
+        "0x1.996388272fd00p+4",
+        "0x1.e629329f79647p+3",
+        "0x1.8b743222dff3ep+2"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.1b09a807a3be7p+3",
+        "0x1.ff241d41a559fp+3",
+        "0x1.996388272fd00p+4",
+        "0x1.62571974ab25ep+5",
+        "0x1.4f1da9889465ap+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36676c7ba0624p+5",
+        "0x1.36a8d019b6475p+4",
+        "0x1.b0d116bd7d870p+0",
+        "0x1.f386b57cf39d3p-8",
+        "0x1.950b9567d9999p-14"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.061539fbd5999p-11",
+        "0x1.09a6cd3f83a66p-6",
+        "0x1.b0d116bd7d870p+0",
+        "0x1.d1b8d204f168dp+4",
+        "0x1.36667fb71fbcep+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.378da8e5047eap+5",
+        "0x1.49cfbe9b0ea9fp+4",
+        "0x1.6c11cd8f39a02p+2",
+        "0x1.43f8adc08da68p-3",
+        "0x1.2b5c9aed5d20dp-8"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.27427e9e18382p-3",
+        "0x1.3695834a84392p+0",
+        "0x1.6c11cd8f39a02p+2",
+        "0x1.d4218af51ab4fp+4",
+        "0x1.366b13d8d21bep+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4374e43b2a599p+5",
+        "0x1.796c1326a4c6ap+4",
+        "0x1.30a9222add4b5p+3",
+        "0x1.ff04c75f1e20ap-1",
+        "0x1.f2aa09961b0d9p-5"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a1cfba987e64ep+0",
+        "0x1.0c16b300f980ep+2",
+        "0x1.30a9222add4b5p+3",
+        "0x1.e191bfd4928aap+4",
+        "0x1.36a4bba79929dp+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7d28d0684f384p+5",
+        "0x1.1afc3a839c7edp+5",
+        "0x1.996388272fb65p+4",
+        "0x1.e629329f792bfp+3",
+        "0x1.8b743222df826p+2"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.1b09a807a3476p+3",
+        "0x1.ff241d41a52e8p+3",
+        "0x1.996388272fb65p+4",
+        "0x1.62571974ab17cp+5",
+        "0x1.4f1da988945e9p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667f4b9d435ep+5",
+        "0x1.37976332ff7fdp+4",
+        "0x1.b927cb11af1b9p+0",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.8e536dcf7b5c2p-11",
+        "0x1.30fccc9919700p-4",
+        "0x1.b927cb11af1b9p+0",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.382e92048c25fp+5",
+        "0x1.50fc47d941f6ep+4",
+        "0x1.9583df79e1ad1p+2",
+        "0x1.7946b2fcd570ap-10",
+        "0x1.692c666666666p-32"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.c82b9e25bf847p-3",
+        "0x1.a95e172db907ep+0",
+        "0x1.9583df79e1ad1p+2",
+        "0x1.d19f7eb4658cfp+4",
+        "0x1.366666666c0b1p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.462a97b7a6ccdp+5",
+        "0x1.8931387aa3ef4p+4",
+        "0x1.7bc1e56cda1b9p+3",
+        "0x1.8fa6f83b10e1cp-2",
+        "0x1.640e79212d1ebp-11"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.f8862a280cce4p+0",
+        "0x1.4b2b4850f6236p+2",
+        "0x1.7bc1e56cda1b9p+3",
+        "0x1.d7d8357a85dd2p+4",
+        "0x1.3667186da2f70p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.946541c66d07cp+5",
+        "0x1.3ea7529a6a0c1p+5",
+        "0x1.f274e89c96168p+4",
+        "0x1.54deca8953a66p+4",
+        "0x1.5cf753283e9d0p+3"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.77fb6d801a857p+3",
+        "0x1.46e83ece6db1dp+4",
+        "0x1.f274e89c96168p+4",
+        "0x1.933c321176a00p+5",
+        "0x1.620550cb6e3a0p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667f4b9e0536p+5",
+        "0x1.3797633302481p+4",
+        "0x1.b927cb11e036cp+0",
+        "0x1.4c39999999999p-42",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.8e5379ecff0a4p-11",
+        "0x1.30fccc9be1a8fp-4",
+        "0x1.b927cb11e036cp+0",
+        "0x1.d1999999999edp+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.382e91a43d09dp+5",
+        "0x1.50fc47d94e29dp+4",
+        "0x1.9583df79e48ddp+2",
+        "0x1.7946b3315dc33p-10",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.c82b3dd6a36c0p-3",
+        "0x1.a95e172e7c368p+0",
+        "0x1.9583df79e48ddp+2",
+        "0x1.d19f7eb4665f1p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.462a952f2f981p+5",
+        "0x1.893138765cfdap+4",
+        "0x1.7bc1e56cda88bp+3",
+        "0x1.8fa6f83b216ccp-2",
+        "0x1.640e509805066p-11"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.f885d9192634ep+0",
+        "0x1.4b2b483fda5cep+2",
+        "0x1.7bc1e56cda88bp+3",
+        "0x1.d7d8357a861f5p+4",
+        "0x1.3667186d8eb26p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.946541bc5c890p+5",
+        "0x1.3ea7529764b37p+5",
+        "0x1.f274e89df0211p+4",
+        "0x1.54deca8941048p+4",
+        "0x1.5cf753283e6f5p+3"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.77fb6d57d88a8p+3",
+        "0x1.46e83ec863008p+4",
+        "0x1.f274e89df0211p+4",
+        "0x1.933c32116d4f1p+5",
+        "0x1.620550cb6e345p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37b56c22aedcdp+5",
+        "0x1.401a5984158f5p+4",
+        "0x1.9f45097955bb7p+1",
+        "0x1.268829809357ap+0",
+        "0x1.9fdacb0ebba33p-2"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4f05bc48766eep-3",
+        "0x1.367e63b5e51e0p-1",
+        "0x1.9f45097955bb7p+1",
+        "0x1.e4021c31a2cf1p+4",
+        "0x1.3806413175220p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.5058b73031f17p+5",
+        "0x1.c0ea994af9b47p+4",
+        "0x1.247eb278f96e0p+4",
+        "0x1.75e0282b463adp+3",
+        "0x1.888e96a90fef7p+2"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.9f250c9cb8b0ap+1",
+        "0x1.150865c9269c2p+3",
+        "0x1.247eb278f96e0p+4",
+        "0x1.4644d6d79e5b8p+5",
+        "0x1.4eef4fd0f7656p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.aa4b040d75f86p+5",
+        "0x1.67d8b6c94fe56p+5",
+        "0x1.352153e272178p+5",
+        "0x1.f92877be9662fp+4",
+        "0x1.7c05df5617dc0p+4"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.cf92769c3e47fp+3",
+        "0x1.994b072c39646p+4",
+        "0x1.352153e272178p+5",
+        "0x1.e56108ac17fe4p+5",
+        "0x1.9567de3bec5d6p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.672ddae37d028p+6",
+        "0x1.62950574c1d15p+6",
+        "0x1.5ea78e99dae15p+6",
+        "0x1.599da5380cdd2p+6",
+        "0x1.52b6aaccf308cp+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.97f54f60939e9p+5",
+        "0x1.14fb6bdb2837bp+6",
+        "0x1.5ea78e99dae15p+6",
+        "0x1.ce040b9e73439p+6",
+        "0x1.448e8899acb7ap+7"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37b56c1b70d2dp+5",
+        "0x1.401a59841735cp+4",
+        "0x1.9f4509795d83dp+1",
+        "0x1.26882980a56e5p+0",
+        "0x1.9fdacab3607a6p-2"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4f05b50a6c661p-3",
+        "0x1.367e63b619ebfp-1",
+        "0x1.9f4509795d83dp+1",
+        "0x1.e4021c31a3f08p+4",
+        "0x1.3806413119c6dp+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.5058b6af25881p+5",
+        "0x1.c0ea994aedad1p+4",
+        "0x1.247eb278f9826p+4",
+        "0x1.75e0282a920bcp+3",
+        "0x1.888e3d3ca5df2p+2"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.9f25048bf21aep+1",
+        "0x1.150865c90e8d6p+3",
+        "0x1.247eb278f9826p+4",
+        "0x1.4644d6d7714fcp+5",
+        "0x1.4eef4a3a30c45p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.aa4b040d75d1bp+5",
+        "0x1.67d8b6c94fdbcp+5",
+        "0x1.352153e261eb9p+5",
+        "0x1.f928781973e06p+4",
+        "0x1.7c05da5cdb946p+4"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.cf92769c3dad3p+3",
+        "0x1.994b072c39511p+4",
+        "0x1.352153e261eb9p+5",
+        "0x1.e56108d986bd0p+5",
+        "0x1.9567dcfd9d4b8p+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.672ddae37cfcep+6",
+        "0x1.62950574c1ca9p+6",
+        "0x1.5ea78e99dada1p+6",
+        "0x1.599da5380cd4ep+6",
+        "0x1.52b6aaccf2fdfp+6"
+      ]
+    },
+    {
+      "heston": "heavy",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.97f54f6093936p+5",
+        "0x1.14fb6bdb28310p+6",
+        "0x1.5ea78e99dada1p+6",
+        "0x1.ce040b9e733b5p+6",
+        "0x1.448e8899acb22p+7"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667443b1fe97p+5",
+        "0x1.36a4f720c4b81p+4",
+        "0x1.42a3a8f3be8f0p-1",
+        "0x1.cf184d2d68c29p-8",
+        "0x1.4e86b7066b852p-14"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.bba9730609eb8p-12",
+        "0x1.f485d2f28d47bp-7",
+        "0x1.42a3a8f3be8f0p-1",
+        "0x1.d1b68b1e6c702p+4",
+        "0x1.36667b4ed1d6dp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.367a55eace946p+5",
+        "0x1.39cf1a7fb4b33p+4",
+        "0x1.7e556f515f596p+1",
+        "0x1.cb718acecbf85p-4",
+        "0x1.66190d938a8f6p-9"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3ef84682e02b8p-7",
+        "0x1.b45a0ca726657p-3",
+        "0x1.7e556f515f596p+1",
+        "0x1.d3650b2468659p+4",
+        "0x1.36693298818d8p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.374b83466391ap+5",
+        "0x1.49896a86914dep+4",
+        "0x1.c4c1dd1a30f5fp+2",
+        "0x1.f34bf7fc50518p-1",
+        "0x1.ee0aaad6a103dp-5"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.ca39bffa56780p-4",
+        "0x1.32304202ae784p+0",
+        "0x1.c4c1dd1a30f5fp+2",
+        "0x1.e133f9597c1c2p+4",
+        "0x1.36a427bbc13a8p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.62704be5acd73p+5",
+        "0x1.04a82690cd657p+5",
+        "0x1.7edf1990c4534p+4",
+        "0x1.e6ea3f8812d7cp+3",
+        "0x1.df70b2e74f970p+2"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.604f2bfa33865p+2",
+        "0x1.a5d3cd7668c8fp+3",
+        "0x1.7edf1990c4534p+4",
+        "0x1.62875caed182cp+5",
+        "0x1.545d7194db5fdp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3667443b2239fp+5",
+        "0x1.36a4f720c9c49p+4",
+        "0x1.42a3a8f470fe4p-1",
+        "0x1.cf184d94faec0p-8",
+        "0x1.4e86c29f3dccdp-14"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.bba977a722e14p-12",
+        "0x1.f485d31af17aep-7",
+        "0x1.42a3a8f470fe4p-1",
+        "0x1.d1b68b1e72e94p+4",
+        "0x1.36667b4ed2906p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.367a55eacf379p+5",
+        "0x1.39cf1a7fb614cp+4",
+        "0x1.7e556f516b802p+1",
+        "0x1.cb718ad092618p-4",
+        "0x1.66190ddc4b499p-9"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3ef8468d1270ap-7",
+        "0x1.b45a0ca7d72dcp-3",
+        "0x1.7e556f516b802p+1",
+        "0x1.d3650b246a2bfp+4",
+        "0x1.36693298821f0p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.374b834663d6bp+5",
+        "0x1.49896a8691e40p+4",
+        "0x1.c4c1dd1a33862p+2",
+        "0x1.f34bf7fc6804ep-1",
+        "0x1.ee0aaad88d485p-5"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.ca39bffae0929p-4",
+        "0x1.32304202b7d9fp+0",
+        "0x1.c4c1dd1a33862p+2",
+        "0x1.e133f9597cd9cp+4",
+        "0x1.36a427bbc1781p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.62704be5acdaap+5",
+        "0x1.04a82690cd672p+5",
+        "0x1.7edf1990c456ep+4",
+        "0x1.e6ea3f8812df0p+3",
+        "0x1.df70b2e74fc45p+2"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "mild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.604f2bfa33a1fp+2",
+        "0x1.a5d3cd7668cfbp+3",
+        "0x1.7edf1990c456ep+4",
+        "0x1.62875caed1849p+5",
+        "0x1.545d7194db62bp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366720120c772p+5",
+        "0x1.37970f31835adp+4",
+        "0x1.4f1b301db5d2fp-1",
+        "0x0.0p+0",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.73574c2172e14p-12",
+        "0x1.30a8cb1cf4652p-4",
+        "0x1.4f1b301db5d2fp-1",
+        "0x1.d199999999999p+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36bb2a06994edp+5",
+        "0x1.4402a1398328dp+4",
+        "0x1.b56aaee2880a9p+1",
+        "0x1.79ee74608b0a4p-10",
+        "0x1.2dc5b5c28f5c2p-30"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.530e80cba1baep-5",
+        "0x1.b3875a63984dbp-1",
+        "0x1.b56aaee2880a9p+1",
+        "0x1.d19f81536b1bcp+4",
+        "0x1.366666667942cp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3a5e4f7cf5dd9p+5",
+        "0x1.64ad7eaef59aep+4",
+        "0x1.177a0317e44fdp+3",
+        "0x1.80fca74162f4bp-1",
+        "0x1.5b2c98e35228fp-8"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.fbf48b47bb949p-2",
+        "0x1.7238c24479a40p+1",
+        "0x1.177a0317e44fdp+3",
+        "0x1.dda17ed3a4b14p+4",
+        "0x1.366bd318c9f3bp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7f1ffb4fe60e6p+5",
+        "0x1.2a78551e68781p+5",
+        "0x1.d19529a945eb9p+4",
+        "0x1.425bf65435e2bp+4",
+        "0x1.63cbbad0b098ap+3"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.22e653a5fe9ffp+3",
+        "0x1.1e8a43d66a89cp+4",
+        "0x1.d19529a945eb9p+4",
+        "0x1.89fac7f6e7be2p+5",
+        "0x1.62dfddc07c797p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.366720120e54bp+5",
+        "0x1.37970f3187496p+4",
+        "0x1.4f1b301e40b74p-1",
+        "0x1.cc24ccccccccdp-41",
+        "0x0.0p+0"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.73574fdca8000p-12",
+        "0x1.30a8cb20e3033p-4",
+        "0x1.4f1b301e40b74p-1",
+        "0x1.d199999999a7fp+4",
+        "0x1.3666666666666p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.36bb2a0699c73p+5",
+        "0x1.4402a139842ffp+4",
+        "0x1.b56aaee290f8ep+1",
+        "0x1.79ee74b4c2619p-10",
+        "0x1.3489213333333p-30"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.530e80cd8317bp-5",
+        "0x1.b3875a63b9314p-1",
+        "0x1.b56aaee290f8ep+1",
+        "0x1.d19f81536c6cap+4",
+        "0x1.3666666679aefp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.3a5e4f7cf60b7p+5",
+        "0x1.64ad7eaef5fedp+4",
+        "0x1.177a0317e52b5p+3",
+        "0x1.80fca74173477p-1",
+        "0x1.5b2c98edc0d00p-8"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.fbf48b47d286ep-2",
+        "0x1.7238c2447cc35p+1",
+        "0x1.177a0317e52b5p+3",
+        "0x1.dda17ed3a533dp+4",
+        "0x1.366bd318ca1d6p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7f1ffb4fe60a8p+5",
+        "0x1.2a78551e68736p+5",
+        "0x1.d19529a945df9p+4",
+        "0x1.425bf65435d67p+4",
+        "0x1.63cbbad0b0833p+3"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "crash",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.22e653a5fe906p+3",
+        "0x1.1e8a43d66a807p+4",
+        "0x1.d19529a945df9p+4",
+        "0x1.89fac7f6e7b80p+5",
+        "0x1.62dfddc07c76dp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37b0d5c9d4d0fp+5",
+        "0x1.4006a81b94768p+4",
+        "0x1.2eb8d1a12ed48p+1",
+        "0x1.24d2fe559eb96p+0",
+        "0x1.9b454d69c5d2bp-2"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4a6f636e6a888p-3",
+        "0x1.340836a5c203bp-1",
+        "0x1.2eb8d1a12ed48p+1",
+        "0x1.e3e6c97ef3853p+4",
+        "0x1.3801abb3d02c3p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4de7bfbe09c8ep+5",
+        "0x1.b23a562f13715p+4",
+        "0x1.1cb74944d43a5p+4",
+        "0x1.6a103b25c3f62p+3",
+        "0x1.787f066594659p+2"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7815957a36275p+1",
+        "0x1.ef4fbf22b42bap+2",
+        "0x1.1cb74944d43a5p+4",
+        "0x1.4350db963dca5p+5",
+        "0x1.4dee56ccbfaccp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a4ecc1e13d42bp+5",
+        "0x1.6217c729fb660p+5",
+        "0x1.2f478dd0fef17p+5",
+        "0x1.ede92e8834e62p+4",
+        "0x1.720b14964c1b3p+4"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.ba196deb5b711p+3",
+        "0x1.8dc927ed90659p+4",
+        "0x1.2f478dd0fef17p+5",
+        "0x1.dfc16410e73fep+5",
+        "0x1.92e92b8bf96d3p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.666dec811edaap+6",
+        "0x1.61bef5a02aa77p+6",
+        "0x1.5dbfcd041cbe3p+6",
+        "0x1.58a0ae652f8cap+6",
+        "0x1.519f1ff9fc2f2p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "lewis",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.9675729bd74edp+5",
+        "0x1.14255c06910ddp+6",
+        "0x1.5dbfcd041cbe3p+6",
+        "0x1.cd0714cb95f31p+6",
+        "0x1.4402c330314adp+7"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.37b0d614a5e5ap+5",
+        "0x1.4006a81b9562bp+4",
+        "0x1.2eb8d1a136f1cp+1",
+        "0x1.24d2fe5637249p+0",
+        "0x1.9b3ab411f70fcp-2"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.02,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4a6fae3f7f35cp-3",
+        "0x1.340836a5df89fp-1",
+        "0x1.2eb8d1a136f1cp+1",
+        "0x1.e3e6c97efd0bep+4",
+        "0x1.3801a11a785d7p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.4de7bfbe09d3ep+5",
+        "0x1.b23a562f1385bp+4",
+        "0x1.1cb74944d4505p+4",
+        "0x1.6a103b25c4301p+3",
+        "0x1.787f066590d83p+2"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 0.25,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.7815957a36d7dp+1",
+        "0x1.ef4fbf22b47d1p+2",
+        "0x1.1cb74944d4505p+4",
+        "0x1.4350db963dd8dp+5",
+        "0x1.4dee56ccbf73fp+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.a4ecc1e13d3bap+5",
+        "0x1.6217c729fb5cfp+5",
+        "0x1.2f478dd0fee6bp+5",
+        "0x1.ede92e8834ce0p+4",
+        "0x1.720b14964c03bp+4"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 1.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.ba196deb5b54fp+3",
+        "0x1.8dc927ed90538p+4",
+        "0x1.2f478dd0fee6bp+5",
+        "0x1.dfc16410e733dp+5",
+        "0x1.92e92b8bf9675p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": true,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.666dec811ed4ep+6",
+        "0x1.61bef5a02aa0cp+6",
+        "0x1.5dbfcd041cb6ep+6",
+        "0x1.58a0ae652f842p+6",
+        "0x1.519f1ff9fc255p+6"
+      ]
+    },
+    {
+      "heston": "fast",
+      "jumps": "wild",
+      "formulation": "gatheral",
+      "maturity": 10.0,
+      "is_call": false,
+      "shape": [
+        5
+      ],
+      "prices_hex": [
+        "0x1.9675729bd7437p+5",
+        "0x1.14255c0691072p+6",
+        "0x1.5dbfcd041cb6ep+6",
+        "0x1.cd0714cb95ea8p+6",
+        "0x1.4402c3303145dp+7"
+      ]
+    }
+  ],
+  "content_sha256": "413f194491555da999f040c59297bd53e488a2ffd15797122a8bdedb40fd8dca"
+}

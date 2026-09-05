@@ -1,0 +1,302 @@
+{
+  "description": "Zero-coupon bond prices under the risk-neutral CIR (1985) short rate, computed with mpmath at 50 decimal digits from equation 23 as published -- unrearranged, and sharing no algebra with the float64 kernel it checks. Not produced by any pricing library, and regenerable from the checked-in generator.",
+  "generator": "scripts/generate_cir_reference_fixtures.py",
+  "precision_digits": 50,
+  "library": "mpmath 1.3.0",
+  "reference": "Cox, J. C., Ingersoll, J. E., Ross, S. A. (1985). A Theory of the Term Structure of Interest Rates. Econometrica 53(2), 385-407, equation 23.",
+  "parameterization": "Risk-neutral: dr = kappa (theta - r) dt + volatility sqrt(r) dW. The market price of rate risk is absorbed into kappa and theta.",
+  "conventions": {
+    "discounting": "P(0, maturity) = A(maturity) exp(-B(maturity) * initial_rate)",
+    "deterministic_branch": "volatility == 0 uses exp(-(theta*T + (r0 - theta)(1 - exp(-kappa*T))/kappa)), the integral of the noiseless mean-reverting path -- a separate formula rather than a limit of equation 23, whose exponent is undefined there.",
+    "maturity_zero": "P(0, 0) = 1 exactly."
+  },
+  "cases": [
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.5",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.5",
+      "gamma_times_maturity": "0.76811457",
+      "discount_factor": "0.962023623026291443043660242293",
+      "log_discount_factor": "-0.0387162724575420175011030006046"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.1",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.1",
+      "gamma_times_maturity": "0.33166248",
+      "discount_factor": "0.960840811992745836160631912297",
+      "log_discount_factor": "-0.0399465320236249889519854463915"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.01",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.01",
+      "gamma_times_maturity": "0.30033315",
+      "discount_factor": "0.960789953744070379326867062516",
+      "log_discount_factor": "-0.0399994644075086647795190909923"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.001",
+      "gamma_times_maturity": "0.30000333",
+      "discount_factor": "0.960789444298327166139787543415",
+      "log_discount_factor": "-0.0399999946439836521728351289171"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.0001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.0001",
+      "gamma_times_maturity": "0.30000003",
+      "discount_factor": "0.960789439203783257654867602124",
+      "log_discount_factor": "-0.0399999999464398273781188503722"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.00001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.00001",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152837809922232125696",
+      "log_discount_factor": "-0.0399999999994643982728668273916"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.000001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.000001",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152328355444040992154",
+      "log_discount_factor": "-0.0399999999999946439827285768378"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.0000001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.0000001",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152323260899258994340",
+      "log_discount_factor": "-0.0399999999999999464398272857592"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.00000001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.00000001",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152323209953811174353",
+      "log_discount_factor": "-0.0399999999999999994643982728576"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.0000000001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility sweep at the book parameters, sigma = 0.0000000001",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152323209439262151372",
+      "log_discount_factor": "-0.0399999999999999999999464398273"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.1",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "the reference one-year price",
+      "gamma_times_maturity": "0.33166248",
+      "discount_factor": "0.960840811992745836160631912297",
+      "log_discount_factor": "-0.0399465320236249889519854463915"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.1",
+      "initial_rate": "0.04",
+      "maturity": "10.0",
+      "note": "ordinary parameters, ten years",
+      "gamma_times_maturity": "3.3166248",
+      "discount_factor": "0.677896707097114071502426126840",
+      "log_discount_factor": "-0.388760352062378358342729371716"
+    },
+    {
+      "kappa": "2.0",
+      "theta": "0.03",
+      "volatility": "0.5",
+      "initial_rate": "0.05",
+      "maturity": "5.0",
+      "note": "fast reversion, high vol-of-rate",
+      "gamma_times_maturity": "10.606602",
+      "discount_factor": "0.855625660686465677837120811200",
+      "log_discount_factor": "-0.155922310771463924524815496494"
+    },
+    {
+      "kappa": "0.5",
+      "theta": "0.02",
+      "volatility": "0.02",
+      "initial_rate": "0.02",
+      "maturity": "30.0",
+      "note": "small vol-of-rate over thirty years",
+      "gamma_times_maturity": "15.023981",
+      "discount_factor": "0.549048427880293642179066402714",
+      "log_discount_factor": "-0.599568630287758429242141793641"
+    },
+    {
+      "kappa": "1.5",
+      "theta": "0.05",
+      "volatility": "0.4",
+      "initial_rate": "0.01",
+      "maturity": "0.25",
+      "note": "short maturity, rate far below theta",
+      "gamma_times_maturity": "0.40078049",
+      "discount_factor": "0.995851913396464750363261351176",
+      "log_discount_factor": "-0.00415671378055395714611156064839"
+    },
+    {
+      "kappa": "3.0",
+      "theta": "0.04",
+      "volatility": "2.0",
+      "initial_rate": "0.04",
+      "maturity": "200.0",
+      "note": "gamma*tau ~ 825; the published form overflows",
+      "gamma_times_maturity": "824.62113",
+      "discount_factor": "0.00118137034187164316709844713617",
+      "log_discount_factor": "-6.74108020762866691654070539840"
+    },
+    {
+      "kappa": "1.0",
+      "theta": "0.04",
+      "volatility": "5.0",
+      "initial_rate": "0.04",
+      "maturity": "500.0",
+      "note": "gamma*tau ~ 3571; log A ~ -100",
+      "gamma_times_maturity": "3570.7142",
+      "discount_factor": "0.00729059347798295270929011635641",
+      "log_discount_factor": "-4.92117032640096948068160632688"
+    },
+    {
+      "kappa": "0.05",
+      "theta": "0.04",
+      "volatility": "0.9",
+      "initial_rate": "0.04",
+      "maturity": "100.0",
+      "note": "very slow reversion",
+      "gamma_times_maturity": "127.37739",
+      "discount_factor": "0.698118187591531356132813897286",
+      "log_discount_factor": "-0.359366867356282800541878251615"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.000001",
+      "initial_rate": "0.09",
+      "maturity": "50.0",
+      "note": "tiny vol-of-rate, long maturity",
+      "gamma_times_maturity": "15.000000",
+      "discount_factor": "0.114558849834575564022987517757",
+      "log_discount_factor": "-2.16666661567202066514731932075"
+    },
+    {
+      "kappa": "5.0",
+      "theta": "0.04",
+      "volatility": "0.00000001",
+      "initial_rate": "0.04",
+      "maturity": "500.0",
+      "note": "gamma*tau = 2500 exactly",
+      "gamma_times_maturity": "2500.0000",
+      "discount_factor": "0.00000000206115362243855791036261759076",
+      "log_discount_factor": "-19.9999999999999999600240000000"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.0000000001",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility = 1e-10",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152323209439262151372",
+      "log_discount_factor": "-0.0399999999999999999999464398273"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.0000000001",
+      "initial_rate": "0.09",
+      "maturity": "50.0",
+      "note": "volatility = 1e-10, long maturity",
+      "gamma_times_maturity": "15.000000",
+      "discount_factor": "0.114558849833323903449594559854",
+      "log_discount_factor": "-2.16666661568294658291977609260"
+    },
+    {
+      "kappa": "0.8",
+      "theta": "0.03",
+      "volatility": "0.0",
+      "initial_rate": "0.05",
+      "maturity": "0.5",
+      "note": "volatility exactly zero: the deterministic mean-reverting branch",
+      "gamma_times_maturity": "0.40000000",
+      "discount_factor": "0.977026015990546187263753049641",
+      "log_discount_factor": "-0.0232419988491090174813891768713"
+    },
+    {
+      "kappa": "0.3",
+      "theta": "0.04",
+      "volatility": "0.0",
+      "initial_rate": "0.04",
+      "maturity": "1.0",
+      "note": "volatility exactly zero: the deterministic mean-reverting branch",
+      "gamma_times_maturity": "0.30000000",
+      "discount_factor": "0.960789439152323209439210691323",
+      "log_discount_factor": "-0.0400000000000000000000000000000"
+    },
+    {
+      "kappa": "2.0",
+      "theta": "0.02",
+      "volatility": "0.0",
+      "initial_rate": "0.10",
+      "maturity": "30.0",
+      "note": "volatility exactly zero: the deterministic mean-reverting branch",
+      "gamma_times_maturity": "60.000000",
+      "discount_factor": "0.527292424043048557243694608751",
+      "log_discount_factor": "-0.639999999999999999999999999650"
+    },
+    {
+      "kappa": "0.05",
+      "theta": "0.06",
+      "volatility": "0.0",
+      "initial_rate": "0.01",
+      "maturity": "100.0",
+      "note": "volatility exactly zero: the deterministic mean-reverting branch",
+      "gamma_times_maturity": "5.0000000",
+      "discount_factor": "0.00669269967753551481889621194872",
+      "log_discount_factor": "-5.00673794699908546709663604842"
+    }
+  ],
+  "content_sha256": "c80b97eb1bf1c45a1106f6d8649706764945ce32cd296afc75f59c58a2160f4f"
+}

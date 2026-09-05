@@ -89,6 +89,10 @@ def _encode_value(value: object) -> Any:
         return _encode_ref(value)
     if isinstance(value, Enum):
         return value.value
+    if isinstance(value, tuple):
+        # A schedule. JSON has no tuple, and the decoder turns the list back
+        # into one, so the round trip is closed rather than lossy.
+        return [_encode_value(item) for item in value]
     if isinstance(value, float):
         return value
     return value
@@ -195,7 +199,32 @@ def _decode_field(value: object, spec: FieldSpec, *, type_id: str) -> object:
         return _decode_enum(value, spec, type_id=type_id)
     if spec.json_type == "number":
         return _decode_number(value, field=spec.name, type_id=type_id)
+    if spec.json_type == "array":
+        return _decode_array(value, spec, type_id=type_id)
     return _decode_string(value, field=spec.name, type_id=type_id)
+
+
+def _decode_array(value: object, spec: FieldSpec, *, type_id: str) -> tuple[Any, ...]:
+    """A JSON array as a tuple, each element decoded by the item spec.
+
+    A ``list`` and nothing else. A string is a sequence of characters and a
+    mapping is a sequence of keys, and either would decode into a schedule of
+    the wrong thing rather than failing.
+    """
+    assert spec.items is not None  # guaranteed by the import-time metadata guard
+    if not isinstance(value, list):
+        raise SerializationError(
+            f"{type_id}.{spec.name} must be a JSON array; got {type(value).__name__}."
+        )
+    if spec.min_items is not None and len(value) < spec.min_items:
+        raise SerializationError(
+            f"{type_id}.{spec.name} must have at least {spec.min_items} entr"
+            f"{'y' if spec.min_items == 1 else 'ies'}; got {len(value)}."
+        )
+    return tuple(
+        _decode_field(item, spec.items, type_id=f"{type_id}.{spec.name}[{index}]")
+        for index, item in enumerate(value)
+    )
 
 
 def _decode_ref(value: object, *, field: str, type_id: str) -> InstrumentRef:
@@ -324,6 +353,15 @@ def _field_schema(spec: FieldSpec) -> dict[str, Any]:
         if spec.description:
             schema["description"] = spec.description
         return schema
+
+    if spec.json_type == "array":
+        assert spec.items is not None  # guaranteed by the import-time metadata guard
+        array_schema: dict[str, Any] = {"type": "array", "items": _field_schema(spec.items)}
+        if spec.min_items is not None:
+            array_schema["minItems"] = spec.min_items
+        if spec.description:
+            array_schema["description"] = spec.description
+        return array_schema
 
     schema = {}
     types: list[str] = [spec.json_type]

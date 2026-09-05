@@ -23,6 +23,11 @@ SCHEMA_PATH = Path(__file__).resolve().parents[1] / "docs" / "schemas" / "instru
 def main() -> int:
     text = render_instrument_json_schema()
     previous = SCHEMA_PATH.read_text(encoding="utf-8") if SCHEMA_PATH.exists() else None
+    if "--check" in sys.argv[1:]:
+        if previous != text:
+            sys.stderr.write("instrument-v1.schema.json is stale.\n")
+            return 1
+        return 0
     if previous == text:
         sys.stdout.write(f"{SCHEMA_PATH} is up to date.\n")
         return 0

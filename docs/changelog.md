@@ -13,6 +13,46 @@ separate changelog entries.
 
 ## [Unreleased]
 
+### Added
+
+- Fixed-income contracts: `Cashflow`, `FixedIncomeSecurity`, `ZeroCouponBond`,
+  and `FixedRateBond`, with explicit payment times and accrual fractions.
+- Cashflow present values against structural discount curves, including flat,
+  CIR, and log-linear interpolated discount-factor curves.
+- Risk-neutral CIR bond prices, zero and forward rates, and a complex
+  integrated-rate transform, with NumPy, PyTorch and JAX array support.
+- CIR short-rate simulation using full-truncation Euler, quadratic-exponential,
+  or exact transitions. Exact transitions support NumPy and JAX; PyTorch
+  is refused because a public generator-bound gamma sampler is unavailable.
+- Composable Bates and BCC97 processes with Heston or constant variance,
+  Merton compound-Poisson lognormal jumps or no jumps, and CIR or constant rates.
+- Bates and BCC97 European-option pricing through Lewis and Gatheral Fourier
+  inversion. BCC97 uses independent equity/variance and short-rate drivers.
+- Explicit `initial_state` and `discounting` arguments on `MonteCarloEngine.price`,
+  with constant-rate and pathwise short-rate discounting rules.
+- Additive version-1 instrument schemas, public examples, independent analytical
+  checks, and seeded reference fixtures for the new models.
+
+### Fixed
+
+- Stabilize the Heston characteristic function at small positive vol-of-vol
+  without substituting deterministic variance; retain ordinary-parameter
+  arithmetic and handle the removable martingale-argument singularity.
+- Keep jump counts and jump sizes on independent JAX random keys.
+- Validate custom Monte Carlo discount factors before multiplying payoffs.
+
+### Compatibility
+
+- Existing equity instrument roots, pricing-model selectors, and default
+  Monte Carlo discounting are unchanged. Fixed-income securities use
+  `present_value`, not the option-pricing or terminal-payoff routes.
+- Stored numerical references allow documented cross-platform rounding;
+  same-environment seeded reproducibility is checked separately.
+
+---
+
+
+
 ## [0.2.2] — 2026-09-01
 
 ### Added

@@ -45,6 +45,7 @@ from .exotics import (
     LookbackOption,
     VarianceSwap,
 )
+from .fixed_income import FixedRateBond, ZeroCouponBond
 from .forwards import Forward, Future
 from .options import EuropeanOption
 
@@ -91,6 +92,17 @@ class CapabilitySet:
         for this type. Type-level: an *instance* is additionally eligible only
         with a strictly positive maturity, which ``MonteCarloEngine.supports``
         applies and is authoritative for an actual request.
+    cashflows : bool
+        Whether :func:`~fast_vollib.instruments.cashflows` returns a dated
+        payment schedule for this type. False for every contract evaluated
+        through the payoff dispatcher: a terminal payoff is one amount at one
+        horizon, not a schedule.
+    present_value : bool
+        Whether :func:`fast_vollib.pricing.present_value` values this type
+        against a :class:`~fast_vollib.rates.DiscountCurve`. Reported separately
+        from ``price`` because it is a different question: ``price`` asks which
+        *option-pricing models* have an analytic kernel, and a bond has no
+        volatility model at all -- it has a curve.
     simulation_autodiff : frozenset[BackendLiteral]
         Backends on which a simulated valuation returns a result that still
         carries an autograd graph. Recorded against what is installed and
@@ -116,6 +128,8 @@ class CapabilitySet:
     native_autodiff: frozenset[tuple[PricingModel, IVSolver, BackendLiteral]] = frozenset()
     simulate: bool = False
     simulation_autodiff: frozenset[BackendLiteral] = frozenset()
+    cashflows: bool = False
+    present_value: bool = False
 
     def supports_price(self, model: PricingModel) -> bool:
         """Whether ``model`` has an analytic pricing kernel for this type."""
@@ -214,6 +228,19 @@ def _future_capabilities() -> CapabilitySet:
     return CapabilitySet(payoff=True)
 
 
+def _fixed_income_capabilities() -> CapabilitySet:
+    """A dated schedule and a present value, and deliberately no payoff.
+
+    ``payoff=False`` is the honest answer rather than an omission.  A payoff
+    maps the state at one horizon to one cashflow, and a bond's payments happen
+    at several dates whose separation is the whole content of the contract.
+    ``price=frozenset()`` for the same reason at a different layer: the three
+    ``PricingModel`` members are option-pricing conventions, and none of them
+    values a bond. The route is a curve, and ``present_value`` says so.
+    """
+    return CapabilitySet(cashflows=True, present_value=True)
+
+
 def _no_capabilities() -> CapabilitySet:
     """An asset is a description of an underlier, not a contract to evaluate."""
     return CapabilitySet()
@@ -228,6 +255,8 @@ _CAPABILITY_BUILDERS: dict[type[Instrument], Callable[[], CapabilitySet]] = {
     VarianceSwap: _simulated_only_capabilities,
     Forward: _forward_capabilities,
     Future: _future_capabilities,
+    ZeroCouponBond: _fixed_income_capabilities,
+    FixedRateBond: _fixed_income_capabilities,
     Asset: _no_capabilities,
 }
 

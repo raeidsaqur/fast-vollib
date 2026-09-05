@@ -10,7 +10,7 @@ than the one requested is indistinguishable from the one that was asked for.
 
 What the engine supplies and what it refuses to supply
 -----------------------------------------------------
-It supplies exactly three things the process does not: the initial spot, the
+It supplies exactly three things the process does not: the initial state, the
 discount factor, and the estimator.  It does **not** supply a measure.
 ``market.rate`` discounts and nothing else; it is never used to rewrite a
 drift.  Simulating under a physical drift and discounting at the risk-free rate
@@ -20,11 +20,30 @@ requires a process the caller made risk-neutral, for which
 is ignored outright: volatility is a process parameter here, and reading both
 would let two disagreeing values silently pick one.
 
-Everything is validated before a single path is drawn.  An unsupported type, a
-zero maturity, a multi-state process, a grid that does not end at maturity, a
-mixed array namespace, an unusable RNG: each raises with the sampling budget
-untouched, because discovering the problem after a hundred thousand paths is
-merely expensive, and discovering it *never* is worse.
+More than one state, and more than one way to discount
+------------------------------------------------------
+The initial state is ``market.underlying`` *plus* whatever else the process
+evolves, named through ``initial_state``.  The engine never invents one: a
+missing variance or short rate is a refusal, because a default there would be a
+model chosen on the caller's behalf.  ``spot`` is not accepted in
+``initial_state`` at all -- ``market.underlying`` is where it comes from, and
+two values for one quantity would silently pick one.
+
+``discounting`` names how the payoff is carried back.  Omitted, it is
+``exp(-market.rate * T)`` at the contract's maturity -- unchanged, bit for bit,
+from every call written before the argument existed, and semantically
+:class:`~fast_vollib.simulation.ConstantRateDiscounting` at that rate.  Supplied,
+it is applied path by path, which is what a stochastic-rate model needs: there
+the discount factor and the payoff are functions of the same path and the
+expectation does not factorize.  When a rule is supplied ``market.rate`` is not
+read *at all*, for the reason ``market.volatility`` is never read.
+
+Request inputs are validated before a single path is drawn. An unsupported type, a
+zero maturity, a state the process needs and nothing supplies, a grid that does
+not end at maturity, a mixed array namespace, an unusable RNG: each raises with
+the sampling budget untouched, because discovering the problem after a hundred
+thousand paths is merely expensive, and discovering it *never* is worse.
+Custom discount-rule outputs can only be validated after the rule is evaluated.
 
 Zero maturity and futures
 -------------------------
@@ -42,9 +61,10 @@ and so does the refusal.
 
 from __future__ import annotations
 
+from collections.abc import Mapping as MappingABC
 from dataclasses import dataclass
 import math
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Mapping
 
 import numpy as np
 
@@ -73,8 +93,14 @@ from ..instruments.exotics import (
     LookbackOption,
     VarianceSwap,
 )
+from ..instruments.fixed_income import FixedIncomeSecurity
 from ..instruments.forwards import Forward, Future
 from ..instruments.options import EuropeanOption
+from .discounting import (
+    ConstantRateDiscounting,
+    PathwiseShortRateDiscounting,
+    constant_rate_factor,
+)
 from .scenario import dtype_epsilon, horizon_tolerance
 from .simulate import simulate
 
@@ -202,6 +228,8 @@ class MonteCarloEngine:
         rng: Any,
         time_grid: Any = None,
         n_steps: int | None = None,
+        initial_state: Mapping[str, Any] | None = None,
+        discounting: Any = None,
         return_native: bool = False,
     ) -> MCResult:
         """Simulate ``instrument``'s underlier and average its discounted payoff.
@@ -212,11 +240,12 @@ class MonteCarloEngine:
             A supported type with a strictly positive maturity and scalar terms.
         market : VanillaMarketInputs
             ``underlying`` is the spot the simulation starts from and ``rate``
-            is the continuously compounded discount rate. ``volatility`` is not
-            read: the process owns it.
+            is the continuously compounded discount rate -- read only when
+            ``discounting`` is omitted. ``volatility`` is not read at all: the
+            process owns it.
         process : StochasticProcess
-            Must evolve exactly ``("spot",)``. The engine never inspects or
-            rewrites its drift.
+            Its first state must be ``"spot"``; any others are supplied through
+            ``initial_state``. The engine never inspects or rewrites its drift.
         n_paths : int
             At least 2, or an even number of at least 4 with ``antithetic``:
             a standard error needs more than one sample, and an antithetic
@@ -229,6 +258,15 @@ class MonteCarloEngine:
             Build an evenly spaced grid over ``[0, maturity]`` instead. Exactly
             one of ``time_grid`` and ``n_steps`` is supplied; supplying both,
             or neither, is an error rather than a precedence rule to memorize.
+        initial_state : Mapping, optional
+            The process's states other than ``"spot"``, by name -- a variance, a
+            short rate. Every one the process declares is required and none may
+            be ``"spot"``. A single-state process takes nothing here.
+        discounting : DiscountingRule, optional
+            How the sampled payoff is carried back to today; see
+            :mod:`fast_vollib.simulation.discounting`. Omitted, the payoff is
+            discounted at ``market.rate`` over the contract's maturity, exactly
+            as it always was. Supplied, ``market.rate`` is not read.
         return_native : bool, default False
             Return the price and standard error as backend arrays with their
             dtype, device, and autograd graph intact. The default extracts
@@ -248,7 +286,8 @@ class MonteCarloEngine:
         UnsupportedInstrumentError
             For a type with no route, or an instance that is not eligible.
         UnsupportedProcessError
-            For a process this engine cannot supply the initial state of.
+            For a process whose first state is not ``"spot"``, or one whose
+            further states ``initial_state`` does not supply.
         MissingMarketInputError
             Naming the market field that was needed.
         SimulationValidationError
@@ -257,25 +296,47 @@ class MonteCarloEngine:
         maturity = self._validated_instrument(instrument)
         requirement = self._validated_requirement(instrument)
         self._validate_process(process)
+        extra_state = self._validated_initial_state(initial_state, process=process)
+        if discounting is not None:
+            if not callable(getattr(discounting, "discount_factors", None)):
+                raise SimulationValidationError("discounting must provide discount_factors().")
+            if isinstance(discounting, PathwiseShortRateDiscounting):
+                discounting._index_of(process.state_names)
 
         spot = market.require("underlying", operation="price by simulation")
-        rate = market.require("rate", operation="discount a simulated payoff")
+        # ``market.rate`` is read only when it is what discounts. A rule beside a
+        # market rate would be two values for one quantity, and reading both
+        # would let them disagree silently -- the same reason
+        # ``market.volatility`` is never read at all.
+        rate = (
+            market.require("rate", operation="discount a simulated payoff")
+            if discounting is None
+            else None
+        )
         _require_scalar(spot, field="market.underlying")
-        _require_scalar(rate, field="market.rate")
-        _require_finite(rate, field="market.rate")
+        if discounting is None:
+            _require_scalar(rate, field="market.rate")
+            _require_finite(rate, field="market.rate")
         _require_positive(spot, field="market.underlying")
         for name, value in process.params().items():
             _require_scalar(value, field=f"process.{name}")
 
         paths = self._validated_path_count(n_paths)
-        inputs: dict[str, Any] = {
-            "market.underlying": spot,
-            "market.rate": rate,
-            "rng": rng,
-            "time_grid": time_grid,
-        }
+        inputs: dict[str, Any] = {"market.underlying": spot}
+        if discounting is None:
+            inputs["market.rate"] = rate
+        elif isinstance(discounting, ConstantRateDiscounting):
+            _require_scalar(discounting.rate, field="discounting.rate")
+            _require_finite(discounting.rate, field="discounting.rate")
+            inputs["discounting.rate"] = discounting.rate
+        inputs["rng"] = rng
+        inputs["time_grid"] = time_grid
         for name, value in process.params().items():
             inputs[f"process.{name}"] = value
+        # After the process parameters, so that a default call resolves its
+        # namespace, device and dtype from exactly the inputs it always did.
+        for name, value in extra_state.items():
+            inputs[f"initial_state[{name!r}]"] = value
         namespace = resolve_namespace(inputs)
         device = resolve_device(namespace, inputs)
         dtype = resolve_dtype(namespace, inputs)
@@ -297,7 +358,7 @@ class MonteCarloEngine:
         scenario = simulate(
             _underlier_of(instrument),
             process,
-            initial_state={"spot": spot},
+            initial_state={"spot": spot, **extra_state},
             time_grid=grid,
             n_paths=paths,
             rng=rng,
@@ -309,7 +370,31 @@ class MonteCarloEngine:
         else:
             cashflow = payoff(instrument, scenario)
 
-        discounted = _discount(cashflow, rate=rate, maturity=maturity)
+        if discounting is None:
+            # Left exactly as it was, at the *contract's* maturity rather than
+            # the grid's last time. The two agree whenever the grid ends where
+            # the contract does, which the grid check already requires to within
+            # a tolerance; taking the contract's is what makes every call that
+            # omits ``discounting`` bitwise unchanged.
+            discounted = _discount(cashflow, rate=rate, maturity=maturity)
+        else:
+            factors = discounting.discount_factors(
+                states=scenario.states,
+                time_grid=scenario.time_grid,
+                state_names=scenario.state_names,
+            )
+            if getattr(factors, "shape", None) != (paths,):
+                raise SimulationValidationError(
+                    f"discount_factors() must return shape ({paths},); "
+                    f"got {getattr(factors, 'shape', None)}."
+                )
+            resolve_namespace({"cashflow": cashflow, "discount_factors": factors})
+            resolve_device(namespace, {"cashflow": cashflow, "discount_factors": factors})
+            xp = get_namespace(factors)
+            valid = concrete_float(xp.all(xp.isfinite(factors) & (factors > 0.0)))
+            if valid is not None and not valid:
+                raise SimulationValidationError("discount_factors() must be finite and positive.")
+            discounted = cashflow * factors
         return self._estimate(discounted, n_paths=paths, return_native=return_native)
 
     # --- validation -----------------------------------------------------------
@@ -323,6 +408,13 @@ class MonteCarloEngine:
                 "a future's economics are a stream of daily variation margin that this "
                 "library does not model. Use payoff() for the terminal cashflow, or a "
                 "Forward if a single settlement at maturity is what you mean."
+            )
+        if isinstance(instrument, FixedIncomeSecurity):
+            raise UnsupportedInstrumentError(
+                f"{cls.__name__} is a fixed-income security, and simulating an underlier "
+                f"would not value it: its payments are fixed and dated, so what it needs "
+                f"is a discount curve rather than a path. Use "
+                f"fast_vollib.pricing.present_value(instrument, discount_curve=...)."
             )
         if cls not in self.SUPPORTED_TYPES:
             supported = ", ".join(sorted(t.__name__ for t in self.SUPPORTED_TYPES))
@@ -349,18 +441,66 @@ class MonteCarloEngine:
 
     def _validate_process(self, process: Any) -> None:
         names = getattr(process, "state_names", None)
-        if names != ("spot",):
+        if not isinstance(names, tuple) or not names or names[0] != "spot":
             raise UnsupportedProcessError(
-                f"MonteCarloEngine drives a single-factor spot process, but "
-                f"{type(process).__name__} evolves {names!r}. Its public inputs carry one "
-                f"initial state -- market.underlying -- so it cannot supply the rest. "
-                f"simulate() itself is not restricted this way."
+                f"MonteCarloEngine drives a spot process, but {type(process).__name__} "
+                f"evolves {names!r}. Its first state must be 'spot', which is what "
+                f"market.underlying supplies; any further states are supplied by name "
+                f"through initial_state. simulate() itself is not restricted this way."
             )
         if not callable(getattr(process, "params", None)):
             raise UnsupportedProcessError(
                 f"{type(process).__name__} does not expose params(); see "
                 f"fast_vollib.processes.StochasticProcess for the contract."
             )
+
+    def _validated_initial_state(
+        self, initial_state: Mapping[str, Any] | None, *, process: Any
+    ) -> dict[str, Any]:
+        """The non-spot states, checked against what the process actually evolves.
+
+        ``spot`` is not accepted here and cannot be: ``market.underlying`` is
+        where the engine's spot comes from, and a second value for it would be
+        two answers to one question. Every *other* state the process declares is
+        required -- an engine that defaulted a missing variance to something
+        would be choosing a model on the caller's behalf.
+        """
+        names = tuple(getattr(process, "state_names", ()))
+        required = names[1:]
+        if initial_state is None:
+            supplied: dict[str, Any] = {}
+        elif isinstance(initial_state, MappingABC):
+            supplied = dict(initial_state)
+        else:
+            raise SimulationValidationError(
+                f"initial_state must be a mapping of state name to value; got "
+                f"{type(initial_state).__name__}."
+            )
+
+        if "spot" in supplied:
+            raise SimulationValidationError(
+                "initial_state must not carry 'spot': the engine takes the spot from "
+                "market.underlying, and two values for one quantity would silently pick "
+                "one. Remove it, or simulate() directly if the two are meant to differ."
+            )
+        unknown = sorted(set(supplied) - set(required))
+        if unknown:
+            raise SimulationValidationError(
+                f"initial_state carries {unknown!r}, which {type(process).__name__} does "
+                f"not evolve. It evolves {names!r}; a value nothing reads is more likely a "
+                f"typo than a spare."
+            )
+        missing = [name for name in required if name not in supplied]
+        if missing:
+            raise UnsupportedProcessError(
+                f"MonteCarloEngine drives {type(process).__name__}, which evolves "
+                f"{names!r}, but initial_state supplies no {missing!r}. market.underlying "
+                f"carries 'spot'; every other state is supplied by name through "
+                f"initial_state. simulate() itself is not restricted this way."
+            )
+        for name, value in supplied.items():
+            _require_scalar(value, field=f"initial_state[{name!r}]")
+        return {name: supplied[name] for name in required}
 
     def _validated_path_count(self, n_paths: Any) -> int:
         # ``np.integer`` too, matching ``simulate()``: an integer read out of a
@@ -594,12 +734,11 @@ def _to_host(value: Any) -> float:
 def _discount(cashflow: Any, *, rate: Any, maturity: float) -> Any:
     """Present value of a cashflow at maturity, in the cashflow's namespace.
 
-    A native rate keeps its autograd graph, so a gradient of the price with
-    respect to the discount rate is available. A Python rate has no graph to
-    keep, and ``math.exp`` avoids materializing a zero-dimensional array whose
-    default precision would promote a single-precision payoff.
+    The factor itself is :func:`~fast_vollib.simulation.discounting.constant_rate_factor`,
+    which exists so that this route and an explicit
+    :class:`~fast_vollib.simulation.ConstantRateDiscounting` cannot drift apart:
+    a caller who moved from one to the other would otherwise see their price
+    change in the last digits for no reason they could name. There is one
+    implementation and this calls it.
     """
-    if namespace_of(rate) is None:
-        return math.exp(-float(rate) * maturity) * cashflow
-    ns = get_namespace(cashflow, rate)
-    return ns.exp(-rate * maturity) * cashflow
+    return constant_rate_factor(rate, maturity) * cashflow
