@@ -49,7 +49,7 @@ JUMP_SETS = {
     "wild": {"jump_intensity": 5.0, "mean_log_jump": -0.02, "jump_volatility": 0.45},
 }
 
-#: Where the near-degenerate Heston limit is resolvable; see the module note.
+#: Shared reduction-test parameter, not a lower bound on supported vol-of-vol.
 LIMIT_VOL_OF_VOL = 1e-4
 
 

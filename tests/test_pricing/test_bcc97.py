@@ -22,10 +22,9 @@ through the public API, and Merton's series is written from the paper in
 the discount factor -- the property its own tests pin pathwise -- so the two
 routes price the same contract and must agree inside a stated budget.
 
-The ``vol_of_vol`` limits are taken at ``1e-4`` rather than at zero, for the
-reason ``test_bates.py`` documents at length: ``heston_characteristic_function``
-is ill-conditioned as the vol-of-vol vanishes, and that is a property of the
-shipped Heston transform rather than of anything added here.
+The reductions retain the shared ``vol_of_vol = 1e-4`` test parameter. It is
+not a numerical floor: ``test_bates.py`` separately checks stable convergence
+of the rationalized Heston transform down to ``vol_of_vol = 1e-12``.
 """
 
 from __future__ import annotations
@@ -454,13 +453,8 @@ def test_no_jumps_and_a_flat_diffusion_reduce_to_black_scholes(maturity, sigma) 
     np.testing.assert_allclose(got, expected, rtol=2e-5, atol=2e-5)
 
 
-def test_the_vol_of_vol_limit_is_taken_where_the_transform_still_works() -> None:
-    """A guard on the constant this file reduces at, not on the model.
-
-    ``heston_characteristic_function``'s conditioning as ``vol_of_vol -> 0`` is
-    documented in ``test_bates.py`` and is inherited here unchanged: BCC97
-    multiplies that transform by a rate factor and cannot repair it.
-    """
+def test_the_shared_reduction_parameter_is_unchanged() -> None:
+    """Preserve the reduction-test parameter, not a model conditioning floor."""
     assert LIMIT_VOL_OF_VOL == 1e-4
 
 

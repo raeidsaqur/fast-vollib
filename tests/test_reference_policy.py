@@ -7,7 +7,8 @@ import pytest
 from reference_fixtures import assert_reference_array, assert_reference_text, write_or_check
 
 
-def test_reference_bounds_reject_material_changes():
+def test_reference_bounds_reject_material_changes(monkeypatch):
+    monkeypatch.delenv("FV_STRICT_REFERENCE_FIXTURES", raising=False)
     assert_reference_array([100.0 + 1e-12], [100.0])
     assert_reference_array([1e-10], [0.0], pricing=True)
     with pytest.raises(AssertionError):
