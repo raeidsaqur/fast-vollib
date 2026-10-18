@@ -1,7 +1,7 @@
 {
   "upload_type": "software",
-  "title": "fast-vollib: accelerated derivatives pricing, implied volatility, and Monte Carlo simulation with NumPy, PyTorch, and JAX",
-  "description": "<p><strong>fast-vollib</strong> is an accelerated &mdash; kernel-fused, optimized &mdash; Python library for Black, Black-Scholes, and Black-Scholes-Merton pricing, implied volatility, Greeks, typed derivative contracts, and explicit Monte Carlo workflows. It provides pluggable NumPy, PyTorch, and JAX backends and a compatibility-first functional API modeled on <code>py_vollib_vectorized</code>.</p><p>Documentation: <a href=\"https://raeidsaqur.github.io/fast-vollib/\">raeidsaqur.github.io/fast-vollib</a></p>",
+  "title": "fast-vollib: accelerated derivatives pricing, portfolio P&L, and Monte Carlo simulation with NumPy, PyTorch, and JAX",
+  "description": "<p><strong>fast-vollib</strong> is an accelerated &mdash; kernel-fused, optimized &mdash; Python library for Black, Black-Scholes, and Black-Scholes-Merton pricing, implied volatility, Greeks, observation-backed listed-option P&amp;L, typed derivative contracts, and explicit Monte Carlo workflows. P&amp;L workflows include Decimal FIFO accounting, exact terminal payoff metrics, explicit quote indications, European horizon valuation and retained fixed-grid forecasts. It provides pluggable NumPy, PyTorch, and JAX backends and a compatibility-first functional API modeled on <code>py_vollib_vectorized</code>.</p><p>Documentation: <a href=\"https://raeidsaqur.github.io/fast-vollib/\">raeidsaqur.github.io/fast-vollib</a></p>",
   "license": "mit",
   "access_right": "open",
   "creators": [
@@ -17,6 +17,8 @@
     "derivatives pricing",
     "Greeks",
     "Monte Carlo",
+    "portfolio P&L",
+    "listed options",
     "quantitative finance",
     "GPU acceleration",
     "PyTorch",
