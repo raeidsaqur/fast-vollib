@@ -1,7 +1,7 @@
 [project]
 name = "fast-vollib"
 dynamic = ["version"]
-description = "Fast derivatives pricing, implied volatility, typed instruments, and Monte Carlo simulation with NumPy, PyTorch, and JAX."
+description = "Fast derivatives pricing, implied volatility, portfolio P&L, typed instruments, and Monte Carlo simulation with NumPy, PyTorch, and JAX."
 readme = "README.md"
 license = { text = "MIT" }
 authors = [

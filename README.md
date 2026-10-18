@@ -9,8 +9,8 @@
 <h1 align="center">fast-vollib</h1>
 
 <p align="center">
-  Accelerated derivatives pricing, implied volatility, typed instruments, and Monte Carlo
-  simulation with NumPy, PyTorch, and JAX backends.
+  Accelerated derivatives pricing, implied volatility, portfolio P&L, typed instruments,
+  and Monte Carlo simulation with NumPy, PyTorch, and JAX backends.
 </p>
 
 <p align="center">
@@ -51,13 +51,37 @@
 
 **fast-vollib** is an accelerated --- kernel-fused, optimized --- Python library
 for Black, Black-Scholes, and Black-Scholes-Merton pricing, implied volatility,
-Greeks, typed derivative contracts, and explicit Monte Carlo workflows. It has
+Greeks, portfolio P&L, typed derivative contracts, and explicit Monte Carlo workflows. It has
 pluggable NumPy, PyTorch, and JAX backends and a compatibility-first functional
 API modeled on `py_vollib_vectorized`.
 
 ---
 
 ## What's New?
+
+**v0.2.4 — Listed-option P&L workflows.** Build observation-backed positions and
+inspect their terminal payoff, current quote indications and European model value:
+
+- **Evidence and accounting** — immutable observations, revision-aware as-of
+  snapshots, explicit option strategies and Decimal FIFO realized/unrealized P&L.
+- **Terminal curves and quote marks** — exact breakevens/extrema, explicit bid/ask
+  policies, missing-data diagnostics and labelled JSON/CSV/figure exports.
+- **European horizon valuation** — batched repricing, explicit volatility/forward/
+  time policies, coherent surface-sensitivity bands and position Greeks with units.
+- **Retained forecasts and terminal laws** — fixed-grid sample identity and weights,
+  explicit scenario projection and profit probability under a specified law.
+- **Offline broker evidence** — saved Questrade mappings with explicit fees and
+  execution/activity cash comparisons; synthetic examples do not establish
+  real-account reconciliation.
+
+Quote indications are not executable spread fills. American model valuation is
+not added: separate European surrogate reports retain exercise/delivery caveats.
+Surface-sensitivity bands are not joint P&L probabilities, VaR or ES.
+
+See the [v0.2.4 changelog](https://raeidsaqur.github.io/fast-vollib/changelog/#024-2026-10-18),
+[Terminal P&L guide](https://raeidsaqur.github.io/fast-vollib/pnl/),
+[Horizon P&L guide](https://raeidsaqur.github.io/fast-vollib/horizon_pnl/), and
+[Retained Forecasts guide](https://raeidsaqur.github.io/fast-vollib/forecasting/).
 
 **v0.2.3 — Fixed-income models and Python support.** This release adds
 fixed-income contracts and stochastic-rate workflows alongside the existing

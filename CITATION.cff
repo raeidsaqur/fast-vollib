@@ -3,9 +3,9 @@ message: "If you use fast-vollib in your research, please cite it using the meta
 type: software
 title: "fast-vollib"
 abstract: >-
-  Accelerated derivatives pricing, implied volatility, Greeks, typed instruments,
-  and Monte Carlo simulation for Black, Black-Scholes and Black-Scholes-Merton
-  models, with pluggable NumPy, PyTorch and JAX backends and a
+  Accelerated derivatives pricing, implied volatility, Greeks, portfolio P&L,
+  typed instruments and Monte Carlo simulation for Black, Black-Scholes and
+  Black-Scholes-Merton models, with pluggable NumPy, PyTorch and JAX backends and a
   compatibility-first functional API modeled on py_vollib_vectorized.
 authors:
   - family-names: Saqur
@@ -13,9 +13,9 @@ authors:
     email: raeid.saqur@maths.ox.ac.uk
     orcid: "https://orcid.org/0000-0002-6330-5480"
     affiliation: "Mathematical Institute, University of Oxford"
-version: 0.2.3
+version: 0.2.4
 doi: "10.5281/zenodo.22150802"
-date-released: 2026-09-05
+date-released: 2026-10-18
 license: MIT
 repository-code: "https://github.com/raeidsaqur/fast-vollib"
 identifiers:
@@ -29,6 +29,8 @@ keywords:
   - derivatives-pricing
   - greeks
   - monte-carlo
+  - portfolio-pnl
+  - option-strategies
   - quantitative-finance
   - gpu-acceleration
   - pytorch

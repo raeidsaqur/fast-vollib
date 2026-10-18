@@ -13,6 +13,10 @@ separate changelog entries.
 
 ## [Unreleased]
 
+---
+
+## [0.2.4] — 2026-10-18
+
 ### Added
 
 - Immutable observation records with available-time revision selection and strict
@@ -46,6 +50,8 @@ separate changelog entries.
 - Execute process-package doctests as part of the test suite.
 - Isolate the portable reference-tolerance test from the strict-mode environment
   setting, and correct stale comments about small-vol-of-vol stability.
+- Respect the optional visualization extra in P&L tests and exercise plotting
+  explicitly in the Python 3.12 CI lane.
 
 ---
 
@@ -600,7 +606,8 @@ behaviour across NumPy, PyTorch, and JAX.
 - Compiled bisection fallback yields a **16× throughput improvement** on large
   WRDS-scale datasets compared to the pure Python fallback.
 
-[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/raeidsaqur/fast-vollib/compare/v0.2.0...v0.2.1
