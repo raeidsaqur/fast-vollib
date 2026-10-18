@@ -11,6 +11,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  MPLBACKEND: Agg
+
 jobs:
   test:
     name: pytest / Python ${{ matrix.python-version }}
@@ -41,6 +44,10 @@ jobs:
 
       - name: Install dependencies
         run: uv sync --all-groups
+
+      - name: Install visualization extra for plot coverage
+        if: matrix.python-version == '3.12'
+        run: uv sync --all-groups --extra viz
 
       - name: Lint (ruff)
         run: uv run ruff check .

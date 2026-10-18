@@ -63,6 +63,42 @@ FORBIDDEN_IMPORTS: dict[str, frozenset[str]] = {
     ),
 }
 
+
+# Evidence, inventory and valuation are additive layers above existing packages.
+_NEW_LAYERS = frozenset({"observations", "portfolio", "pnl", "forecasting", "integrations"})
+for _directory in SOURCE_ROOT.iterdir():
+    if (_directory / "__init__.py").is_file() and _directory.name not in _NEW_LAYERS:
+        FORBIDDEN_IMPORTS[_directory.name] = (
+            FORBIDDEN_IMPORTS.get(_directory.name, frozenset()) | _NEW_LAYERS
+        )
+FORBIDDEN_IMPORTS.update(
+    {
+        "observations": frozenset(
+            p.name
+            for p in SOURCE_ROOT.iterdir()
+            if (p / "__init__.py").is_file() and p.name != "observations"
+        ),
+        "portfolio": frozenset(
+            {
+                "pnl",
+                "forecasting",
+                "integrations",
+                "pricing",
+                "simulation",
+                "surface",
+                "rates",
+                "processes",
+                "diagnostics",
+            }
+        ),
+        "pnl": frozenset({"pricing", "processes", "diagnostics", "integrations"}),
+        "forecasting": frozenset({"pnl", "portfolio", "pricing", "diagnostics", "integrations"}),
+        "integrations": frozenset(
+            {"pricing", "simulation", "surface", "processes", "forecasting", "rates", "diagnostics"}
+        ),
+    }
+)
+
 #: The only first-party modules a curve may depend on.
 #:
 #: Stated as an allow-list rather than a forbid-list, uniquely for this package,
@@ -83,6 +119,7 @@ RATES_ALLOWED = frozenset({"fast_vollib._array_api"})
 #: consequence at runtime; this checks the cause, in any module, whether or not
 #: anything imports it yet.
 FUNCTION_LOCAL_ONLY: dict[str, frozenset[str]] = {
+    "forecasting": frozenset({"simulation", "surface", "rates", "processes"}),
     "processes": frozenset({"rates"}),
     "pricing": frozenset({"rates"}),
 }
@@ -248,3 +285,46 @@ def test_the_declared_floor_matches_the_packaging_metadata() -> None:
     text = (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     assert 'requires-python = ">=3.10"' in text
     assert MINIMUM_PYTHON == (3, 10)
+
+
+def test_integrations_only_import_financial_records_and_value_references():
+    modules = _modules_of("integrations")
+    assert modules
+    seen = set()
+    for path in modules:
+        for name in _imports(path, module_level_only=False):
+            seen.add(name)
+            assert _top_level(name) in {
+                "integrations",
+                "observations",
+                "portfolio",
+                "pnl",
+                "instruments",
+            }, (path, name)
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.ImportFrom):
+                if not node.level and node.module:
+                    assert node.module.split(".")[0] not in {
+                        "requests",
+                        "httpx",
+                        "urllib",
+                        "socket",
+                        "torch",
+                        "jax",
+                        "lightning",
+                    }
+                resolved = _absolute(_package_of(path), node)
+                if "fast_vollib.instruments" in resolved:
+                    assert {n.name for n in node.names} <= {
+                        "InstrumentRef",
+                        "OptionType",
+                        "SettlementType",
+                    }
+            if isinstance(node, ast.Import):
+                assert not any(n.name.startswith("fast_vollib.instruments") for n in node.names)
+                assert not any(
+                    n.name.split(".")[0]
+                    in {"requests", "httpx", "urllib", "socket", "torch", "jax", "lightning"}
+                    for n in node.names
+                )
+    assert "fast_vollib.portfolio" in seen and "fast_vollib.pnl.quotes" in seen
