@@ -83,6 +83,12 @@ nav:
       - Instruments: instruments.md
       - Fixed Income: fixed_income.md
       - Simulation: simulation.md
+      - Observation Records: observations.md
+      - Listed Portfolios: portfolio.md
+      - Terminal P&L: pnl.md
+      - Horizon P&L and Terminal Laws: horizon_pnl.md
+      - Retained Forecasts: forecasting.md
+      - Saved Third-party Platform (e.g., Questrade) Payloads: questrade.md
       - Compatibility: compatibility.md
       - Benchmarks: benchmarks.md
   - API Reference: api.md

@@ -198,6 +198,29 @@ and the [changelog](https://raeidsaqur.github.io/fast-vollib/changelog/) for det
 
 ---
 
+## Listed-option P&L and retained forecasts
+
+Listed-option entries and observation-derived Decimal FIFO snapshots support
+terminal intrinsic-equivalent P&L curves with exact breakevens and extrema.
+See the [terminal P&L guide](docs/pnl.md) for an offline example and explicit
+American-exercise and physical-delivery assumptions.
+
+Observed [quote marks](docs/pnl.md#quote-indications) support explicit midpoint or
+per-leg close estimates, with missing-data diagnostics and separate future costs.
+[Offline Third-party Platform (e.g., Questrade) normalization](docs/questrade.md) accepts saved, versioned payloads
+and compares execution/activity cash without adding both ledgers. Synthetic examples
+do not establish real-account reconciliation.
+
+[Horizon valuation](docs/horizon_pnl.md) adds batched European repricing, coherent
+surface sensitivity, labelled position Greeks and specified-law terminal profit
+probabilities. European proxies for American contracts retain separate types and
+caveats; surface-sensitivity bands are not joint P&L probabilities.
+
+The [retained forecasting guide](docs/forecasting.md) describes generic targets,
+fixed-grid process/surface draws and explicit financial trajectory projection.
+
+---
+
 ## Install
 
 ```bash

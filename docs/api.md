@@ -937,3 +937,56 @@ the forward and the discount factor are outputs of the model, and
 `bcc97_forward_measure` returns the pair it used. `rate_volatility=0.0` with
 `rate_theta=initial_rate` is a flat deterministic rate, and the price is then
 bitwise `bates_price` at that forward and discount.
+
+
+## Observations, listed portfolios and terminal P&L
+
+See [Observation Records](observations.md), [Listed Portfolios](portfolio.md),
+and [Terminal P&L](pnl.md) for evidence timing, accounting and capability limits.
+
+| Namespace | Public contracts |
+|---|---|
+| `fast_vollib.observations` | `ObservationStamp`, `ObservationRecord`, `ObservationSnapshot`, `select_as_of` |
+| `fast_vollib.portfolio` | `ListedContract`, `FeeRecord`, `Execution`, `Trade`, `OptionLeg`, `Position`, `OpenLot`, `LotLedger`, `PositionSnapshot` |
+| `fast_vollib.portfolio` factories | `match_lots`, `position_snapshot`, `hypothetical_snapshot`, `resolve_expiry_instant`, `year_fraction` |
+| Strategy builders | `iron_condor`, `iron_butterfly`, `butterfly`, `vertical_spread`, `straddle`, `strangle`, `calendar_spread`, `diagonal_spread` with explicit typed premium records |
+| `fast_vollib.pnl` | `PreparedTerminal`, `CoefficientConversion`, `PnLProfile`, `ResultMeta`, `PayoffMetrics` |
+| Terminal evaluation | `prepare_terminal`, `terminal_pnl`, `expiry_profile`, `plot_pnl` |
+
+Each namespace exposes typed validation errors. The `serialization` modules
+provide strict versioned data codecs with Decimal money preserved as text.
+
+## Retained forecast contracts
+
+See the [forecasting guide](forecasting.md) for `ForecastTarget`, `ReturnSpec`,
+`ForecastQuery`, `ForecastDistribution`, `ForecastDrawSet`, `FixedGridDrawSet`,
+`ForecastMeta`, `ForecastResult`, `TrajectoryBlock`, `MarginalBlock`, `SurfaceBlock`,
+`CurveBlock`, `MarkedEvent`, `EventBlock`, `ScenarioView`, `ProcessDistribution`,
+`SurfaceDistributionAdapter` and `returns_to_spot`.
+
+## Quote marks and export
+
+`fast_vollib.pnl` exports `OptionQuote`, `QuoteFlags`, `QuotePolicy`, `QuoteSnapshot`,
+`LegQuoteStatus`, `mark_position`, `quotes_as_of`, `quote_record`, `quote_to_dict`,
+`quote_from_dict` and `export_pnl`. See [quote indications](pnl.md#quote-indications)
+for side selection, cutoff/freshness policies, missing marks and close-cost ownership.
+
+## Saved Third-party Platform (e.g., Questrade) payloads
+
+See [offline normalization](questrade.md) for `NormalizationContext`, `ContractTerms`,
+`load_saved_json`, `normalize_symbols`, `normalize_executions`,
+`normalize_option_quotes`, `normalize_positions`, `normalize_activities`,
+`position_evidence`, `activity_record`, `broker_position_record` and
+`reconcile_executions_activities`. These APIs are pure and take explicit saved-data
+variants, timing and fee policies.
+
+## Horizon valuation and terminal laws
+
+`fast_vollib.pnl` exports `HorizonMarket`, `FlatVol`, `PerLegVol`, `SurfaceVol`,
+`SurfaceVolSamples`, `ProportionalCarry`, `pnl_at_horizon`, `repricing_index`,
+`pnl_at_horizon_samples`, `SurfaceSensitivityBand`, `plot_pnl_band`,
+`export_surface_band`, `EuropeanProxyProfile`, `EuropeanProxySensitivityBand`,
+`european_proxy_profile`, `european_proxy_samples`, `position_greeks`, `PositionGreeks`,
+`LognormalTerminal`, `probability_of_profit` and `TerminalProfitProbability`.
+See [the guide](horizon_pnl.md) for required model, time, forward, volatility and
+measure assumptions and the proxy/export restrictions.

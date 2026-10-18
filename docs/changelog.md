@@ -13,6 +13,32 @@ separate changelog entries.
 
 ## [Unreleased]
 
+### Added
+
+- Immutable observation records with available-time revision selection and strict
+  codecs, explicit listed-option strategies, hypothetical and executed snapshots,
+  and Decimal FIFO accounting.
+- Native terminal intrinsic-equivalent P&L, exact rational roots/extrema, owned
+  reports and optional plots with retained exercise/delivery caveats.
+- Explicit quote-mark policies for midpoint and per-leg close indications, with
+  per-leg availability, freshness, delay and size diagnostics; no last-price
+  substitution. Added quote observation codecs, labelled plot overlays and
+  JSON/CSV/figure export while preserving terminal report wire fields.
+- Pure offline Third-party Platform (e.g., Questrade) normalization with named mappings, lossless money,
+  explicit capture/availability and fee policies, inventory-only evidence,
+  explicit execution/activity comparisons and a synthetic notebook. Real-account
+  reconciliation is not established by the synthetic example.
+- Batched European horizon P&L with explicit flat/per-leg/surface volatility,
+  forward/time movement policies and bounded pricing chunks; coherent union-grid
+  surface-sensitivity bands; position Greeks with labelled report units; analytic
+  profit probability under a specified lognormal terminal law. American model
+  routes are refused; European surrogate curves/bands retain separate types and
+  persistent export/plot caveats.
+- Generic forecast targets, explicit time queries, owned typed result blocks and
+  retained fixed-grid draws with sample identity and weighting metadata. Process
+  and single-date surface adapters reuse existing numerical APIs; scenario
+  projection refuses marginals and requires explicit financial semantics.
+
 ### Fixed
 
 - Enable site-wide MathJax rendering for inline and display equations, with

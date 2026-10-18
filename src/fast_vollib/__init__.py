@@ -39,10 +39,28 @@ except ImportError:  # pragma: no cover - fallback for source trees without buil
         __version__ = "0.0.0"
 
 if TYPE_CHECKING:  # pragma: no cover - import-time cost is the point of the guard
-    from . import instruments, processes, simulation
+    from . import (
+        forecasting,
+        instruments,
+        integrations,
+        observations,
+        pnl,
+        portfolio,
+        processes,
+        simulation,
+    )
 
 #: Subpackages resolved on first attribute access rather than at import.
-_LAZY_SUBPACKAGES = ("instruments", "processes", "simulation")
+_LAZY_SUBPACKAGES = (
+    "instruments",
+    "processes",
+    "simulation",
+    "observations",
+    "portfolio",
+    "pnl",
+    "forecasting",
+    "integrations",
+)
 
 
 def __getattr__(name: str):
@@ -70,6 +88,11 @@ def __dir__() -> list[str]:
 __all__ = [
     "get_all_greeks",
     "instruments",
+    "forecasting",
+    "integrations",
+    "observations",
+    "portfolio",
+    "pnl",
     "processes",
     "simulation",
     "get_backend",
