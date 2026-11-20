@@ -236,21 +236,32 @@ host-staged approximation, or in which a barrier is priced as a European.
 
 ## Implied-volatility routing
 
-`solver="jackel"` is the default: it is machine-precision and the only route
-with gradient support. It reaches the **full-model** Jäckel wrappers for the
-`numpy`, `torch`, and `jax` backends. Requesting it with `numba` raises and
-names `solver="halley"` as the alternative.
+For instruments, the default is `solver="jackel"`. This solver uses the full-model
+Jäckel wrappers on `numpy`, `torch`, and `jax`. If you request Jäckel with `numba`,
+fast-vollib raises `UnsupportedSolverError`. The error message gives
+`solver="halley"` as an alternative.
 
-`solver="halley"` is **deprecated**. It remains available, tested, and
-unchanged, it serves every backend, and it raises no runtime warning — but it
-carries no gradient support and is less accurate than the Jäckel route at
-comparable cost. Reach for it to reproduce existing results, not for new work.
+All backends support `solver="halley"`. For gradients, use `solver="jackel"` with
+the native PyTorch or JAX route. The validation tests use the same exact-quote
+reference for both solvers.
 
-The raw `jackel_iv_black` solver consumes an *undiscounted* Black-76 price and a
-forward. Market prices are discounted, so handing one to the raw solver produces
-a plausible and wrong volatility. The adapter never reaches it: the full-model
-wrappers perform the discount and forward conversion for the model actually
-requested, and a test spies on the raw solver to confirm what it receives.
+- **Halley.** Halley meets the tolerance on all strict rows in the canonical grid,
+  the varied-parameter sample, the fixtures, and the stress set.
+  The base relative tolerance is 10⁻⁸.
+  Refer to the [Jäckel guide](jackel.md) for failures on a separate development set.
+- **Jäckel.** The base relative tolerance is 10⁻¹².
+  Refer to the [Jäckel guide](jackel.md) for the exceptions in the validation tests.
+  Jäckel rejects a quote if its normalized out-of-the-money price is below the solver limit.
+  It also rejects some quotes near the upper price bound.
+  The error signal gives `solver="halley"` as an alternative.
+
+The `jackel_iv_black` solver requires an *undiscounted* Black-76 price and a
+forward price. If you give the solver a discounted market price, it can return
+an incorrect implied volatility without a signal.
+
+The instrument adapter uses the full-model wrappers for Jäckel. These wrappers
+use the requested model to remove the discount and get the forward price.
+A regression test checks the normalized inputs to the solver.
 
 ## Maturity is a year fraction
 

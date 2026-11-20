@@ -6,6 +6,7 @@ import warnings
 import numpy as np
 
 from ..types import ModelLiteral, OnErrorLiteral
+from . import _iv_common as _ivc
 
 if TYPE_CHECKING:
     from .._typing import FlagArray, Float1D, OptionalFloat1D  # noqa: F401
@@ -372,101 +373,8 @@ def greeks(
     }
 
 
-# ---------------------------------------------------------------------------
-# Implied volatility (vectorized Newton-Raphson on GPU tensors)
-# ---------------------------------------------------------------------------
-
-_HALLEY_ITERS = 8
-_BISECT_ITERS = 30  # 10/(2^30)≈9e-9, narrower than _IV_LO → sufficient accuracy
-_IV_LO = 1e-8
-_IV_HI = 10.0
-
-# ---------------------------------------------------------------------------
-# torch.compile — fuses the entire Halley loop into a single CUDA kernel set,
-# eliminating ~96 individual kernel launches per IV solve batch.
-# ---------------------------------------------------------------------------
-
-_compiled_halley: "object | None" = None
-_compiled_bisect: "object | None" = None
-
-
-def _get_compiled_halley():
-    """Lazy-init torch.compile wrapper for the Halley IV loop."""
-    global _compiled_halley
-    if _compiled_halley is not None:
-        return _compiled_halley
-    import torch
-
-    def _halley_loop(sigma, pt, st, kt, tt, rt, qv, is_call):
-        for _ in range(_HALLEY_ITERS):
-            d1, d2 = _d1_d2(st, kt, tt, rt, sigma, qv)
-            discounted_spot = st * torch.exp(-qv * tt)
-            discounted_strike = kt * torch.exp(-rt * tt)
-            sqrt_t_inner = torch.sqrt(torch.clamp(tt, min=1e-32))
-            cdf_d1 = _normal_cdf(d1)
-            cdf_d2 = _normal_cdf(d2)
-            call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
-            put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
-            px = torch.where(is_call, call, put)
-            vega = discounted_spot * _normal_pdf(d1) * sqrt_t_inner
-            residual = px - pt
-            safe_vega = torch.where(vega > 1e-14, vega, torch.full_like(vega, torch.inf))
-            newton_step = residual / safe_vega
-            safe_sigma = torch.where(sigma > 1e-8, sigma, torch.full_like(sigma, torch.inf))
-            halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
-            halley_denom = torch.where(
-                halley_denom.abs() > 0.05,
-                halley_denom,
-                torch.sign(halley_denom + 1e-15) * 0.05,
-            )
-            sigma = torch.clamp(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
-        return sigma
-
-    _compiled_halley = _make_compiled(_halley_loop)
-    return _compiled_halley
-
-
-def _get_compiled_bisect():
-    """Lazy-init torch.compile wrapper for the bisection fallback loop."""
-    global _compiled_bisect
-    if _compiled_bisect is not None:
-        return _compiled_bisect
-    import torch
-
-    def _bisect_loop(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged):
-        # Hoist all loop-invariant terms outside the 30-iteration body
-        discounted_spot = st * torch.exp(-qv * tt)
-        discounted_strike = kt * torch.exp(-rt * tt)
-        sqrt_t = torch.sqrt(torch.clamp(tt, min=1e-32))
-        log_fk = torch.log(torch.clamp(st, min=1e-32) / torch.clamp(kt, min=1e-32))
-        carry_drift = (rt - qv) * tt  # the r-q part of the d1 numerator
-        sigma_lo = torch.where(not_converged, torch.full_like(sigma, _IV_LO), sigma)
-        sigma_hi = torch.where(not_converged, torch.full_like(sigma, _IV_HI), sigma)
-        for _ in range(_BISECT_ITERS):
-            sigma_mid = 0.5 * (sigma_lo + sigma_hi)
-            vol_term = torch.clamp(sigma_mid * sqrt_t, min=1e-32)
-            d1 = (log_fk + carry_drift + 0.5 * sigma_mid**2 * tt) / vol_term
-            d2 = d1 - sigma_mid * sqrt_t
-            cdf_d1 = _normal_cdf(d1)
-            cdf_d2 = _normal_cdf(d2)
-            call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
-            put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
-            px_mid = torch.where(is_call, call, put)
-            mid_res = px_mid - pt
-            sigma_lo = torch.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
-            sigma_hi = torch.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
-        return torch.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
-
-    _compiled_bisect = _make_compiled(_bisect_loop)
-    return _compiled_bisect
-
-
 def _price_vega_d1d2_t(is_call, s, k, t, r, sigma, q):
-    """Return (price, raw_vega, d1, d2) in a single pass.
-
-    Accepts a pre-computed boolean tensor `is_call` to avoid repeated flag
-    string comparison on every Halley iteration.
-    """
+    """Return (price, raw_vega, d1, d2) in a single pass (used by the Jaeckel autograd path)."""
     import torch
 
     d1, d2 = _d1_d2(s, k, t, r, sigma, q)
@@ -480,20 +388,98 @@ def _price_vega_d1d2_t(is_call, s, k, t, r, sigma, q):
     return price, vega, d1, d2
 
 
-def _price_for_model_t(is_call, s, k, t, r, sigma, q):
+# ---------------------------------------------------------------------------
+# Implied volatility — safeguarded Halley on the out-of-the-money price
+# (problem statement, constants and row policy: backends/_iv_common.py).
+# CUDA + Triton: one fused kernel (triton_kernels.iv_otm_triton).
+# Otherwise: the same algorithm in torch tensor ops on the active device.
+# ---------------------------------------------------------------------------
+
+
+def _iv_log_objective_t(a, s, l_fo, l_ko, upper, tiny):
+    """(ln w, |w'|/w, d1, d2), w = c(s) or u(s) = Fo - c(s); see numpy_backend._iv_log_objective."""
     import torch
 
-    qt = q if q is not None else torch.zeros_like(r)
-    px, _, _, _ = _price_vega_d1d2_t(is_call, s, k, t, r, sigma, qt)
-    return px
+    d1 = a / s + 0.5 * s
+    d2 = d1 - s
+    fo = torch.exp(l_fo)
+    ko = torch.exp(l_ko)
+    n1 = _normal_cdf(torch.where(upper, -d1, d1))
+    n2 = _normal_cdf(d2)
+    w = torch.where(upper, fo * n1 + ko * n2, fo * n1 - ko * n2)
+    # w <= 0: c underflowed (sub-normal cancellation) -> ln c = -inf, i.e. the root lies above s
+    lw = torch.where(w > 0, torch.log(w), torch.full_like(w, float("-inf")))
+    if bool(tiny.any()):
+        la = l_fo + torch.special.log_ndtr(torch.where(upper, -d1, d1))
+        lb = l_ko + torch.special.log_ndtr(d2)
+        lw_t = torch.where(upper, torch.logaddexp(la, lb), la + torch.log1p(-torch.exp(lb - la)))
+        lw = torch.where(tiny, lw_t, lw)
+    dlw = torch.exp(l_fo - 0.5 * d1 * d1 - _ivc.LOG_SQRT2PI - lw)
+    return lw, dlw, d1, d2
 
 
-def _initial_guess_t(price, s, t):
+def _iv_step_t(s, lo, hi, a, l_target, l_fo, l_ko, upper, tiny):
+    """One safeguarded Halley step; see numpy_backend._iv_step."""
     import torch
 
-    sqrt_t = torch.sqrt(torch.clamp(t, min=1e-8))
-    approx = price / torch.clamp(s * sqrt_t, min=1e-12) * _SQRT2PI
-    return torch.clamp(approx, 0.30, 5.0)
+    lw, dlw, d1, d2 = _iv_log_objective_t(a, s, l_fo, l_ko, upper, tiny)
+    sgn = torch.where(upper, -1.0, 1.0).to(s.dtype)
+    g = sgn * (lw - l_target)
+    below = g < 0
+    lo = torch.where(below, s, lo)
+    hi = torch.where(below, hi, s)
+    delta = g / dlw
+    den = 1.0 - 0.5 * delta * (d1 * d2 / s - sgn * dlw)
+    den = torch.where(den.abs() < 0.5, torch.where(den < 0, -0.5, 0.5).to(s.dtype), den)
+    step = delta / den
+    cand = s - step
+    small = step.abs() <= _ivc.ACCEPT_RTOL * s
+    ok = torch.isfinite(cand) & (((cand > lo) & (cand < hi)) | small)
+    fallback = torch.where(
+        torch.isinf(hi), 4.0 * s, torch.where(lo > 0, torch.sqrt(lo * hi), 0.25 * s)
+    )
+    s_new = torch.clamp(torch.where(ok, cand, fallback), max=_ivc.S_MAX)
+    return s_new, lo, hi, ok & small
+
+
+def _iv_solve_otm_t(tv, gap, fo, ko, a, s0):
+    import torch
+
+    upper = gap < tv
+    l_target = torch.log(torch.where(upper, gap, tv))
+    l_fo = torch.log(fo)
+    l_ko = torch.log(ko)
+    tiny = (l_target - l_fo) < _ivc.TINY_LOG
+    s = s0
+    lo = torch.zeros_like(s)
+    hi = torch.full_like(s, float("inf"))
+    conv = torch.zeros_like(s, dtype=torch.bool)
+    for _ in range(_ivc.MAIN_ITERS):
+        s, lo, hi, conv = _iv_step_t(s, lo, hi, a, l_target, l_fo, l_ko, upper, tiny)
+    todo = torch.nonzero(~conv).flatten()
+    for _ in range(_ivc.MAX_ITERS):
+        if todo.numel() == 0:
+            break
+        sn, ln, hn, cv = _iv_step_t(
+            s[todo],
+            lo[todo],
+            hi[todo],
+            a[todo],
+            l_target[todo],
+            l_fo[todo],
+            l_ko[todo],
+            upper[todo],
+            tiny[todo],
+        )
+        s[todo], lo[todo], hi[todo] = sn, ln, hn
+        bounded = torch.isfinite(hn) & (ln > 0)
+        tight = (hn <= ln * (1.0 + _ivc.BRACKET_RTOL)) | (
+            torch.nextafter(ln, torch.full_like(ln, float("inf"))) >= hn
+        )
+        done = cv | (bounded & tight)
+        conv[todo] = done
+        todo = todo[~done]
+    return s, conv
 
 
 def implied_volatility(
@@ -509,72 +495,58 @@ def implied_volatility(
 ) -> Float1D:
     import torch
 
-    from ..utils.validation import handle_error
-
+    shape, price, s, k, t, r, flag, q = _ivc.flatten_inputs(price, s, k, t, r, flag, q)
     dev = _device()
     pt = _h2d(price, "price", dev)
     st = _h2d(s, "s", dev)
     kt = _h2d(k, "k", dev)
     tt = _h2d(t, "t", dev)
     rt = _h2d(r, "r", dev)
-    # Black-76: q=r so d1 uses only σ² drift (carry=disc eliminates r-q from d1)
-    if model == "black" and q is None:
-        qv = rt.clone()
+    if q is not None and model == "black_scholes_merton":
+        qv = _h2d(q, "q", dev)
     else:
-        qv = torch.zeros_like(rt) if q is None else _h2d(q, "q", dev)
-
-    # Pre-compute boolean flag once — avoids re-running `flag == "c"` each Halley iter
+        qv = torch.zeros_like(rt)
     is_call = torch.as_tensor(flag == "c", device=dev)
-
-    valid = tt > 0
-
-    # Below-intrinsic check — returns NaN for impossible prices (same as numpy backend)
-    discounted_spot = st * torch.exp(-qv * tt)
-    discounted_strike = kt * torch.exp(-rt * tt)
-    intrinsic = torch.where(
-        is_call,
-        torch.clamp(discounted_spot - discounted_strike, min=0.0),
-        torch.clamp(discounted_strike - discounted_spot, min=0.0),
-    )
-    below_intrinsic = pt < intrinsic - 1e-10
-
-    zero_price = (pt <= 0.0) & valid  # undetermined sigma for zero-price OTM options
-    if bool(below_intrinsic.any().item()):
-        handle_error(
-            f"Option price is below intrinsic value. {int(below_intrinsic.sum().item())}", on_error
-        )
 
     if _check_triton():
         from . import triton_kernels as tk
 
-        # Triton path: Halley loop + below-intrinsic + convergence check in one kernel;
-        # hoists 5 loop-invariant ops out of 8 Halley iters, and fuses the convergence
-        # check to save one separate bsm_price kernel call.
-        sigma, below_intrinsic_mask, not_converged = tk.bsm_iv_triton(
-            pt, st, kt, tt, rt, qv, is_call
-        )
-
-        if not_converged.any():
-            sigma = tk.bsm_iv_bisect_triton(pt, st, kt, tt, rt, qv, is_call, not_converged, sigma)
-
-        result = torch.where(valid, sigma, torch.zeros_like(sigma))
-        result = torch.where(
-            below_intrinsic_mask | zero_price, torch.full_like(result, float("nan")), result
-        )
+        sigma, code = tk.iv_otm_triton(model, pt, st, kt, tt, rt, qv, is_call)
     else:
-        sigma = _initial_guess_t(pt, st, tt)
-        # Halley's method (3rd order) — torch.compile fuses 8 iters
-        sigma = _get_compiled_halley()(sigma, pt, st, kt, tt, rt, qv, is_call)
-
-        px_final = _price_for_model_t(is_call, st, kt, tt, rt, sigma, qv)
-        underflow_stuck = (px_final == 0.0) & (pt > 0.0)
-        not_converged = (torch.abs(px_final - pt) > 1e-6) | underflow_stuck
-        if not_converged.any():
-            sigma = _get_compiled_bisect()(sigma, pt, st, kt, tt, rt, qv, is_call, not_converged)
-
-        result = torch.where(valid, sigma, torch.zeros_like(sigma))
-        result = torch.where(
-            below_intrinsic | zero_price, torch.full_like(result, float("nan")), result
-        )
-
-    return result.cpu().numpy()
+        rows = _ivc.classify(torch, model, pt, st, kt, tt, rt, qv, is_call)
+        near = torch.nonzero(rows["near"]).flatten()
+        if near.numel():  # within the error bound of the double-precision bounds
+            sub = _ivc.classify(
+                torch,
+                model,
+                pt[near],
+                st[near],
+                kt[near],
+                tt[near],
+                rt[near],
+                qv[near],
+                is_call[near],
+                precise=True,
+            )
+            for key, value in sub.items():
+                rows[key][near] = value.to(rows[key].dtype)
+        code = rows["code"].to(torch.int8)
+        sigma = torch.full_like(pt, float("nan"))
+        sigma = torch.where(rows["zero_vol"], torch.zeros_like(sigma), sigma)
+        idx = torch.nonzero(rows["interior"]).flatten()
+        if idx.numel():
+            sqrt_t = torch.sqrt(tt[idx])
+            tv, fo = rows["tv"][idx], rows["Fo"][idx]
+            sigma0 = torch.clamp(
+                tv / (fo * sqrt_t) * _ivc.SQRT2PI, _ivc.SEED_SIGMA_LO, _ivc.SEED_SIGMA_HI
+            )
+            sol, conv = _iv_solve_otm_t(
+                tv, rows["gap"][idx], fo, rows["Ko"][idx], rows["a"][idx], sigma0 * sqrt_t
+            )
+            sigma[idx] = torch.where(conv, sol / sqrt_t, torch.full_like(sol, float("nan")))
+            code[idx[~conv]] = _ivc.NOT_CONVERGED
+    counts = torch.bincount(code.to(torch.int64).flatten(), minlength=_ivc.N_CODES).cpu().tolist()
+    _ivc.report_row_errors(
+        {c: n for c, n in enumerate(counts) if c != _ivc.OK}, int(pt.numel()), on_error
+    )
+    return sigma.cpu().numpy().reshape(shape)

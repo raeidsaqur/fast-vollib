@@ -57,7 +57,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import numpy as np
 
-from .. import backends
+from .. import _iv_dispatch, backends
 from .._array_api import get_namespace
 from ..api import get_all_greeks
 from ..config import get_backend
@@ -96,7 +96,7 @@ __all__ = [
 ]
 
 #: Backends the Jäckel solver has a full-model wrapper for.
-_JACKEL_BACKENDS = ("numpy", "torch", "jax")
+_JACKEL_BACKENDS = _iv_dispatch.JACKEL_BACKENDS
 
 
 class _Terms(NamedTuple):
@@ -124,17 +124,7 @@ def _resolve_model(model: PricingModel | ModelLiteral) -> PricingModel:
 
 
 def _resolve_solver(solver: IVSolver | IVSolverLiteral) -> IVSolver:
-    if isinstance(solver, IVSolver):
-        return solver
-    if isinstance(solver, str):
-        try:
-            return IVSolver(solver)
-        except ValueError:
-            pass
-    valid = ", ".join(repr(member.value) for member in IVSolver)
-    raise UnsupportedSolverError(
-        f"Unknown implied-volatility solver {solver!r}. Available solvers: {valid}."
-    )
+    return _iv_dispatch.resolve_solver(solver, default=IVSolver.JACKEL.value)
 
 
 def _terms_of(instrument_or_batch: object) -> _Terms:
@@ -413,31 +403,8 @@ def greeks_instrument(
 
 
 def _jackel_backend_module(backend_name: str, *, requested: BackendLiteral) -> Any:
-    """The Jäckel full-model wrapper for a backend, or a typed refusal.
-
-    Never substitutes: a solver that cannot serve the requested backend is an
-    error, because silently answering with a different one is exactly the
-    behaviour the capability system exists to prevent.
-    """
-    if backend_name in _JACKEL_BACKENDS:
-        import importlib
-
-        return importlib.import_module(f"..jackel.{backend_name}_backend", __spec__.parent)
-
-    available = ", ".join(_JACKEL_BACKENDS)
-    detail = (
-        f"Request solver='halley' for the {backend_name!r} backend, or a backend the "
-        f"Jäckel solver supports; the solver is never substituted silently."
-        if requested != "auto"
-        else (
-            f"backend='auto' resolved to {backend_name!r} here. Pass an explicit "
-            f"backend the Jäckel solver supports, or solver='halley'."
-        )
-    )
-    raise UnsupportedSolverError(
-        f"The Jäckel solver has no {backend_name!r} implementation "
-        f"(available: {available}). {detail}"
-    )
+    """The Jäckel full-model wrapper for a backend, or a typed refusal (never a substitute)."""
+    return _iv_dispatch.jackel_backend_module(backend_name, requested=requested)
 
 
 def _native_jackel_route(namespace_name: str) -> Any:

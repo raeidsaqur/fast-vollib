@@ -3,7 +3,8 @@ name = "fast-vollib"
 dynamic = ["version"]
 description = "Fast derivatives pricing, implied volatility, portfolio P&L, typed instruments, and Monte Carlo simulation with NumPy, PyTorch, and JAX."
 readme = "README.md"
-license = { text = "MIT" }
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 authors = [
     { name = "Raeid Saqur", email = "raeid.saqur@maths.ox.ac.uk" }
 ]
@@ -35,7 +36,6 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Financial and Insurance Industry",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
@@ -167,9 +167,11 @@ constraint-dependencies = [
 # but torch's aarch64 CUDA wheels (and their triton dependency) do not reach that
 # far back, so requiring ARM coverage across the whole 3.10+ range backtracks the
 # resolver all the way to torch 2.6.0. 3.12 is what the GPU hosts actually run.
+# CPython only: the CUDA wheels these entries guard (torch, jax) are CPython-only, and uv >= 0.12.14
+# checks each resolver fork's full marker, including the PyPy forks.
 required-environments = [
-    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_full_version >= '3.12'",
-    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_full_version >= '3.12'",
+    "sys_platform == 'linux' and platform_machine == 'aarch64' and python_full_version >= '3.12' and platform_python_implementation == 'CPython'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64' and python_full_version >= '3.12' and platform_python_implementation == 'CPython'",
 ]
 index = [
     { name = "pytorch-cu130", url = "https://download.pytorch.org/whl/cu130", explicit = true },
@@ -221,6 +223,15 @@ local_scheme = "no-local-version"
 [tool.hatch.build.hooks.vcs]
 version-file = "src/fast_vollib/_version.py"
 
+[tool.hatch.build.targets.sdist]
+# Keep the source archive independent of local files and Git excludes.
+only-include = [
+    ".github", ".gitignore", ".pre-commit-config.yaml", ".zenodo.json",
+    "CITATION.cff", "CONTRIBUTING.md", "LICENSE", "NOTICE", "README.md",
+    "docs", "examples", "mkdocs.yml", "notebooks", "pyproject.toml", "ruff.toml",
+    "scripts", "src", "tests", "tools", "uv.lock",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/fast_vollib"]
 
@@ -266,6 +277,11 @@ bench = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-m 'not slow'"
+markers = [
+    "slow: long validation sweeps (full canonical grid, held-out sample); run with -m slow",
+    "gpu: needs a CUDA device; skipped without one",
+]
 
 
 # --- Formatting and Linting Tools Configuration -- #

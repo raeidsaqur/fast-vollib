@@ -1,0 +1,6421 @@
+{
+ "schema": "fv-iv-adjudication-fixtures/1",
+ "created": "2026-11-19",
+ "protocol": "protocol.json",
+ "reference_script": "scripts/reference_inverse.py",
+ "mpmath": "1.3.0",
+ "base_version": "v0.2.4",
+ "routes": {
+  "x86_64-h100:halley_jax_cpu": {
+   "route": "halley_jax",
+   "device": "cpu",
+   "fired": [
+    "halley.jax"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:halley_jax_cuda": {
+   "route": "halley_jax",
+   "device": "gpu",
+   "fired": [
+    "halley.jax"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:halley_numba_cpu": {
+   "route": "halley_numba",
+   "device": "cpu",
+   "fired": [
+    "halley.numba"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:halley_numpy_cpu": {
+   "route": "halley_numpy",
+   "device": "cpu",
+   "fired": [
+    "halley.numpy"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:halley_torch_cpu": {
+   "route": "halley_torch",
+   "device": "cpu",
+   "fired": [
+    "halley.torch",
+    "torch.compile"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:halley_torch_cuda": {
+   "route": "halley_torch",
+   "device": "cuda",
+   "fired": [
+    "halley.torch",
+    "triton"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:jackel_host_cpu": {
+   "route": "jackel_host",
+   "device": "cpu",
+   "fired": [
+    "jackel_iv.jackel_iv_black"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide"
+   ]
+  },
+  "x86_64-h100:jackel_host_nonumba_cpu": {
+   "route": "jackel_host",
+   "device": "cpu",
+   "fired": [
+    "jackel_iv.jackel_iv_black"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": false,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide",
+    "RuntimeWarning: overflow encountered in multiply"
+   ]
+  },
+  "x86_64-h100:jackel_jax_ad_cpu": {
+   "route": "jackel_jax_ad",
+   "device": "cpu",
+   "fired": [
+    "jackel.jax.autograd_wrapper"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:jackel_jax_ad_cuda": {
+   "route": "jackel_jax_ad",
+   "device": "gpu",
+   "fired": [
+    "jackel.jax.autograd_wrapper"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:jackel_jax_cpu": {
+   "route": "jackel_jax",
+   "device": "cpu",
+   "fired": [
+    "jackel.jax",
+    "host_lbr_fallback",
+    "jackel.jax.native_kernel"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide"
+   ]
+  },
+  "x86_64-h100:jackel_jax_cuda": {
+   "route": "jackel_jax",
+   "device": "gpu",
+   "fired": [
+    "jackel.jax",
+    "host_lbr_fallback",
+    "jackel.jax.native_kernel"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide"
+   ]
+  },
+  "x86_64-h100:jackel_numpy_cpu": {
+   "route": "jackel_numpy",
+   "device": "cpu",
+   "fired": [
+    "jackel.numpy"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide"
+   ]
+  },
+  "x86_64-h100:jackel_numpy_nonumba_cpu": {
+   "route": "jackel_numpy",
+   "device": "cpu",
+   "fired": [
+    "jackel.numpy"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": false,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide",
+    "RuntimeWarning: overflow encountered in multiply"
+   ]
+  },
+  "x86_64-h100:jackel_torch_ad_cpu": {
+   "route": "jackel_torch_ad",
+   "device": "cpu",
+   "fired": [
+    "jackel.torch.native_kernel(autograd)"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:jackel_torch_ad_cuda": {
+   "route": "jackel_torch_ad",
+   "device": "cuda",
+   "fired": [
+    "jackel.torch.native_kernel(autograd)"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:jackel_torch_cpu": {
+   "route": "jackel_torch",
+   "device": "cpu",
+   "fired": [
+    "jackel.torch",
+    "host_lbr_fallback",
+    "jackel.torch.native_kernel"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide"
+   ]
+  },
+  "x86_64-h100:jackel_torch_cuda": {
+   "route": "jackel_torch",
+   "device": "cuda",
+   "fired": [
+    "jackel.torch",
+    "host_lbr_fallback",
+    "jackel.torch.native_kernel"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.",
+    "RuntimeWarning: invalid value encountered in divide"
+   ]
+  },
+  "x86_64-h100:jackel_triton_direct_cuda": {
+   "route": "jackel_triton_direct",
+   "device": "cuda",
+   "fired": [
+    "jackel.triton_kernels.jackel_iv_triton"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": [
+    "DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`."
+   ]
+  },
+  "x86_64-h100:lbr_cpu": {
+   "route": "lbr",
+   "device": "cpu",
+   "fired": [
+    "py_lets_be_rational"
+   ],
+   "machine": "x86_64",
+   "numba_in_jackel": true,
+   "warnings": []
+  }
+ },
+ "fixtures": [
+  {
+   "id": "J1",
+   "role": "dev",
+   "description": "deep out-of-the-money call; quote in the underflow region (normalised price subnormal)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.49be87707752ap+7",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.ed1ab91d8b800p-1022",
+   "sigma_gen_hex": "0x1.b59dd28a07a12p-7",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.b59dd28a087bcp-7",
+    "ref_lo_hex": "0x1.b59dd28a087bbp-7",
+    "ref_hi_hex": "0x1.b59dd28a087bcp-7",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.b59dd28a087bbp-7",
+    "sigma_int_hi_hex": "0x1.b59dd28a087bcp-7",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-59",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 4171184490461184.0,
+    "beta": 1.60498299521113e-310,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 2662207.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.694d93a41ca11p-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.694d93a41dc86p-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.694d93a41d53ep-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.694d93a41c832p-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.043ebd6ad41dcp-4",
+     "verdict": "FAIL(rel 3.76e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7820p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.b59dd28a087bbp-7",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J1-ctl",
+   "role": "control",
+   "description": "matched control for J1: same x, larger s, all routes pass",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.49be87707752ap+7",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.5bd9fb13e9300p-10",
+   "sigma_gen_hex": "0x1.28dea7f3aebaap-3",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.28dea7f3aebadp-3",
+    "ref_lo_hex": "0x1.28dea7f3aebacp-3",
+    "ref_hi_hex": "0x1.28dea7f3aebadp-3",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.28dea7f3aebacp-3",
+    "sigma_int_hi_hex": "0x1.28dea7f3aebadp-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-55",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 6119468082041600.0,
+    "beta": 1.0334282332385775e-05,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 43.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.28dea7f3aebadp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.28dea7f3aebb2p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.28dea7f3aebbcp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.28dea7f3aeba2p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.28dea7f3aeb9ep-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.28dea7f3aead7p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.28dea7f3aeba5p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.28dea7f3aebacp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.28dea7f3aebe4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.28dea7f3aebe5p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.28dea7f3aebe4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.28dea7f3aebe5p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.28dea7f3aeba5p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.28dea7f3aebacp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.28dea7f3aebe9p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.28dea7f3aebe3p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.28dea7f3aebe9p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.28dea7f3aebe3p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.28dea7f3ae889p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.28dea7f3aebabp-3",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J2",
+   "role": "dev",
+   "description": "deep out-of-the-money call; quote in the underflow region (normalised price subnormal)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.c97a59a800b8bp+11",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.142c1e9523ec0p-1022",
+   "sigma_gen_hex": "0x1.882fd06669b5ep-4",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.882fd06669b8ap-4",
+    "ref_lo_hex": "0x1.882fd06669b8ap-4",
+    "ref_hi_hex": "0x1.882fd06669b8bp-4",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.882fd06669b8ap-4",
+    "sigma_int_hi_hex": "0x1.882fd06669b8bp-4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-56",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 354875587313344.0,
+    "beta": 2.89821576002e-312,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 3214.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.aee564b491c7ep-2",
+     "verdict": "FAIL(rel 3.39e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.dbc6fa3a2eb97p-2",
+     "verdict": "FAIL(rel 3.85e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.882fd06669b8bp-4",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J2-ctl",
+   "role": "control",
+   "description": "matched control for J2: same x, larger s, all routes pass",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.c97a59a800b8bp+11",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.0b54b45b3de1cp-10",
+   "sigma_gen_hex": "0x1.b075306067329p-1",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.b075306067329p-1",
+    "ref_lo_hex": "0x1.b075306067328p-1",
+    "ref_hi_hex": "0x1.b075306067329p-1",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.b075306067328p-1",
+    "sigma_int_hi_hex": "0x1.b075306067329p-1",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-53",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 4702934523960860.0,
+    "beta": 1.6856955245507824e-06,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -1.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.b0753056a4d72p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.b0753056a4d72p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.b0753056a4d72p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.b0753056a4d72p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.b0753056a4d72p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.b0753056a4d72p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.b075306067329p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.b075306067329p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.b075306067329p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.b075306067329p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.b075306067934p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.b07530606732ap-1",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J3",
+   "role": "dev",
+   "description": "deep out-of-the-money call; quote in the underflow region (normalised price subnormal)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.553d0a40ea595p+12",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.bd7d37b1e6044p-1021",
+   "sigma_gen_hex": "0x1.b3078c5370456p-4",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.b4d6a1af16ccap-4",
+    "ref_lo_hex": "0x1.b4d6a1af16cc9p-4",
+    "ref_hi_hex": "0x1.b4d6a1af16ccap-4",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.b4d6a1af16cc9p-4",
+    "sigma_int_hi_hex": "0x1.b4d6a1af16ccap-4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-56",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 7837127674847299.0,
+    "beta": 1.04805146810946e-310,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 7815088633766845.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.81e+00)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.81e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.81e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.81e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.81e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.dd80d2f3c99acp-2",
+     "verdict": "FAIL(rel 3.37e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.63e+00)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.63e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.e52c16dba3e31p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.e52c16dba3e31p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.e52c16dba3e31p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.e52c16dba3e31p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.63e+00)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.63e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.e52c16dba3e30p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.e52c16dba3e32p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.e52c16dba3e30p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.e52c16dba3e32p-3",
+     "verdict": "FAIL(rel 1.22e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.fd7e436f73bbfp-2",
+     "verdict": "FAIL(rel 3.67e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.b4d6a1af16cc9p-4",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J3-ctl",
+   "role": "control",
+   "description": "matched control for J3: same x, larger s, all routes pass",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.553d0a40ea595p+12",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.33b22fc66896cp-7",
+   "sigma_gen_hex": "0x1.0a0d1ae0ede0ep+0",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.0a0d1ae0ede0fp+0",
+    "ref_lo_hex": "0x1.0a0d1ae0ede0ep+0",
+    "ref_hi_hex": "0x1.0a0d1ae0ede0fp+0",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.0a0d1ae0ede0ep+0",
+    "sigma_int_hi_hex": "0x1.0a0d1ae0ede0fp+0",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-52",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 5413046007007596.0,
+    "beta": 1.2708169838171266e-05,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 14.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.0a0d1ada7c6f6p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.0a0d1ada7c6f6p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.0a0d1ada7c6f6p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.0a0d1ada7c6f6p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.0a0d1ada7c6f6p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.0a0d1ada7c6f6p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.0a0d1ae0ee111p+0",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.0a0d1ae0ede0fp+0",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J1x",
+   "role": "dev",
+   "description": "as J1, quote = exact price at the generating sigma correctly rounded",
+   "quote_source": "exact_rounded",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.49be87707752ap+7",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.ed1ab91b018c1p-1022",
+   "sigma_gen_hex": "0x1.b59dd28a07a12p-7",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.b59dd28a07a12p-7",
+    "ref_lo_hex": "0x1.b59dd28a07a12p-7",
+    "ref_hi_hex": "0x1.b59dd28a07a13p-7",
+    "ref_dps": 80,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.b59dd28a07a11p-7",
+    "sigma_int_hi_hex": "0x1.b59dd28a07a13p-7",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-59",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 4171184487798977.0,
+    "beta": 1.60498299418674e-310,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.694d93a41ca11p-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.694d93a41dc86p-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.694d93a41d53ep-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.694d93a41c832p-5",
+     "verdict": "FAIL(rel 2.30e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.043ebd6ad41dcp-4",
+     "verdict": "FAIL(rel 3.76e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0000000000000p-2",
+     "verdict": "FAIL(rel 1.77e+01)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7824p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.9c05ad3fd7820p-5",
+     "verdict": "FAIL(rel 2.77e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.b59dd28a07a10p-7",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J2x",
+   "role": "dev",
+   "description": "as J2, quote = exact price at the generating sigma correctly rounded",
+   "quote_source": "exact_rounded",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.c97a59a800b8bp+11",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.142c1e9523232p-1022",
+   "sigma_gen_hex": "0x1.882fd06669b5ep-4",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.882fd06669b5ep-4",
+    "ref_lo_hex": "0x1.882fd06669b5ep-4",
+    "ref_hi_hex": "0x1.882fd06669b5fp-4",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.882fd06669b5dp-4",
+    "sigma_int_hi_hex": "0x1.882fd06669b5fp-4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-56",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 354875587310130.0,
+    "beta": 2.89821575999e-312,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 2.13e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.aee564b491c7ep-2",
+     "verdict": "FAIL(rel 3.39e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.5775c544ff263p-1",
+     "verdict": "FAIL(rel 6.01e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.c3adb800da44ep-3",
+     "verdict": "FAIL(rel 1.30e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.dbc6fa3a2eb97p-2",
+     "verdict": "FAIL(rel 3.85e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.882fd06669b63p-4",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "J3x",
+   "role": "dev",
+   "description": "as J3, quote = exact price at the generating sigma correctly rounded",
+   "quote_source": "exact_rounded",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.553d0a40ea595p+12",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.02816ba6df910p-1022",
+   "sigma_gen_hex": "0x1.b3078c5370456p-4",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.b3078c5370456p-4",
+    "ref_lo_hex": "0x1.b3078c5370455p-4",
+    "ref_hi_hex": "0x1.b3078c5370456p-4",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.b3078c5370455p-4",
+    "sigma_int_hi_hex": "0x1.b3078c5370457p-4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-56",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 44078082160912.0,
+    "beta": 2.94725954693e-313,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.82e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.82e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.82e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.82e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.dd80d2f3c99acp-2",
+     "verdict": "FAIL(rel 3.39e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.66e+00)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.66e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.e52c16dba3e31p-3",
+     "verdict": "FAIL(rel 1.23e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.e52c16dba3e31p-3",
+     "verdict": "FAIL(rel 1.23e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.66e+00)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.6a09e667f3bcdp-1",
+     "verdict": "FAIL(rel 5.66e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.e52c16dba3e30p-3",
+     "verdict": "FAIL(rel 1.23e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.e52c16dba3e32p-3",
+     "verdict": "FAIL(rel 1.23e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.e52c16dba3e30p-3",
+     "verdict": "FAIL(rel 1.23e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.e52c16dba3e32p-3",
+     "verdict": "FAIL(rel 1.23e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.fd7e436f73bbfp-2",
+     "verdict": "FAIL(rel 3.68e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.b3078c5370463p-4",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "H1",
+   "role": "dev",
+   "description": "low-volatility in-the-money call: F=S=100, K=100e^-0.1, T=1, r=0, sigma=0.0182; NumPy generator quote",
+   "quote_source": "numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.69ef5a02e89c5p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.30852febdacb8p+3",
+   "sigma_gen_hex": "0x1.2a305532617c2p-6",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.2a3054c763725p-6",
+    "ref_lo_hex": "0x1.2a3054c763725p-6",
+    "ref_hi_hex": "0x1.2a3054c763726p-6",
+    "ref_dps": 100,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.2a3054b043e37p-6",
+    "sigma_int_hi_hex": "0x1.2a3054de83010p-6",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.71f8ee0000000p-34",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 3275488.0,
+    "beta": 0.1000416719364776,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -2.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.20b11e9ddc0cbp-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.20b11eaa24dcfp-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.20b11ebcf59d4p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.20b11ebcf59d4p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.20b11eaa24dcfp-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.20b11ef739bf4p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.2a3054c7636edp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.2a3054c76371ep-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.2a7d0ef5713bep-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.2a7d0ef571304p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.2a7d0ef5713bep-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.2a7d0ef571304p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.2a3054c7636edp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.2a3054c76371ep-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.2a7d0ef571185p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.2a7d0ef571491p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.2a7d0ef571185p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.2a7d0ef571491p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.2a7d0ef43942dp-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.2a3054c763724p-6",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "H1x",
+   "role": "dev",
+   "description": "as H1, quote = exact price at sigma=0.0182 correctly rounded (differs from the generator quote)",
+   "quote_source": "exact_rounded",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.69ef5a02e89c5p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.30852febdacbap+3",
+   "sigma_gen_hex": "0x1.2a305532617c2p-6",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.2a305523e1ab9p-6",
+    "ref_lo_hex": "0x1.2a305523e1ab9p-6",
+    "ref_hi_hex": "0x1.2a305523e1abap-6",
+    "ref_dps": 100,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.2a30550cc21d9p-6",
+    "sigma_int_hi_hex": "0x1.2a30553b01396p-6",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.71f8e00000000p-34",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 3275490.0,
+    "beta": 0.1000416719364777,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.20b11ec57a200p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.20b11ec000b08p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.20b11ebf15fe7p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.20b11ebf15fe7p-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.20b11ebf15fecp-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.20b11eccca88dp-6",
+     "verdict": "FAIL(rel 3.18e-02)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.2a305523e1a97p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.2a305523e1acfp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.2a7d0f50e797ap-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.2a7d0f50e78c1p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.2a7d0f50e797ap-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.2a7d0f50e78c1p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.2a305523e1a97p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.2a305523e1acfp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.2a7d0f50e7741p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.2a7d0f50e7a4cp-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.2a7d0f50e7741p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.2a7d0f50e7a4cp-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.2a7d0f4faf9e9p-6",
+     "verdict": "FAIL(rel 1.01e-03)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.2a305523e1ab8p-6",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "H1-ctl",
+   "role": "control",
+   "description": "matched control for H1: same contract, sigma=0.25",
+   "quote_source": "numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.69ef5a02e89c5p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.df39ad9512bb4p+3",
+   "sigma_gen_hex": "0x1.0000000000000p-2",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.ffffffffffffap-3",
+    "ref_lo_hex": "0x1.ffffffffffff9p-3",
+    "ref_hi_hex": "0x1.ffffffffffffap-3",
+    "ref_dps": 82,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.ffffffffffff8p-3",
+    "sigma_int_hi_hex": "0x1.ffffffffffffbp-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-54",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 3073443612686812.0,
+    "beta": 0.1574361599061325,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -3.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z2_lower_middle",
+    "halley_seed": 0.3753874059987326,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.ffffffffffff5p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.ffffffffffff6p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.ffffffffffff6p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.ffffffffffffcp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.fffffffffffeep-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.ffffffffffff6p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.ffffffffffff7p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0000000000003p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.ffffffffffffap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.ffffffffffffcp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.ffffffffffffap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.ffffffffffffcp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.ffffffffffff7p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0000000000003p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.0000000000005p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.ffffffffffffep-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.0000000000005p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.ffffffffffffep-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.ffffffffffff4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.ffffffffffff8p-3",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-worst",
+   "role": "dev",
+   "description": "native J\u00e4ckel kernels (torch/JAX, CPU and CUDA) fail (worst; rel err 3.47e+00 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.ba118083ca148p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.7d1780ddf8000p-921",
+   "sigma_gen_hex": "0x1.71a1538e44838p-9",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.71a1538e44e03p-9",
+    "ref_lo_hex": "0x1.71a1538e44e03p-9",
+    "ref_hi_hex": "0x1.71a1538e44e04p-9",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.71a1538e44e03p-9",
+    "sigma_int_hi_hex": "0x1.71a1538e44e04p-9",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-61",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 6704238023376896.0,
+    "beta": 7.988199815168718e-280,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 1927217.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.53685e9b8e587p-7",
+     "verdict": "FAIL(rel 2.67e+00)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.53685e9b8ee4ep-7",
+     "verdict": "FAIL(rel 2.67e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.53685e9b95c12p-7",
+     "verdict": "FAIL(rel 2.67e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.53685e9b7d232p-7",
+     "verdict": "FAIL(rel 2.67e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.53685e9ba75e6p-7",
+     "verdict": "FAIL(rel 2.67e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.8fecbf72d938ap-7",
+     "verdict": "FAIL(rel 3.33e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.71a1538e44b84p-9",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.71a1538e44e00p-9",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.71a1538e44b84p-9",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.71a1538e44e00p-9",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.9cc193164aac0p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.9cc193164aab4p-7",
+     "verdict": "FAIL(rel 3.47e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.71a1538e44e05p-9",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-worst-ctl",
+   "role": "control",
+   "description": "matched control for NJ-worst",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.ba118083ca148p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.b13873dca0e00p-10",
+   "sigma_gen_hex": "0x1.16242a8c7d2a5p-5",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.16242a8c7d2cbp-5",
+    "ref_lo_hex": "0x1.16242a8c7d2cap-5",
+    "ref_hi_hex": "0x1.16242a8c7d2cbp-5",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.16242a8c7d2cap-5",
+    "sigma_int_hi_hex": "0x1.16242a8c7d2cbp-5",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-57",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 7621295949352448.0,
+    "beta": 1.5720066220649405e-05,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 663.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.16242a8c7ba2cp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.16242a8c7ba40p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.16242a8c7ba61p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.16242a8c7ba4bp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.16242a8c7ba1ap-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.16242a8c7bb4bp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.16242a8c7d2d9p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.16242a8c7d2dcp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.16242a8c7d331p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.16242a8c7d323p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.16242a8c7d331p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.16242a8c7d323p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.16242a8c7d2d9p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.16242a8c7d2dcp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.16242a8c7d331p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.16242a8c7d338p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.16242a8c7d331p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.16242a8c7d338p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.16242a8c7cefdp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.16242a8c7d2cdp-5",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-median",
+   "role": "dev",
+   "description": "native J\u00e4ckel kernels (torch/JAX, CPU and CUDA) fail (median; rel err 2.44e-03 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.f2b58911644f8p+9",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.a7c7b55fa4d40p-82",
+   "sigma_gen_hex": "0x1.c16fe79f7f6c2p-3",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.c16fe79f7f6d1p-3",
+    "ref_lo_hex": "0x1.c16fe79f7f6d1p-3",
+    "ref_hi_hex": "0x1.c16fe79f7f6d2p-3",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.c16fe79f7f6d1p-3",
+    "sigma_int_hi_hex": "0x1.c16fe79f7f6d2p-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-55",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 7455218559765824.0,
+    "beta": 1.0839326712781669e-27,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 1603.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.9f213007dab47p-3",
+     "verdict": "FAIL(rel 7.63e-02)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.9f213007dab66p-3",
+     "verdict": "FAIL(rel 7.63e-02)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.9f213007daa8cp-3",
+     "verdict": "FAIL(rel 7.63e-02)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.9f213007dab72p-3",
+     "verdict": "FAIL(rel 7.63e-02)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.9f213007daaa8p-3",
+     "verdict": "FAIL(rel 7.63e-02)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.15b8fe5723a7ep-2",
+     "verdict": "FAIL(rel 2.36e-01)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.c16fe79f7f6d6p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.c16fe79f7f6d2p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.c288aa755cec3p-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.c288aa755d062p-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.c288aa755cec3p-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.c288aa755d062p-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.c16fe79f7f6d6p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.c16fe79f7f6d2p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.c288aa755cb9ap-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.c288aa755cbbcp-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.c288aa755cb9ap-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.c288aa755cbbcp-3",
+     "verdict": "FAIL(rel 2.44e-03)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.b45a20c9f56b4p-3",
+     "verdict": "FAIL(rel 2.91e-02)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.c16fe79f7f6d2p-3",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-median-ctl",
+   "role": "control",
+   "description": "matched control for NJ-median",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.f2b58911644f8p+9",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.28ee725a57414p-8",
+   "sigma_gen_hex": "0x1.3cdbfae2835b9p-1",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.3cdbfae2835b9p-1",
+    "ref_lo_hex": "0x1.3cdbfae2835b8p-1",
+    "ref_hi_hex": "0x1.3cdbfae2835b9p-1",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.3cdbfae2835b8p-1",
+    "sigma_int_hi_hex": "0x1.3cdbfae2835b9p-1",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-53",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 5223673000981524.0,
+    "beta": 1.4346223370058484e-05,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -6.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3cdbfac895550p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3cdbfac895550p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3cdbfac895550p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3cdbfac895550p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3cdbfac895550p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.3cdbfac895550p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bbp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.3cdbfae2835b9p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.3cdbfae2835b9p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bbp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.3cdbfae2835b9p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.3cdbfae2835b9p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.3cdbfae283c35p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.3cdbfae2835bap-1",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-worst-ITM",
+   "role": "dev",
+   "description": "native J\u00e4ckel kernels (torch/JAX, CPU and CUDA) fail (worst-ITM; rel err 1.23e-02 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.69ef5a02e89c2p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.30852fe8bb1f8p+3",
+   "sigma_gen_hex": "0x1.b59dd28a07a12p-7",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.bc7de32fd9fc6p-7",
+    "ref_lo_hex": "0x1.bc7de32fd9fc5p-7",
+    "ref_hi_hex": "0x1.bc7de32fd9fc6p-7",
+    "ref_dps": 110,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.bbfdd10530a21p-7",
+    "sigma_int_hi_hex": "0x1.bcf692e5ccb6cp-7",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.00245552b4a00p-16",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 8.0,
+    "beta": 0.1000416718753107,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 5.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.543913ac2d33ep-7",
+     "verdict": "FAIL(rel 2.35e-01)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.545a6df612180p-7",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.545a85a53feb4p-7",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.545a6f63a263ap-7",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.545a597d15a6dp-7",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.5521761f1d3c3p-7",
+     "verdict": "FAIL(rel 2.33e-01)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.bc7de32fd9ffcp-7",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.bc7de32fd9fcbp-7",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.c1f515b3b6ff9p-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.c1f515b3b68d9p-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.c1f515b3b6ff9p-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.c1f515b3b68d9p-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.bc7de32fd9ffcp-7",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.bc7de32fd9fcbp-7",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.c1f515b3b9595p-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.c1f515b3b8aebp-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.c1f515b3b9595p-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.c1f515b3b8aebp-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.c1f515ab2f3eep-7",
+     "verdict": "FAIL(rel 1.23e-02)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.bc7de32fd9fcep-7",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-worst-ITM-ctl",
+   "role": "control",
+   "description": "matched control for NJ-worst-ITM",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.69ef5a02e89c2p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.30916fdcb81a0p+3",
+   "sigma_gen_hex": "0x1.16242a8c7d2a5p-5",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.16242a8c7cd5fp-5",
+    "ref_lo_hex": "0x1.16242a8c7cd5fp-5",
+    "ref_hi_hex": "0x1.16242a8c7cd60p-5",
+    "ref_dps": 88,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.16242a8c7cc5dp-5",
+    "sigma_int_hi_hex": "0x1.16242a8c7ce62p-5",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0300000000000p-49",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 841800994736.0,
+    "beta": 0.1000573919415312,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -3.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.16242a8c7b054p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.16242a8c7abf8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.16242a8c7abf8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.16242a8c7abf8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.16242a8c7abf8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.16242a8c7b751p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.16242a8c7cd61p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.16242a8c7cd62p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.16242a8c7cdd0p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.16242a8c7cdb4p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.16242a8c7cdd0p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.16242a8c7cdb4p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.16242a8c7cd61p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.16242a8c7cd62p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.16242a8c7cd9ep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.16242a8c7cdbcp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.16242a8c7cd9ep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.16242a8c7cdbcp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.16242a8c7cef3p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.16242a8c7cd65p-5",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "NJ-least",
+   "role": "dev",
+   "description": "native J\u00e4ckel kernels (torch/JAX, CPU and CUDA) fail (least; rel err 1.09e-12 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.ba118083ca148p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.e67868bfc0b00p-12",
+   "sigma_gen_hex": "0x1.f57fa14783e24p-6",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.f57fa14783dcep-6",
+    "ref_lo_hex": "0x1.f57fa14783dcdp-6",
+    "ref_hi_hex": "0x1.f57fa14783dcep-6",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.f57fa14783dcdp-6",
+    "sigma_int_hi_hex": "0x1.f57fa14783dcep-6",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-58",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 8558076873149184.0,
+    "beta": 4.413079352296514e-06,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -1115.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.f57fa0e1a6a67p-6",
+     "verdict": "FAIL(rel 1.21e-08)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.f57fa0e1a6b38p-6",
+     "verdict": "FAIL(rel 1.21e-08)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.f57fa0e1a6a6dp-6",
+     "verdict": "FAIL(rel 1.21e-08)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.f57fa0e1a6ad3p-6",
+     "verdict": "FAIL(rel 1.21e-08)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.f57fa0e1a6b19p-6",
+     "verdict": "FAIL(rel 1.21e-08)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.f57fa0e1a801bp-6",
+     "verdict": "FAIL(rel 1.21e-08)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.f57fa14783ddbp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.f57fa14783dcfp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.f57fa1478635ep-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.f57fa14786358p-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.f57fa1478635ep-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.f57fa14786358p-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.f57fa14783ddbp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.f57fa14783dcfp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.f57fa1478632bp-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.f57fa14786324p-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.f57fa1478632bp-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.f57fa14786324p-6",
+     "verdict": "FAIL(rel 1.09e-12)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.f57fa1478603dp-6",
+     "verdict": "FAIL(rel 1.00e-12)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.f57fa14783dd0p-6",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JT-worst",
+   "role": "dev",
+   "description": "J\u00e4ckel Triton direct-kernel fails (worst; rel err 8.45e+00 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.52e871cdc6078p+11",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.02e6c679ccbf0p-58",
+   "sigma_gen_hex": "0x1.795ecb0892568p-2",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.795ecb0892563p-2",
+    "ref_lo_hex": "0x1.795ecb0892562p-2",
+    "ref_hi_hex": "0x1.795ecb0892563p-2",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.795ecb0892562p-2",
+    "sigma_int_hi_hex": "0x1.795ecb0892563p-2",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-54",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 4554642757045232.0,
+    "beta": 6.738587943814494e-21,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -304.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.86e-01)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.86e-01)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.86e-01)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.86e-01)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 1.86e-01)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.8bc800f528990p-2",
+     "verdict": "FAIL(rel 4.88e-02)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.795ecb089255dp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.795ecb0892563p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.79612c2526f44p-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.79612c2526eb3p-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.79612c2526f44p-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.79612c2526eb3p-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.795ecb089255dp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.795ecb0892563p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.79612c2526f2fp-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.79612c2526f14p-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.79612c2526f2fp-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.79612c2526f14p-2",
+     "verdict": "FAIL(rel 2.46e-05)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.bdae63698ff5ep+1",
+     "verdict": "FAIL(rel 8.45e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.795ecb0892562p-2",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JT-worst-ctl",
+   "role": "control",
+   "description": "matched control for JT-worst",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.52e871cdc6078p+11",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.2cac3fb6369bcp-11",
+   "sigma_gen_hex": "0x1.85de4aa7bfc0ap-1",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.85de4aa7bfc0bp-1",
+    "ref_lo_hex": "0x1.85de4aa7bfc0bp-1",
+    "ref_hi_hex": "0x1.85de4aa7bfc0cp-1",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.85de4aa7bfc0bp-1",
+    "sigma_int_hi_hex": "0x1.85de4aa7bfc0cp-1",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-53",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 5289492665821628.0,
+    "beta": 1.1013830723319738e-06,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 22.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.85de4ac75bc2cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.85de4ac75bc2cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.85de4ac75bc2cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.85de4ac75bc2cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.85de4ac75bc2cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.85de4ac75bc2cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0cp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.85de4aa7bfc0bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.85de4aa7bfb1ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.85de4aa7bfc0cp-1",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JT-median",
+   "role": "dev",
+   "description": "J\u00e4ckel Triton direct-kernel fails (median; rel err 2.72e-03 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.308ff61aef792p+10",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.e7248476e3080p-52",
+   "sigma_gen_hex": "0x1.32b3a36b5b05bp-2",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.32b3a36b5b078p-2",
+    "ref_lo_hex": "0x1.32b3a36b5b078p-2",
+    "ref_hi_hex": "0x1.32b3a36b5b079p-2",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.32b3a36b5b078p-2",
+    "sigma_int_hi_hex": "0x1.32b3a36b5b079p-2",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-54",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 8569904062935168.0,
+    "beta": 1.210565544549746e-18,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 3364.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.32b3a36b5b087p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.32b3a36b5b068p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.32b3a36b5b076p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.32b3a36b5b069p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.32b3a36b5b076p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.41a2feb0e861bp-2",
+     "verdict": "FAIL(rel 4.87e-02)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.32b3a36b5b06cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.32b3a36b5b078p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.32b697085b4acp-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.32b697085b4e5p-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.32b697085b4acp-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.32b697085b4e5p-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.32b3a36b5b06cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.32b3a36b5b078p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.32b697085b4e5p-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.32b697085b4c4p-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.32b697085b4e5p-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.32b697085b4c4p-2",
+     "verdict": "FAIL(rel 3.76e-05)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.33896feb50475p-2",
+     "verdict": "FAIL(rel 2.72e-03)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.32b3a36b5b078p-2",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JT-median-ctl",
+   "role": "control",
+   "description": "matched control for JT-median",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.308ff61aef792p+10",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.eb0957235f390p-8",
+   "sigma_gen_hex": "0x1.5f7923090e99ep-1",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.5f7923090e99dp-1",
+    "ref_lo_hex": "0x1.5f7923090e99dp-1",
+    "ref_hi_hex": "0x1.5f7923090e99ep-1",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.5f7923090e99dp-1",
+    "sigma_int_hi_hex": "0x1.5f7923090e99ep-1",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-53",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 8638405214073744.0,
+    "beta": 2.1466721898800697e-05,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -14.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.5f7923090e99dp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.5f7923090edd7p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "HL-worst",
+   "role": "dev",
+   "description": "Halley fails (worst; rel err 3.28e+00 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.5097ec658416bp+10",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.1b6e894149200p-998",
+   "sigma_gen_hex": "0x1.1f5a5c6262fe3p-4",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.1f5a5c626300fp-4",
+    "ref_lo_hex": "0x1.1f5a5c626300fp-4",
+    "ref_hi_hex": "0x1.1f5a5c6263010p-4",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.1f5a5c626300fp-4",
+    "sigma_int_hi_hex": "0x1.1f5a5c6263010p-4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-56",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 4986184637125120.0,
+    "beta": 1.1263933624621028e-303,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 60001.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 3.28e+00)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 3.28e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 3.28e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 3.28e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3333333333333p-2",
+     "verdict": "FAIL(rel 3.28e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.394e30b68ad42p-2",
+     "verdict": "FAIL(rel 3.36e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.1f5a5c626300fp-4",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.1f5a5c626300fp-4",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.1f5a5c626300fp-4",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.1f5a5c626300fp-4",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.687e1f8771550p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.687e1f8771550p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.687e1f8771550p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.687e1f8771550p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.687e1f8771554p-3",
+     "verdict": "FAIL(rel 1.51e+00)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.1f5a5c626300fp-4",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "HL-worst-ctl",
+   "role": "control",
+   "description": "matched control for HL-worst",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.5097ec658416bp+10",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.19053cb1a48d4p-8",
+   "sigma_gen_hex": "0x1.5f7923090e99ep-1",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.5f7923090e99fp-1",
+    "ref_lo_hex": "0x1.5f7923090e99ep-1",
+    "ref_hi_hex": "0x1.5f7923090e99fp-1",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.5f7923090e99ep-1",
+    "sigma_int_hi_hex": "0x1.5f7923090e99fp-1",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-53",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 4943764168263892.0,
+    "beta": 1.1686250171677656e-05,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 9.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.5f79230800aacp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.5f7923090e99ep-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.5f7923090e351p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.5f7923090e99fp-1",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "HL-median",
+   "role": "dev",
+   "description": "Halley fails (median; rel err 1.30e-01 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.c3402c3c25674p+9",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.a0843c71c5880p-21",
+   "sigma_gen_hex": "0x1.a2982ce4f8459p-2",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.a2982ce4f845fp-2",
+    "ref_lo_hex": "0x1.a2982ce4f845fp-2",
+    "ref_hi_hex": "0x1.a2982ce4f8460p-2",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.a2982ce4f845fp-2",
+    "sigma_int_hi_hex": "0x1.a2982ce4f8460p-2",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-54",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 7327436590831744.0,
+    "beta": 2.5824888512644182e-09,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 203.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.6c2036b6ee9a8p-2",
+     "verdict": "FAIL(rel 1.30e-01)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.6c2036b6ee9a8p-2",
+     "verdict": "FAIL(rel 1.30e-01)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.6c2036b6ee9a8p-2",
+     "verdict": "FAIL(rel 1.30e-01)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.6c2036b6ee9a8p-2",
+     "verdict": "FAIL(rel 1.30e-01)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.6c2036b6ee9a8p-2",
+     "verdict": "FAIL(rel 1.30e-01)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.6c2036b6ee97ep-2",
+     "verdict": "FAIL(rel 1.30e-01)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.a2982ce4f845dp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.a2982ce4f8460p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.a2982ce4f845dp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.a2982ce4f8460p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.a2982ce500bf3p-2",
+     "verdict": "FAIL(rel 4.71e-12)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.a2982ce5e781bp-2",
+     "verdict": "FAIL(rel 1.33e-10)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.a2982ce4f8463p-2",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "HL-median-ctl",
+   "role": "control",
+   "description": "matched control for HL-median",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.c3402c3c25674p+9",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.852ef7e0edfd0p-10",
+   "sigma_gen_hex": "0x1.1da77d8ccfb9dp-1",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.1da77d8ccfb9ap-1",
+    "ref_lo_hex": "0x1.1da77d8ccfb99p-1",
+    "ref_hi_hex": "0x1.1da77d8ccfb9ap-1",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.1da77d8ccfb99p-1",
+    "sigma_int_hi_hex": "0x1.1da77d8ccfb9ap-1",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-53",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 6846588006621136.0,
+    "beta": 4.941861090047528e-06,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -76.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.1da77da91b5b6p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.1da77da91b5b6p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.1da77da91b5b6p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.1da77da91b5b6p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.1da77da91b5b6p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.1da77da91b5b6p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb99p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.1da77d8ccfb9bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.1da77d8ccfb9bp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb99p-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.1da77d8cd06ecp-1",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.1da77d8ccfb9ap-1",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "HL-worst-ITM",
+   "role": "dev",
+   "description": "Halley fails (worst-ITM; rel err 2.60e-01 at v0.2.4)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "p",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.0fd403ca7e44ap+8",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.57a80794fc896p+7",
+   "sigma_gen_hex": "0x1.0ba221e43c3a1p-3",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.0ef49c84a603ep-3",
+    "ref_lo_hex": "0x1.0ef49c84a603ep-3",
+    "ref_hi_hex": "0x1.0ef49c84a603fp-3",
+    "ref_dps": 112,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.0daa80a92a524p-3",
+    "sigma_int_hi_hex": "0x1.0ff7d8b7a27e2p-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.4a1bdb7bb1a00p-11",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 2.0,
+    "beta": 1.042190610987495,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 1.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 4.307093815000098,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.98a88d63737a6p-4",
+     "verdict": "FAIL(rel 2.46e-01)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.9125e59fb6329p-4",
+     "verdict": "FAIL(rel 2.60e-01)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.9125e4865eddep-4",
+     "verdict": "FAIL(rel 2.60e-01)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.9125e5976fb4ep-4",
+     "verdict": "FAIL(rel 2.60e-01)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.9125e59894df8p-4",
+     "verdict": "FAIL(rel 2.60e-01)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.98a8a82958a54p-4",
+     "verdict": "FAIL(rel 2.46e-01)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.0ef49c84a6040p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0ef49c84a603cp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.0f1f77a0a3adfp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.0f1f77a0a39edp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.0f1f77a0a3adfp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.0f1f77a0a39edp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.0ef49c84a6040p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0ef49c84a603cp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.0f1f77a0a3a53p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.0f1f77a0a3be4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.0f1f77a0a3a53p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.0f1f77a0a3be4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.0f1f655ba542ap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.0ef49c84a603dp-3",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "HL-worst-ITM-ctl",
+   "role": "control",
+   "description": "matched control for HL-worst-ITM",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "p",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.0fd403ca7e44ap+8",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.57a89b725c343p+7",
+   "sigma_gen_hex": "0x1.147f3c872c01dp-2",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.147f3c872e67bp-2",
+    "ref_lo_hex": "0x1.147f3c872e67ap-2",
+    "ref_hi_hex": "0x1.147f3c872e67bp-2",
+    "ref_dps": 92,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.147f3c872d7e2p-2",
+    "sigma_int_hi_hex": "0x1.147f3c872f514p-2",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.d320000000000p-43",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 39692139183.0,
+    "beta": 1.0421974533717506,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 1.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 4.307122092736049,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.147f3c7728eb6p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.147f3c7728eb6p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.147f3c7728eb6p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.147f3c7728eb6p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.147f3c7728eb6p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.147f3c7728eb6p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.147f3c872e67bp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.147f3c872e67bp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.147f3c872e67cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.147f3c872e67cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.147f3c872e67cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.147f3c872e67cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.147f3c872e67bp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.147f3c872e67bp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.147f3c872e67fp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.147f3c872e67dp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.147f3c872e67fp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.147f3c872e67dp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.147f3c872e6f5p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.147f3c872e67cp-2",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JN1",
+   "role": "dev",
+   "description": "host J\u00e4ckel without numba fails (passes with numba)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.9000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.46d041b2f3c00p-5",
+   "sigma_gen_hex": "0x1.0624dd2f1a9fcp-10",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.0624dd2f1ac68p-10",
+    "ref_lo_hex": "0x1.0624dd2f1ac68p-10",
+    "ref_hi_hex": "0x1.0624dd2f1ac69p-10",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.0624dd2f1ac68p-10",
+    "sigma_int_hi_hex": "0x1.0624dd2f1ac69p-10",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-62",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 5749363937590272.0,
+    "beta": 0.0003989422637788,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 774.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "atm",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.0624dd2f1a944p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.0624dd2f1a8dfp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.0624dd2f1a9dfp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.0624dd2f1a8dfp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.0624dd2f1a9ddp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.0624dd2f1aa44p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.0624dd2f1ac7bp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0624dd2f190e9p-10",
+     "verdict": "FAIL(rel 1.49e-12)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.0624dd2f1adfep-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.0624dd2f1aa00p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.0624dd2f1adfep-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.0624dd2f1aa00p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.0624dd2f1ac7bp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0624dd2f190e9p-10",
+     "verdict": "FAIL(rel 1.49e-12)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.0624dd2f1bb8dp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.0624dd2f1aa00p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.0624dd2f1bb8dp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.0624dd2f1aa00p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.0624dd2f1acf7p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.0624dd2f1ac67p-10",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JN2",
+   "role": "dev",
+   "description": "host J\u00e4ckel without numba fails (passes with numba)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.9000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.be0b23850c400p-5",
+   "sigma_gen_hex": "0x1.65c7ea1c75c7dp-10",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.65c7ea1c75df0p-10",
+    "ref_lo_hex": "0x1.65c7ea1c75defp-10",
+    "ref_hi_hex": "0x1.65c7ea1c75df0p-10",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.65c7ea1c75defp-10",
+    "sigma_int_hi_hex": "0x1.65c7ea1c75df0p-10",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-62",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 7846880424805376.0,
+    "beta": 0.0005444867074437,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 462.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "atm",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.65c7ea1c75cd1p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.65c7ea1c75d9fp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.65c7ea1c75da3p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.65c7ea1c75ca3p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.65c7ea1c75da3p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.65c7ea1c75cd5p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.65c7ea1c75cb0p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.65c7ea1c73c1cp-10",
+     "verdict": "FAIL(rel 1.37e-12)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.65c7ea1c75e6bp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.65c7ea1c75a03p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.65c7ea1c75e6bp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.65c7ea1c75a03p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.65c7ea1c75cb0p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.65c7ea1c73c1cp-10",
+     "verdict": "FAIL(rel 1.37e-12)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.65c7ea1c75500p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.65c7ea1c76188p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.65c7ea1c75500p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.65c7ea1c76188p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.65c7ea1c76050p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.65c7ea1c75df0p-10",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JN3",
+   "role": "dev",
+   "description": "host J\u00e4ckel without numba fails (passes with numba)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "p",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.9000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.46d041b2f3800p-5",
+   "sigma_gen_hex": "0x1.0624dd2f1a9fcp-10",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.0624dd2f1a933p-10",
+    "ref_lo_hex": "0x1.0624dd2f1a933p-10",
+    "ref_hi_hex": "0x1.0624dd2f1a934p-10",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.0624dd2f1a932p-10",
+    "sigma_int_hi_hex": "0x1.0624dd2f1a934p-10",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-62",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 5749363937589248.0,
+    "beta": 0.0003989422637788,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": -250.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "atm",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.0624dd2f1a8dep-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.0624dd2f1ac49p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.0624dd2f1ac49p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.0624dd2f1ab49p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.0624dd2f1ac49p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.0624dd2f1a8e2p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.0624dd2f1a55ep-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.0624dd2f18748p-10",
+     "verdict": "FAIL(rel 1.83e-12)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.0624dd2f1ab2dp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.0624dd2f1a731p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.0624dd2f1ab2dp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.0624dd2f1a731p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.0624dd2f1a55ep-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.0624dd2f18748p-10",
+     "verdict": "FAIL(rel 1.83e-12)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.0624dd2f1aeb5p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.0624dd2f1ac35p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.0624dd2f1aeb5p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.0624dd2f1ac35p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.0624dd2f1a7a7p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.0624dd2f1a932p-10",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "JN4",
+   "role": "dev",
+   "description": "host J\u00e4ckel without numba fails (passes with numba)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "p",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.9000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.be0b23850c800p-5",
+   "sigma_gen_hex": "0x1.65c7ea1c75c7dp-10",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.65c7ea1c76125p-10",
+    "ref_lo_hex": "0x1.65c7ea1c76124p-10",
+    "ref_hi_hex": "0x1.65c7ea1c76125p-10",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.65c7ea1c76124p-10",
+    "sigma_int_hi_hex": "0x1.65c7ea1c76126p-10",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-62",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 7846880424806400.0,
+    "beta": 0.0005444867074437,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 1486.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "atm",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.65c7ea1c7613bp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.65c7ea1c760a1p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.65c7ea1c760a1p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.65c7ea1c75fa1p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.65c7ea1c760a1p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.65c7ea1c7613bp-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.65c7ea1c75ecap-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.65c7ea1c745b9p-10",
+     "verdict": "FAIL(rel 1.05e-12)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.65c7ea1c75eb5p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.65c7ea1c75cd0p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.65c7ea1c75eb5p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.65c7ea1c75cd0p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.65c7ea1c75ecap-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.65c7ea1c745b9p-10",
+     "verdict": "FAIL(rel 1.05e-12)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.65c7ea1c761d3p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.65c7ea1c76455p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.65c7ea1c761d3p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.65c7ea1c76455p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.65c7ea1c76099p-10",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.65c7ea1c76125p-10",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-lb-itm",
+   "role": "boundary",
+   "description": "quote equals intrinsic exactly (ITM call): sigma = 0",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.b70c9f81a67a0p+5",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.68f3607e59860p+5",
+   "sigma_gen_hex": "0x1.210fd140319b3p-7",
+   "reference": {
+    "cls": "lower_bound",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x0.0p+0",
+    "sigma_int_hi_hex": "0x1.3d7e1892831fcp-4",
+    "sigma_int_lo_status": "touches_lower_bound",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": 0.0,
+    "beta": 0.6090405868942856,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "lower_bound",
+    "scoring_class": "open_at_zero"
+   },
+   "diagnostics": {
+    "halley_seed": 1.130961510151215,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.f6a680c1abe2cp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.f6f3c70ac8e4fp-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.f6f3c70ac906ep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.f6f3c70ac906ep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.f6f3cc1d2ce91p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.f6a685d53a356p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.dd80f2b264eeep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.dd80f2b264eeep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.dd80f2b264eeep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.dd80f2b264eeep-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.dd80f2b264ee8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.dd80f2b264ee8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.dd80f2b264ee8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.dd80f2b264ee8p-5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-lb-zero",
+   "role": "boundary",
+   "description": "OTM call quote exactly 0: sigma = 0",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.984ef991cadc7p+9",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.0p+0",
+   "sigma_gen_hex": "0x1.a7967921163fep-8",
+   "reference": {
+    "cls": "lower_bound",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x0.0p+0",
+    "sigma_int_hi_hex": "0x1.bf475640df329p-5",
+    "sigma_int_lo_status": "touches_lower_bound",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": null,
+    "beta": 0.0,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": null,
+    "class": "lower_bound",
+    "scoring_class": "zero_quote"
+   },
+   "diagnostics": {
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-below",
+   "role": "boundary",
+   "description": "generator quote below intrinsic (no root)",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.db59d49eafc19p+2",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.724a62b61503ep+6",
+   "sigma_gen_hex": "0x1.2aa299c09350fp-6",
+   "reference": {
+    "cls": "below_lower_bound",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x0.0p+0",
+    "sigma_int_hi_hex": "0x1.4e49070b42ea5p-2",
+    "sigma_int_lo_status": "touches_lower_bound",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": -0.4375,
+    "beta": 3.396764874585233,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "below_lower_bound",
+    "scoring_class": "open_at_zero"
+   },
+   "diagnostics": {
+    "halley_seed": 2.320452023420934,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.f6a9604dddcc0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.d3d2a2f494afap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.d3d2a2ea14ddep-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.d3d2a3383a075p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.d3d2a2ea14ea0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.e1d36785677aep-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.687e1f8771552p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-invalid",
+   "role": "boundary",
+   "description": "negative quote from the generator",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "p",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.6291f2843f253p+3",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "-0x1.64c990dab1118p-48",
+   "sigma_gen_hex": "0x1.147f3c872c01dp-2",
+   "reference": {
+    "cls": "invalid_input",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": null,
+    "sigma_int_lo_hex": null,
+    "sigma_int_hi_hex": null,
+    "sigma_int_lo_status": null,
+    "sigma_int_hi_status": null,
+    "interval_empty": null,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": null,
+    "beta": null,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "invalid_input",
+    "scoring_class": "invalid_input"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    }
+   }
+  },
+  {
+   "id": "B-lowamb",
+   "role": "boundary",
+   "description": "rounding interval reaches intrinsic: any sigma in [0, sigma_int_hi]",
+   "quote_source": "sweep_numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.ab2d87f0024ccp+1",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.82a693c07fedap+6",
+   "sigma_gen_hex": "0x1.0d3991812a713p-6",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.c273dfe53d2dcp-2",
+    "ref_lo_hex": "0x1.c273dfe53d2dbp-2",
+    "ref_hi_hex": "0x1.c273dfe53d2dcp-2",
+    "ref_dps": 114,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x0.0p+0",
+    "sigma_int_hi_hex": "0x1.c8ac0b16095ccp-2",
+    "sigma_int_lo_status": "touches_lower_bound",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.8e0acc330bc00p-8",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 0.375,
+    "beta": 5.291263867674466,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.lower_ambiguous",
+    "scoring_class": "open_at_zero"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 2.422973892531554,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.90f2e88955b22p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.90f2e88955b22p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.90f2e88955b22p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.90f2e88955b22p-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.90f2e88955fffp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.90f389f0bf71cp-2",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.b25b429f98a2cp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.b25b429f98a2dp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.b25b429f98a2cp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.b25b429f98a2dp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.b25b429f98a2ap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.b25b429f98a2ap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.b25b429f98a2ap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.b25b429f98a2ap-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-intr+1ulp",
+   "role": "boundary",
+   "description": "ITM call quote one ulp above intrinsic",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.4000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.4000000000001p+4",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.de700bc6efcecp-6",
+    "ref_lo_hex": "0x1.de700bc6efcebp-6",
+    "ref_hi_hex": "0x1.de700bc6efcecp-6",
+    "ref_dps": 112,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.d91d7b1b930b9p-6",
+    "sigma_int_hi_hex": "0x1.e1a20da27c65bp-6",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.54a42ad730cc0p-12",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 1.0,
+    "beta": 0.223606797749979,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.5013256549262002,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.6d9efa39cb2cbp-6",
+     "verdict": "FAIL(rel 2.36e-01)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.6eb8b50fff4fep-6",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.6eb8b50f4404fp-6",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.6eb8b50f4404fp-6",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.6eb8da09305e2p-6",
+     "verdict": "FAIL(rel 2.34e-01)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.6a3eada7f0376p-6",
+     "verdict": "FAIL(rel 2.43e-01)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.de700bc6efcbcp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.de700bc6efce2p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.e2a8f0525ca3cp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.e2a8f0525cc62p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.e2a8f0525ca3cp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.e2a8f0525cc62p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.de700bc6efcbcp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.de700bc6efce2p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.e2a8f0525d5d1p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.e2a8f0525d5d9p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.e2a8f0525d5d1p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.e2a8f0525d5d9p-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.e2a8f06b98f7fp-6",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.de700bc6efcedp-6",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-intr-1ulp",
+   "role": "boundary",
+   "description": "ITM call quote one ulp below intrinsic",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.4000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.3ffffffffffffp+4",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "below_lower_bound",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": false,
+    "sigma_int_lo_hex": null,
+    "sigma_int_hi_hex": null,
+    "sigma_int_lo_status": null,
+    "sigma_int_hi_status": null,
+    "interval_empty": true,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": -1.0,
+    "beta": 0.2236067977499789,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "below_lower_bound",
+    "scoring_class": "inconsistent"
+   },
+   "diagnostics": {
+    "halley_seed": 0.5013256549262,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.6b61ebae9501ep-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.6c8210537bd67p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.6c8212b2e4f0ap-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.6c8210537bd67p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.6c82105f8642ap-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.67ee4288b789cp-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.a2c803bf455f2p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.a2c803bf455f2p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.a2c803bf455f2p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.a2c803bf455f2p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.a2c803bf45600p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.a2c803bf45600p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.a2c803bf45600p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.a2c803bf45600p-6",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    }
+   }
+  },
+  {
+   "id": "B-upper",
+   "role": "boundary",
+   "description": "call quote equal to F (upper bound): sigma = inf",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.4000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.9000000000000p+6",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "upper_bound",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.0aa03b2b6e41ap+4",
+    "sigma_int_hi_hex": "inf",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "touches_upper_bound",
+    "interval_empty": false,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": 5629499534213120.0,
+    "beta": 1.118033988749895,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "upper_bound",
+    "scoring_class": "open_at_infinity"
+   },
+   "diagnostics": {
+    "halley_seed": 2.5066282746310002,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca650p+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca64bp+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca650p+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca64bp+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca3eap+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca5aep+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca3eap+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca5aep+5",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    }
+   }
+  },
+  {
+   "id": "B-upper-1ulp",
+   "role": "boundary",
+   "description": "call quote one ulp below F",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.4000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.8ffffffffffffp+6",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.07fce7475ed21p+4",
+    "ref_lo_hex": "0x1.07fce7475ed21p+4",
+    "ref_hi_hex": "0x1.07fce7475ed22p+4",
+    "ref_dps": 82,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.066ecd482ba09p+4",
+    "sigma_int_hi_hex": "0x1.0aa03b2b6e41bp+4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.51a9f207b7d00p-3",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 5629499534213119.0,
+    "beta": 1.118033988749895,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z4_upper",
+    "halley_seed": 2.506628274631,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(rel 3.94e-01)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(rel 3.94e-01)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(rel 3.94e-01)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(rel 3.94e-01)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(rel 3.94e-01)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(rel 3.94e-01)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.01f563f9b2668p+4",
+     "verdict": "FAIL(rel 2.28e-02)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.f296083833cc1p+3",
+     "verdict": "FAIL(rel 5.57e-02)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.301137abed886p+4",
+     "verdict": "FAIL(rel 1.52e-01)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.301137abed886p+4",
+     "verdict": "FAIL(rel 1.52e-01)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.301137abed886p+4",
+     "verdict": "FAIL(rel 1.52e-01)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.301137abed886p+4",
+     "verdict": "FAIL(rel 1.52e-01)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.01f563f9b2668p+4",
+     "verdict": "FAIL(rel 2.28e-02)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.f296083833cc1p+3",
+     "verdict": "FAIL(rel 5.57e-02)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.1b45635aa4979p+4",
+     "verdict": "FAIL(rel 7.30e-02)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.1b456861ddb51p+4",
+     "verdict": "FAIL(rel 7.30e-02)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.1b45635aa4979p+4",
+     "verdict": "FAIL(rel 7.30e-02)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.1b456861ddb51p+4",
+     "verdict": "FAIL(rel 7.30e-02)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.301137abed848p+4",
+     "verdict": "FAIL(rel 1.52e-01)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.06dad686177c3p+4",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "B-above",
+   "role": "boundary",
+   "description": "call quote above F",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.4000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.9000000000001p+6",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "above_upper_bound",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": false,
+    "sigma_int_lo_hex": null,
+    "sigma_int_hi_hex": null,
+    "sigma_int_lo_status": null,
+    "sigma_int_hi_status": null,
+    "interval_empty": true,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": 5629499534213121.0,
+    "beta": 1.118033988749895,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "above_upper_bound",
+    "scoring_class": "inconsistent"
+   },
+   "diagnostics": {
+    "halley_seed": 2.5066282746310007,
+    "halley_seed_clipped": false,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": true
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.3ffffffd80000p+3",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca650p+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca64bp+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca650p+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca64bp+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca3eap+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca5aep+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.bed9c0c5ca3eap+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.bed9c0c5ca5aep+5",
+     "verdict": "FAIL(outside consistency set)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    }
+   }
+  },
+  {
+   "id": "B-minsub",
+   "role": "boundary",
+   "description": "OTM call quote = smallest subnormal",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.2c00000000000p+7",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x0.0000000000001p-1022",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.5a2f31eebf293p-7",
+    "ref_lo_hex": "0x1.5a2f31eebf292p-7",
+    "ref_hi_hex": "0x1.5a2f31eebf293p-7",
+    "ref_dps": 80,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.5a059aca6e545p-7",
+    "sigma_int_hi_hex": "0x1.5a478d0ef1851p-7",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.4cb92286a7000p-18",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 1.0,
+    "beta": 0.0,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z1_lower",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.43dd15d085674p-5",
+     "verdict": "FAIL(rel 2.74e+00)"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.43dd15d08f08dp-5",
+     "verdict": "FAIL(rel 2.74e+00)"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.43dd15d091c1ep-5",
+     "verdict": "FAIL(rel 2.74e+00)"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.43dd15d08415dp-5",
+     "verdict": "FAIL(rel 2.74e+00)"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.a1631fd7630e8p-5",
+     "verdict": "FAIL(rel 3.82e+00)"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.5adefa124868cp-5",
+     "verdict": "FAIL(rel 3.01e+00)"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.5adefa124868cp-5",
+     "verdict": "FAIL(rel 3.01e+00)"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.5adefa1248688p-5",
+     "verdict": "FAIL(rel 3.01e+00)"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.5adefa1248688p-5",
+     "verdict": "FAIL(rel 3.01e+00)"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.5adefa1248688p-5",
+     "verdict": "FAIL(rel 3.01e+00)"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.5adefa1248688p-5",
+     "verdict": "FAIL(rel 3.01e+00)"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "FAIL(non-finite)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "FAIL(rel 1.00e+00)"
+    }
+   }
+  },
+  {
+   "id": "B-T0",
+   "role": "boundary",
+   "description": "expiry T=0, quote = intrinsic",
+   "quote_source": "constructed",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.4000000000000p+6",
+   "T_hex": "0x0.0p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.4000000000000p+4",
+   "sigma_gen_hex": null,
+   "reference": {
+    "cls": "expiry",
+    "ref_f64_hex": null,
+    "ref_lo_hex": null,
+    "ref_hi_hex": null,
+    "ref_dps": 0,
+    "interval_closed": null,
+    "sigma_int_lo_hex": null,
+    "sigma_int_hi_hex": null,
+    "sigma_int_lo_status": null,
+    "sigma_int_hi_status": null,
+    "interval_empty": null,
+    "h_quote_hex": null,
+    "h_forward_hex": null,
+    "h_discount_hex": null,
+    "tv_over_quote_ulp": null,
+    "beta": null,
+    "generator_quote_matches": null,
+    "generator_quote_ulps": null,
+    "class": "expiry",
+    "scoring_class": "expiry"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x0.0p+0",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "nan",
+     "verdict": "recorded"
+    }
+   }
+  },
+  {
+   "id": "B-disc",
+   "role": "boundary",
+   "description": "discounted Black-76 (r=0.05, T=0.5): discounting check",
+   "quote_source": "exact_rounded",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.7c00000000000p+6",
+   "T_hex": "0x1.0000000000000p-1",
+   "r_hex": "0x1.999999999999ap-5",
+   "quote_hex": "0x1.04b3ba675bd16p+3",
+   "sigma_gen_hex": "0x1.999999999999ap-3",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.9999999999999p-3",
+    "ref_lo_hex": "0x1.9999999999999p-3",
+    "ref_hi_hex": "0x1.999999999999ap-3",
+    "ref_dps": 82,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.9999999999997p-3",
+    "sigma_int_hi_hex": "0x1.999999999999bp-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-54",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x1.4d140f4d7c354p-55",
+    "tv_over_quote_ulp": 1841065847519664.8,
+    "beta": 0.0857018208167161,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "z2_lower_middle",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.9999999999982p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.9999999999990p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.999999999999bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.999999999999bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.999999999999bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.9999999999998p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.9999999999998p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.999999999998bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.9999999999992p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.9999999999998p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.9999999999992p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.9999999999998p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.9999999999998p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.999999999998bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.999999999996bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.99999999999a2p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.999999999996bp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.99999999999a2p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.99999923fddabp-3",
+     "verdict": "FAIL(rel 1.71e-08)"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.9999999999996p-3",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "ATM-ctl",
+   "role": "control",
+   "description": "ATM control",
+   "quote_source": "numpy_generator",
+   "model": "black76_discounted",
+   "flag": "c",
+   "F_hex": "0x1.9000000000000p+6",
+   "S_hex": null,
+   "q_hex": null,
+   "K_hex": "0x1.9000000000000p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x0.0p+0",
+   "quote_hex": "0x1.fdcbdb70c3310p+2",
+   "sigma_gen_hex": "0x1.999999999999ap-3",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.99999999999a0p-3",
+    "ref_lo_hex": "0x1.99999999999a0p-3",
+    "ref_hi_hex": "0x1.99999999999a1p-3",
+    "ref_dps": 80,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.99999999999a0p-3",
+    "sigma_int_hi_hex": "0x1.99999999999a1p-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-55",
+    "h_forward_hex": "0x0.0p+0",
+    "h_discount_hex": "0x0.0p+0",
+    "tv_over_quote_ulp": 8968431655990032.0,
+    "beta": 0.079655674554058,
+    "generator_quote_matches": false,
+    "generator_quote_ulps": 8.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {
+    "jaeckel_zone": "atm",
+    "halley_seed": 0.3,
+    "halley_seed_clipped": true,
+    "halley_iterations": 8,
+    "halley_bisection_fallback": false
+   },
+   "v0_2_4_outputs": {
+    "x86_64-h100:halley_jax_cpu": {
+     "iv_hex": "0x1.999999999999fp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_jax_cuda": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numba_cpu": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_numpy_cpu": {
+     "iv_hex": "0x1.999999999999fp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cpu": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:halley_torch_cuda": {
+     "iv_hex": "0x1.999999999999fp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_cpu": {
+     "iv_hex": "0x1.99999999999a1p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_host_nonumba_cpu": {
+     "iv_hex": "0x1.999999999999fp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cpu": {
+     "iv_hex": "0x1.99999999999a4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_ad_cuda": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cpu": {
+     "iv_hex": "0x1.99999999999a4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_jax_cuda": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_cpu": {
+     "iv_hex": "0x1.99999999999a1p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_numpy_nonumba_cpu": {
+     "iv_hex": "0x1.999999999999fp-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cpu": {
+     "iv_hex": "0x1.99999999999b3p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_ad_cuda": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cpu": {
+     "iv_hex": "0x1.99999999999b3p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_torch_cuda": {
+     "iv_hex": "0x1.99999999999a0p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:jackel_triton_direct_cuda": {
+     "iv_hex": "0x1.99999999999a4p-3",
+     "verdict": "PASS"
+    },
+    "x86_64-h100:lbr_cpu": {
+     "iv_hex": "0x1.999999999999fp-3",
+     "verdict": "PASS"
+    }
+   }
+  },
+  {
+   "id": "W-bs-call",
+   "role": "wrapper",
+   "description": "spot form (BS), r=0.05, q=0.0, T=1.0; reference only",
+   "quote_source": "exact_rounded",
+   "model": "black_scholes",
+   "flag": "c",
+   "F_hex": null,
+   "S_hex": "0x1.9000000000000p+6",
+   "q_hex": "0x0.0p+0",
+   "K_hex": "0x1.7c7de4a029632p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x1.999999999999ap-5",
+   "quote_hex": "0x1.3085301f552eap+3",
+   "sigma_gen_hex": "0x1.47ae147ae147bp-6",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.47ae147977b53p-6",
+    "ref_lo_hex": "0x1.47ae147977b53p-6",
+    "ref_hi_hex": "0x1.47ae147977b54p-6",
+    "ref_dps": 96,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.47ae1477bdbe4p-6",
+    "sigma_int_hi_hex": "0x1.47ae147b31ac3p-6",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.b9f7000000000p-38",
+    "h_forward_hex": "0x1.5948e1cf3eb4fp-34",
+    "h_discount_hex": "0x1.06dd93ff2a026p-37",
+    "tv_over_quote_ulp": 57254170.22911851,
+    "beta": 0.100041672944493,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {}
+  },
+  {
+   "id": "W-bs-put",
+   "role": "wrapper",
+   "description": "spot form (BS), r=-0.01, q=0.0, T=0.25; reference only",
+   "quote_source": "exact_rounded",
+   "model": "black_scholes",
+   "flag": "p",
+   "F_hex": null,
+   "S_hex": "0x1.9000000000000p+6",
+   "q_hex": "0x0.0p+0",
+   "K_hex": "0x1.e7575a961a62bp+6",
+   "T_hex": "0x1.0000000000000p-2",
+   "r_hex": "-0x1.47ae147ae147bp-7",
+   "quote_hex": "0x1.623e91dacafadp+4",
+   "sigma_gen_hex": "0x1.1111111111111p-4",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.111111e6d1f32p-4",
+    "ref_lo_hex": "0x1.111111e6d1f32p-4",
+    "ref_hi_hex": "0x1.111111e6d1f33p-4",
+    "ref_dps": 102,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.1111107b304d4p-4",
+    "sigma_int_hi_hex": "0x1.111113527354fp-4",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.6ba1a5e000000p-28",
+    "h_forward_hex": "0x1.1c162ef1ca469p-25",
+    "h_discount_hex": "0x1.f72e388a9cdf3p-28",
+    "tv_over_quote_ulp": 162109.5351996739,
+    "beta": 0.2003335000448992,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {}
+  },
+  {
+   "id": "W-bsm-call",
+   "role": "wrapper",
+   "description": "spot form (BSM), r=0.05, q=0.03, T=2.5; reference only",
+   "quote_source": "exact_rounded",
+   "model": "black_scholes_merton",
+   "flag": "c",
+   "F_hex": null,
+   "S_hex": "0x1.9000000000000p+6",
+   "q_hex": "0x1.eb851eb851eb8p-6",
+   "K_hex": "0x1.19e00f7589091p+6",
+   "T_hex": "0x1.4000000000000p+1",
+   "r_hex": "0x1.999999999999ap-5",
+   "quote_hex": "0x1.e95f9ce52fb48p+4",
+   "sigma_gen_hex": "0x1.280fbc7928bf0p-5",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.28123026b27e1p-5",
+    "ref_lo_hex": "0x1.28123026b27e0p-5",
+    "ref_hi_hex": "0x1.28123026b27e1p-5",
+    "ref_dps": 108,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.280ecaed97971p-5",
+    "sigma_int_hi_hex": "0x1.2815937875698p-5",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.b29c8d7380000p-20",
+    "h_forward_hex": "0x1.3aa92a07c372ep-17",
+    "h_discount_hex": "0x1.9ef30dc82ae78p-19",
+    "tv_over_quote_ulp": 215.33864968130925,
+    "beta": 0.4026720050821979,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {}
+  },
+  {
+   "id": "W-bsm-put",
+   "role": "wrapper",
+   "description": "spot form (BSM), r=0.05, q=0.03, T=1.0; reference only",
+   "quote_source": "exact_rounded",
+   "model": "black_scholes_merton",
+   "flag": "p",
+   "F_hex": null,
+   "S_hex": "0x1.9000000000000p+6",
+   "q_hex": "0x1.eb851eb851eb8p-6",
+   "K_hex": "0x1.ad00d67777b85p+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x1.999999999999ap-5",
+   "quote_hex": "0x1.3e7a4bdcaa57bp+2",
+   "sigma_gen_hex": "0x1.1111111111111p-6",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.11111111111a3p-6",
+    "ref_lo_hex": "0x1.11111111111a2p-6",
+    "ref_hi_hex": "0x1.11111111111a3p-6",
+    "ref_dps": 88,
+    "interval_closed": false,
+    "sigma_int_lo_hex": "0x1.1111111111080p-6",
+    "sigma_int_hi_hex": "0x1.11111111112c5p-6",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.2300000000000p-50",
+    "h_forward_hex": "0x1.b78aa0e1789a3p-46",
+    "h_discount_hex": "0x1.691e8b40590f4p-50",
+    "tv_over_quote_ulp": 713514455862.4575,
+    "beta": 0.0500115775432698,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {}
+  },
+  {
+   "id": "W-bsm-atm",
+   "role": "wrapper",
+   "description": "spot form (BSM), r=0.03, q=0.02, T=1.0; reference only",
+   "quote_source": "exact_rounded",
+   "model": "black_scholes_merton",
+   "flag": "c",
+   "F_hex": null,
+   "S_hex": "0x1.9000000000000p+6",
+   "q_hex": "0x1.47ae147ae147bp-6",
+   "K_hex": "0x1.940523199a55bp+6",
+   "T_hex": "0x1.0000000000000p+0",
+   "r_hex": "0x1.eb851eb851eb8p-6",
+   "quote_hex": "0x1.f3b3a0e39d658p+2",
+   "sigma_gen_hex": "0x1.999999999999ap-3",
+   "reference": {
+    "cls": "interior",
+    "ref_f64_hex": "0x1.999999999999ap-3",
+    "ref_lo_hex": "0x1.9999999999999p-3",
+    "ref_hi_hex": "0x1.999999999999ap-3",
+    "ref_dps": 82,
+    "interval_closed": true,
+    "sigma_int_lo_hex": "0x1.9999999999999p-3",
+    "sigma_int_hi_hex": "0x1.999999999999bp-3",
+    "sigma_int_lo_status": "ok",
+    "sigma_int_hi_status": "ok",
+    "interval_empty": false,
+    "h_quote_hex": "0x1.0000000000000p-55",
+    "h_forward_hex": "0x1.5c24661763804p-53",
+    "h_discount_hex": "0x1.9af7d34c59886p-56",
+    "tv_over_quote_ulp": 8790844810843718.0,
+    "beta": 0.079655674554058,
+    "generator_quote_matches": true,
+    "generator_quote_ulps": 0.0,
+    "class": "interior.well_posed",
+    "scoring_class": "strict"
+   },
+   "diagnostics": {},
+   "v0_2_4_outputs": {}
+  }
+ ]
+}

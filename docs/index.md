@@ -10,7 +10,7 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 
 [![PyPI version](https://img.shields.io/pypi/v/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
 [![Python](https://img.shields.io/pypi/pyversions/fast-vollib.svg)](https://pypi.org/project/fast-vollib/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Tests](https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml/badge.svg)](https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml)
 [![Docs](https://github.com/raeidsaqur/fast-vollib/actions/workflows/docs.yml/badge.svg)](https://raeidsaqur.github.io/fast-vollib/)
 
@@ -19,9 +19,11 @@ Stable tagged releases are published to PyPI. Development snapshots from each
 ## Features
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
-- **Vectorized IV solver** — the machine-precision Jäckel solver by default, with the deprecated Halley-plus-bisection route retained for compatibility; handles large option chains efficiently
-- **Machine-precision IV** — Jäckel "Let's Be Rational" solver (`jackel/`) with Householder(3)×3; max relative error ~10⁻¹⁴
-- **GPU-fused Jäckel** — single-pass Triton kernel achieving **0.056 ms / 100k** options on H100
+- **Two implied-volatility solvers.** Halley is the default for functional calls.
+  It supports NumPy, Numba, PyTorch with Triton on CUDA, and JAX.
+  Use `solver="jackel"` on NumPy, PyTorch or JAX.
+  See [Jäckel IV](jackel.md) for validation and gradient support.
+
 - **Full Greeks** — delta, gamma, theta, rho, vega, and `get_all_greeks` in one call
 - **Pluggable backends** — NumPy (default), PyTorch (GPU-accelerated), JAX
 - **DataFrame-native** — `price_dataframe` works directly on pandas DataFrames
@@ -82,7 +84,7 @@ greeks = fast_vollib.get_all_greeks(
 | [Installation](installation.md) | Install fast-vollib with pip, uv, or conda |
 | [Quick Start](quickstart.md) | More complete worked examples |
 | [Backend Selection](backends.md) | How to choose between NumPy, PyTorch, and JAX |
-| [Jäckel IV Solver](jackel.md) | Machine-precision IV — algorithm, API, and GPU benchmarks |
+| [Jäckel IV Solver](jackel.md) | Jäckel IV — algorithm, validated scope, API |
 | [Instruments](instruments.md) | Typed contracts, batches, payoffs, adapters, and capabilities |
 | [Simulation](simulation.md) | Processes, scenarios, path-dependent payoffs, and Monte Carlo valuation |
 | [Compatibility](compatibility.md) | Drop-in `py_vollib` replacement guide |

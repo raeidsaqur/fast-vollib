@@ -46,6 +46,12 @@ def _make_inputs(n: int):
 
 
 def main() -> None:
+    if "--matrix" in sys.argv[1:]:
+        # Same-host benchmark matrix with repeated timings (see scripts/benchmark_matrix.py).
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from benchmark_matrix import main as matrix_main
+
+        raise SystemExit(matrix_main([a for a in sys.argv[1:] if a != "--matrix"]))
     active_backend = get_backend()
     print(f"active_backend={active_backend}")
 

@@ -614,3 +614,71 @@ def test_jax_bsm_price_dataframe_matches_numpy() -> None:
     )
     for column in ("Price", "delta", "gamma", "theta", "rho", "vega"):
         assert_allclose(base[column].to_numpy(), trial[column].to_numpy(), atol=1e-6)
+
+
+# --- backend precedence (explicit > set_backend() > FAST_VOLLIB_BACKEND > auto-detect) ---------
+
+
+def _pretend_accelerators(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(config_module, "_torch_cuda_available", lambda: True)
+    monkeypatch.setattr(config_module, "_jax_available", lambda: True)
+
+
+def test_precedence_auto_detect_when_nothing_is_set(monkeypatch: pytest.MonkeyPatch) -> None:
+    _pretend_accelerators(monkeypatch)
+    assert get_backend("auto") == "torch"
+    assert get_backend(None) == "torch"
+
+
+def test_precedence_env_var_beats_auto_detect(monkeypatch: pytest.MonkeyPatch) -> None:
+    _pretend_accelerators(monkeypatch)
+    monkeypatch.setenv("FAST_VOLLIB_BACKEND", "numba")
+    # The public functions pass backend="auto"; the environment variable must win over detection.
+    assert get_backend("auto") == "numba"
+
+
+def test_precedence_set_backend_beats_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
+    _pretend_accelerators(monkeypatch)
+    monkeypatch.setenv("FAST_VOLLIB_BACKEND", "numba")
+    config_module.set_backend("numpy")
+    assert get_backend("auto") == "numpy"
+    config_module.set_backend("auto")  # clears the override
+    assert get_backend("auto") == "numba"
+
+
+def test_precedence_explicit_argument_beats_everything(monkeypatch: pytest.MonkeyPatch) -> None:
+    _pretend_accelerators(monkeypatch)
+    monkeypatch.setenv("FAST_VOLLIB_BACKEND", "numba")
+    config_module.set_backend("numpy")
+    assert get_backend("jax") == "jax"
+
+
+def test_precedence_reaches_the_public_functions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The env var and set_backend() route an actual call made with the default backend="auto"."""
+    from fast_vollib.backends import numpy_backend
+
+    calls: list[str] = []
+    original = numpy_backend.price_black_scholes
+
+    def spy(*args, **kwargs):
+        calls.append("numpy")
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(numpy_backend, "price_black_scholes", spy)
+    _pretend_accelerators(monkeypatch)
+    flag, s, k, t, r, sigma = _inputs()
+    monkeypatch.setenv("FAST_VOLLIB_BACKEND", "numpy")
+    fast_black_scholes(flag, s, k, t, r, sigma, return_as="numpy")
+    assert calls == ["numpy"]
+    monkeypatch.delenv("FAST_VOLLIB_BACKEND")
+    config_module.set_backend("numpy")
+    fast_black_scholes(flag, s, k, t, r, sigma, return_as="numpy")
+    assert calls == ["numpy", "numpy"]
+
+
+def test_unknown_backend_names_are_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    with pytest.raises(ValueError, match="Unsupported backend"):
+        config_module.set_backend("cuda")  # type: ignore[arg-type]
+    monkeypatch.setenv("FAST_VOLLIB_BACKEND", "cuda")
+    with pytest.raises(ValueError, match="FAST_VOLLIB_BACKEND"):
+        get_backend("auto")

@@ -10,13 +10,14 @@ from .config import get_backend
 from .greeks import delta, gamma, rho, theta, vega
 from .implied_volatility import fast_implied_volatility, fast_implied_volatility_black
 from .models import fast_black, fast_black_scholes, fast_black_scholes_merton
-from .types import BackendLiteral, ModelLiteral, ReturnAsLiteral
+from .types import BackendLiteral, IVSolverLiteral, ModelLiteral, ReturnAsLiteral
 from .utils.broadcast import maybe_format_data_and_broadcast, preprocess_flags
 from .utils.formatting import format_greeks_output
 from .utils.validation import validate_data
 
 if TYPE_CHECKING:
     from ._typing import ArrayLike, FlagLike, OptionalArrayLike  # noqa: F401
+    from .instruments.enums import IVSolver
 
 
 def get_all_greeks(
@@ -75,7 +76,15 @@ def price_dataframe(
     dtype=None,
     backend: BackendLiteral = "auto",
     return_native: bool = False,
+    solver: IVSolver | IVSolverLiteral | None = None,
 ):
+    """Price, implied volatility and Greeks for a DataFrame of options.
+
+    ``solver`` applies only when implied volatilities are inferred from ``price_col`` (no
+    ``sigma_col``): ``None`` (default) or ``"halley"``, or ``"jackel"``; see
+    :func:`fast_vollib.fast_implied_volatility`. Columns, index and ``inplace`` behaviour are
+    unchanged.
+    """
     if flag_col is None:
         raise ValueError("You must specify a `flag_col` argument!")
     if underlying_price_col is None:
@@ -156,6 +165,7 @@ def price_dataframe(
                 dtype=dtype,
                 backend=backend,
                 return_native=return_native,
+                solver=solver,
             )
         else:
             implied = fast_implied_volatility(
@@ -171,6 +181,7 @@ def price_dataframe(
                 dtype=dtype,
                 backend=backend,
                 return_native=return_native,
+                solver=solver,
             )
         output["IV"] = implied
         sigma = implied

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import functools
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from ..types import ModelLiteral, OnErrorLiteral
+from . import _iv_common as _ivc
 
 if TYPE_CHECKING:
     from .._typing import FlagArray, Float1D, OptionalFloat1D  # noqa: F401
@@ -244,152 +246,157 @@ def greeks(
 
 
 # ---------------------------------------------------------------------------
-# Implied volatility
+# Implied volatility — safeguarded Halley on the out-of-the-money price
+# (problem statement, constants and row policy: backends/_iv_common.py).
+# One jitted program per model: classification, MAIN_ITERS Halley steps on every
+# row (lax.fori_loop), then a masked bracket phase (lax.while_loop) that runs only
+# while some row has not converged.
 # ---------------------------------------------------------------------------
 
-_HALLEY_ITERS = 8
-_BISECT_ITERS = 30  # 10/(2^30)≈9e-9, sufficient accuracy
-_IV_LO = 1e-8
-_IV_HI = 10.0
+
+def _iv_log_objective_j(a, s, l_fo, l_ko, upper, tiny, use_tail: bool):
+    """(ln w, |w'|/w, d1, d2), w = c(s) or u(s) = Fo - c(s); see numpy_backend._iv_log_objective.
+
+    ``use_tail`` is static: the log_ndtr evaluation is traced in only when requested.
+    """
+    import jax.numpy as jnp
+    import jax.scipy.special as jss
+
+    d1 = a / s + 0.5 * s
+    d2 = d1 - s
+    fo = jnp.exp(l_fo)
+    ko = jnp.exp(l_ko)
+    n1 = _normal_cdf(jnp.where(upper, -d1, d1))
+    n2 = _normal_cdf(d2)
+    w = jnp.where(upper, fo * n1 + ko * n2, fo * n1 - ko * n2)
+    # w <= 0: c underflowed (sub-normal cancellation) -> ln c = -inf, the root lies above s
+    lw = jnp.where(w > 0, jnp.log(jnp.where(w > 0, w, 1.0)), -jnp.inf)
+
+    def tail(lw):
+        la = l_fo + jss.log_ndtr(jnp.where(upper, -d1, d1))
+        lb = l_ko + jss.log_ndtr(d2)
+        lo_branch = jnp.where(
+            lb < la, la + jnp.log1p(-jnp.exp(jnp.minimum(lb - la, 0.0))), -jnp.inf
+        )
+        return jnp.where(tiny, jnp.where(upper, jnp.logaddexp(la, lb), lo_branch), lw)
+
+    lw = tail(lw) if use_tail else lw
+    dlw = jnp.exp(l_fo - 0.5 * d1 * d1 - _ivc.LOG_SQRT2PI - lw)
+    return lw, dlw, d1, d2
 
 
-# Module-level JIT'd functions — defined once so JAX caches properly.
-# Closures over JIT'd functions cause retracing on every call when the
-# closed-over concrete arrays change; explicit arguments avoid this.
-
-
-def _jax_halley_step(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call):
-    """Single Halley step; meant to be called via a module-level @jax.jit wrapper."""
+def _iv_step_j(state, consts, it):
+    """One safeguarded Halley step on the active rows; see numpy_backend._iv_step."""
     import jax.numpy as jnp
 
-    d1, d2 = _d1_d2(st, kt, tt, rt, sigma, qv)
-    cdf_d1 = _normal_cdf(d1)
-    cdf_d2 = _normal_cdf(d2)
-    call = ds * cdf_d1 - dk * cdf_d2
-    put = dk * (1.0 - cdf_d2) - ds * (1.0 - cdf_d1)
-    px = jnp.where(is_call, call, put)
-    vega = ds * _normal_pdf(d1) * sqrt_tt
-    residual = px - pt
-    safe_vega = jnp.where(vega > 1e-14, vega, jnp.full_like(vega, jnp.inf))
-    newton_step = residual / safe_vega
-    safe_sigma = jnp.where(sigma > 1e-8, sigma, jnp.full_like(sigma, jnp.inf))
-    halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
-    halley_denom = jnp.where(
-        jnp.abs(halley_denom) > 0.05, halley_denom, jnp.sign(halley_denom + 1e-15) * 0.05
+    s, lo, hi, conv, active = state
+    a, l_target, l_fo, l_ko, upper, tiny, use_tail = consts
+    lw, dlw, d1, d2 = _iv_log_objective_j(a, s, l_fo, l_ko, upper, tiny, use_tail)
+    sgn = jnp.where(upper, -1.0, 1.0)
+    g = sgn * (lw - l_target)
+    below = g < 0
+    lo_n = jnp.where(below, s, lo)
+    hi_n = jnp.where(below, hi, s)
+    delta = g / dlw
+    den = 1.0 - 0.5 * delta * (d1 * d2 / s - sgn * dlw)
+    den = jnp.where(jnp.abs(den) < 0.5, jnp.where(den < 0, -0.5, 0.5), den)
+    step = delta / den
+    cand = s - step
+    small = jnp.abs(step) <= _ivc.ACCEPT_RTOL * s
+    cand_ok = jnp.isfinite(cand)
+    ok = cand_ok & (((cand > lo_n) & (cand < hi_n)) | small)
+    fb = jnp.where(
+        jnp.isinf(hi_n), 4.0 * s, jnp.where(lo_n > 0, jnp.sqrt(jnp.abs(lo_n * hi_n)), 0.25 * s)
     )
-    return jnp.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
+    s_n = jnp.minimum(jnp.where(ok, cand, fb), _ivc.S_MAX)
+    bounded = jnp.isfinite(hi_n) & (lo_n > 0)
+    tight = (hi_n <= lo_n * (1.0 + _ivc.BRACKET_RTOL)) | (jnp.nextafter(lo_n, jnp.inf) >= hi_n)
+    done = (small & cand_ok) | (bounded & tight & (it >= _ivc.MAIN_ITERS - 1))
+    s = jnp.where(active, s_n, s)
+    lo = jnp.where(active, lo_n, lo)
+    hi = jnp.where(active, hi_n, hi)
+    conv = conv | (active & done)
+    return s, lo, hi, conv, active & ~done
 
 
-def _jax_bisect_step(
-    sigma_lo, sigma_hi, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, not_converged
-):
-    """Single bisection step; meant to be called via a module-level @jax.jit wrapper."""
-    import jax.numpy as jnp
-
-    sigma_mid = 0.5 * (sigma_lo + sigma_hi)
-    d1, d2 = _d1_d2(st, kt, tt, rt, sigma_mid, qv)
-    cdf_d1 = _normal_cdf(d1)
-    cdf_d2 = _normal_cdf(d2)
-    call = ds * cdf_d1 - dk * cdf_d2
-    put = dk * (1.0 - cdf_d2) - ds * (1.0 - cdf_d1)
-    px_mid = jnp.where(is_call, call, put)
-    mid_res = px_mid - pt
-    new_lo = jnp.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
-    new_hi = jnp.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
-    return new_lo, new_hi
+_jit_iv: "dict[str, object]" = {}
 
 
-_jit_halley: "object | None" = None
-_jit_halley_all: "object | None" = None
-_jit_bisect: "object | None" = None
-_jit_iv_pre: "object | None" = None
-_jit_iv_post: "object | None" = None
-
-
-def _get_jit_halley():
-    global _jit_halley
-    if _jit_halley is None:
-        import jax
-
-        _jit_halley = jax.jit(_jax_halley_step)
-    return _jit_halley
-
-
-def _get_jit_halley_all():
-    """Fused 8-iteration Halley loop via lax.fori_loop — one XLA kernel."""
-    global _jit_halley_all
-    if _jit_halley_all is None:
-        import jax
-
-        @jax.jit
-        def _halley_all(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call):
-            def body(_, sig):
-                return _jax_halley_step(sig, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call)
-
-            return jax.lax.fori_loop(0, _HALLEY_ITERS, body, sigma)
-
-        _jit_halley_all = _halley_all
-    return _jit_halley_all
-
-
-def _get_jit_bisect():
-    global _jit_bisect
-    if _jit_bisect is None:
-        import jax
-
-        _jit_bisect = jax.jit(_jax_bisect_step)
-    return _jit_bisect
-
-
-def _get_jit_iv_pre():
-    """JIT'd pre-computation: ds, dk, sqrt_tt, below_intrinsic, sigma_init."""
-    global _jit_iv_pre
-    if _jit_iv_pre is None:
+def _get_jit_iv(model: str):
+    if model not in _jit_iv:
         import jax
         import jax.numpy as jnp
 
-        @jax.jit
-        def _iv_pre(pt, st, kt, tt, rt, qv, is_call):
-            ds = st * jnp.exp(-qv * tt)
-            dk = kt * jnp.exp(-rt * tt)
-            sqrt_tt = jnp.sqrt(jnp.maximum(tt, 1e-32))
-            intrinsic = jnp.where(is_call, jnp.maximum(ds - dk, 0.0), jnp.maximum(dk - ds, 0.0))
-            below_intrinsic = pt < intrinsic - 1e-10
-            sqrt_t_init = jnp.sqrt(jnp.maximum(tt, 1e-8))
-            sigma_init = jnp.clip(pt / jnp.maximum(st * sqrt_t_init, 1e-12) * _SQRT2PI, 0.30, 5.0)
-            return ds, dk, sqrt_tt, below_intrinsic, sigma_init
+        @functools.partial(jax.jit, static_argnames=("use_tail", "precise"))
+        def _iv(pt, st, kt, tt, rt, qv, is_call, use_tail=False, precise=False):
+            rows = _ivc.classify(jnp, model, pt, st, kt, tt, rt, qv, is_call)
+            need_precise = jnp.any(rows["near"])
+            if precise:  # rows within the error bound of the double-precision bounds
+                exact = _ivc.classify(jnp, model, pt, st, kt, tt, rt, qv, is_call, precise=True)
+                near = rows["near"]
+                rows = {key: jnp.where(near, exact[key], val) for key, val in rows.items()}
+            interior = rows["interior"]
+            one = jnp.ones_like(pt)
+            fo = jnp.where(interior, rows["Fo"], one)
+            ko = jnp.where(interior, rows["Ko"], one)
+            tv = jnp.where(interior, rows["tv"], one)
+            gap = jnp.where(interior, rows["gap"], one)
+            a = jnp.where(interior, rows["a"], 0.0)
+            sqrt_t = jnp.sqrt(jnp.where(interior, tt, one))
+            upper = gap < tv
+            l_target = jnp.log(jnp.where(upper, gap, tv))
+            l_fo = jnp.log(fo)
+            l_ko = jnp.log(ko)
+            tiny = (l_target - l_fo) < _ivc.TINY_LOG
+            consts = (a, l_target, l_fo, l_ko, upper, tiny, use_tail)
+            s0 = (
+                jnp.clip(tv / (fo * sqrt_t) * _ivc.SQRT2PI, _ivc.SEED_SIGMA_LO, _ivc.SEED_SIGMA_HI)
+                * sqrt_t
+            )
+            state = (s0, jnp.zeros_like(pt), jnp.full_like(pt, jnp.inf), interior & False, interior)
 
-        _jit_iv_pre = _iv_pre
-    return _jit_iv_pre
+            def body(i, st_):
+                return _iv_step_j(st_, consts, i)
+
+            state = jax.lax.fori_loop(0, _ivc.MAIN_ITERS, body, state)
+
+            def cond(c):
+                i, st_ = c
+                return (i < _ivc.MAIN_ITERS + _ivc.MAX_ITERS) & jnp.any(st_[4])
+
+            def wbody(c):
+                i, st_ = c
+                return i + 1, _iv_step_j(st_, consts, i)
+
+            _, state = jax.lax.while_loop(cond, wbody, (_ivc.MAIN_ITERS, state))
+            s, _, _, conv, _ = state
+            sigma = jnp.where(interior & conv, s / sqrt_t, jnp.nan)
+            sigma = jnp.where(rows["zero_vol"], 0.0, sigma)
+            code = jnp.where(interior & ~conv, _ivc.NOT_CONVERGED, rows["code"])
+            # Row-code counts on the device: the host receives N_CODES integers, not the codes.
+            counts = jnp.bincount(code.astype(jnp.int32).reshape(-1), length=_ivc.N_CODES)
+            return sigma, counts, jnp.any(tiny & interior), need_precise
+
+        _jit_iv[model] = _iv
+    return _jit_iv[model]
 
 
-def _get_jit_iv_post():
-    """JIT'd post-computation: convergence check and result masking."""
-    global _jit_iv_post
-    if _jit_iv_post is None:
-        import jax
-        import jax.numpy as jnp
+def _rescale_subnormal_quotes(price, s, k):
+    """Scale (price, S, K) by an exact power of two where the quote is below 2**-960.
 
-        @jax.jit
-        def _iv_post(
-            sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, valid, below_intrinsic
-        ):
-            d1, d2 = _d1_d2(st, kt, tt, rt, sigma, qv)
-            cdf_d1 = _normal_cdf(d1)
-            cdf_d2 = _normal_cdf(d2)
-            call = ds * cdf_d1 - dk * cdf_d2
-            put = dk * (1.0 - cdf_d2) - ds * (1.0 - cdf_d1)
-            px_final = jnp.where(is_call, call, put)
-            underflow_stuck = (px_final == 0.0) & (pt > 0.0)
-            not_converged = (jnp.abs(px_final - pt) > 1e-6) | underflow_stuck
-            # Zero-price OTM options: sigma is undetermined (any σ gives price≈0) → NaN
-            zero_price = (pt <= 0.0) & valid
-            result = jnp.where(valid, sigma, 0.0)
-            result = jnp.where(below_intrinsic | zero_price, jnp.full_like(result, jnp.nan), result)
-            return result, not_converged
-
-        _jit_iv_post = _iv_post
-    return _jit_iv_post
+    XLA's CPU runtime flushes sub-normal float64 values to zero, which would turn a tiny but
+    valid quote into a zero price. Implied volatility is invariant under a common scaling of
+    price, underlying and strike, so those rows are lifted into the normal range on the host.
+    """
+    p = np.asarray(price, dtype=np.float64)
+    tiny = (p > 0) & (p < 2.0**-960)
+    if not tiny.any():
+        return price, s, k
+    s_a, k_a = np.broadcast_arrays(np.asarray(s, np.float64), np.asarray(k, np.float64))
+    need = -960 - np.frexp(p)[1] + 1
+    room = 1000 - np.frexp(np.maximum(s_a, k_a))[1]
+    e = np.where(tiny, np.clip(np.minimum(need, room), 0, None), 0)
+    return np.ldexp(p, e), np.ldexp(s_a, e), np.ldexp(k_a, e)
 
 
 def implied_volatility(
@@ -407,44 +414,27 @@ def implied_volatility(
     import jax
     import jax.numpy as jnp
 
-    from ..utils.validation import handle_error
-
+    shape, price, s, k, t, r, flag, q = _ivc.flatten_inputs(price, s, k, t, r, flag, q)
     is_call = _flag_to_bool(flag)
-    pt = jnp.asarray(price, dtype=jnp.float64)
-    st, kt, tt, rt = (jnp.asarray(x, dtype=jnp.float64) for x in (s, k, t, r))
-    if model == "black" and q is None:
-        qv = rt  # Black-76: q=r so carry=disc and d1 = [ln(F/K)+0.5σ²T]/(σ√T)
+    if jax.default_backend() == "cpu":
+        price, s, k = _rescale_subnormal_quotes(price, s, k)
+    pt, st, kt, tt, rt = (jnp.asarray(x, dtype=jnp.float64) for x in (price, s, k, t, r))
+    if q is not None and model == "black_scholes_merton":
+        qv = jnp.asarray(q, dtype=jnp.float64)
     else:
-        qv = jnp.zeros_like(rt) if q is None else jnp.asarray(q, dtype=jnp.float64)
-
-    valid = tt > 0
-
-    # JIT'd pre-computation: ds, dk, sqrt_tt, below_intrinsic, sigma_init
-    ds, dk, sqrt_tt, below_intrinsic, sigma = _get_jit_iv_pre()(pt, st, kt, tt, rt, qv, is_call)
-    below_intrinsic_count = int(np.asarray(below_intrinsic).sum())
-    if below_intrinsic_count:
-        handle_error(f"Option price is below intrinsic value. {below_intrinsic_count}", on_error)
-
-    # Halley's method — fused 8-iteration loop via module-level lax.fori_loop JIT
-    sigma = _get_jit_halley_all()(sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call)
-
-    # JIT'd convergence check and result masking
-    result, not_converged = _get_jit_iv_post()(
-        sigma, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, valid, below_intrinsic
+        qv = jnp.zeros_like(rt)
+    # The deep-tail (log_ndtr) evaluation is compiled in only when a row needs it, so the common
+    # program has no data-dependent branch inside the Halley loop; the program reports the need.
+    # Likewise the double-double bounds: compiled in only when a row lies within the error bound
+    # of the double-precision ones (both flags are reported by the program itself).
+    fn = _get_jit_iv(model)
+    sigma, counts, need_tail, need_precise = fn(pt, st, kt, tt, rt, qv, is_call)
+    if bool(need_tail) or bool(need_precise):
+        sigma, counts, _, _ = fn(
+            pt, st, kt, tt, rt, qv, is_call, use_tail=bool(need_tail), precise=bool(need_precise)
+        )
+    freq = np.asarray(counts)
+    _ivc.report_row_errors(
+        {c: int(n) for c, n in enumerate(freq) if c != _ivc.OK and n}, int(pt.size), on_error
     )
-
-    if not_converged.any():
-        sigma_lo = jnp.where(not_converged, jnp.full_like(sigma, _IV_LO), sigma)
-        sigma_hi = jnp.where(not_converged, jnp.full_like(sigma, _IV_HI), sigma)
-        bisect = _get_jit_bisect()
-        for _ in range(_BISECT_ITERS):
-            sigma_lo, sigma_hi = bisect(
-                sigma_lo, sigma_hi, pt, ds, dk, sqrt_tt, st, kt, tt, rt, qv, is_call, not_converged
-            )
-        sigma = jnp.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
-        # Zero-price OTM options: sigma is undetermined → NaN (matches numpy/torch backends)
-        zero_price = (pt <= 0.0) & valid
-        result = jnp.where(valid, sigma, 0.0)
-        result = jnp.where(below_intrinsic | zero_price, jnp.full_like(result, jnp.nan), result)
-
-    return np.asarray(result)
+    return np.asarray(sigma).reshape(shape)

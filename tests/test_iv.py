@@ -51,3 +51,27 @@ def test_implied_volatility_raises_below_intrinsic_for_supported_backends(backen
             on_error="raise",
             return_as="numpy",
         )
+
+
+def test_halley_low_volatility_in_the_money_example() -> None:
+    """F = S = 100, K = 100 e^-0.1, T = 1, r = 0, sigma = 0.0182 (call).
+
+    v0.2.4 returned 0.01762035 on every Halley route without a warning. The quote, strike and
+    adjudicated reference are the exact values of fixture H1 (tests/fixtures/iv_adjudication).
+    """
+    price = float.fromhex("0x1.30852febdacb8p+3")
+    strike = float.fromhex("0x1.69ef5a02e89c5p+6")
+    reference = float.fromhex("0x1.2a3054c763725p-6")  # 0.0181999996108
+    candidates = ("numpy", "numba", "torch", "jax")
+    for backend in [b for b in candidates if b == "numpy" or b in available_backends()]:
+        iv = fast_implied_volatility(
+            np.array([price]),
+            np.array([100.0]),
+            np.array([strike]),
+            np.array([1.0]),
+            np.array([0.0]),
+            np.array(["c"]),
+            backend=backend,
+            return_as="numpy",
+        )
+        assert abs(iv[0] - reference) <= 1e-8 * reference, (backend, iv[0])

@@ -1,21 +1,19 @@
 """
-Jäckel IV Triton kernel — single-pass Householder(3)×3.
+Jäckel IV Triton kernel — single-pass Householder(3)×3 (experimental).
 
-Experiment I-7: Fuse the entire Jäckel IV pipeline (preproc + boundary + Hermite
-initial guess + Householder iterations + postproc) into one Triton kernel.  All
-intermediate values stay in registers; HBM is accessed once per element.
+Fuses the Jäckel IV pipeline (preprocessing, boundary handling, Hermite initial guess,
+Householder iterations, postprocessing) into one Triton kernel; intermediate values stay in
+registers and HBM is accessed once per element.
 
-normalised_black uses the erf formula (ndtr-based) rather than erfcx to avoid
-float64 overflow in tl.exp(x²)·erfc(x) for large arguments.  Three Householder
-iterations achieve machine precision for all inputs within standard option ranges.
+normalised_black uses the erf formula (ndtr-based) rather than erfcx to avoid float64
+overflow in tl.exp(x²)·erfc(x) for large arguments.
 
-Accuracy:  max relative error ~ 1e-13 vs py_lets_be_rational oracle
-Speed:     see benchmark; target ≤ 0.636ms/100k on H100.
+Status: experimental, and it fails the v0.2.5 validation protocol (4,230 of the 5,474 strict
+rows of the canonical grid within tolerance). It has no row policy (domain check, repricing
+check, error signal) and is not used by the public IV functions.
 """
 
 from __future__ import annotations
-
-import math
 
 import torch
 import triton
@@ -78,10 +76,8 @@ def jackel_iv_kernel(
     K_ptr,
     is_call_ptr,
     out_ptr,
-    F,  # scalar: forward price
-    T,  # scalar: time to expiry
-    inv_sqrt_T,  # scalar: 1 / sqrt(T)
-    sqrt_T,  # scalar: sqrt(T)
+    F_ptr,  # float64 per row: forward price
+    T_ptr,  # float64 per row: time to expiry
     n,
     BLOCK_SIZE: tl.constexpr,
 ):
@@ -96,6 +92,11 @@ def jackel_iv_kernel(
     price = tl.load(price_ptr + offs, mask=mask, other=0.0)
     K = tl.load(K_ptr + offs, mask=mask, other=1.0)
     is_call_i = tl.load(is_call_ptr + offs, mask=mask, other=1).to(tl.int1)
+    # F and T are loaded as float64 arrays: Python float kernel arguments are passed as float32.
+    F = tl.load(F_ptr + offs, mask=mask, other=1.0)
+    T = tl.load(T_ptr + offs, mask=mask, other=1.0)
+    sqrt_T = tl.sqrt(tl.maximum(T, 0.0))
+    inv_sqrt_T = tl.where(sqrt_T > 0.0, 1.0 / tl.where(sqrt_T > 0.0, sqrt_T, 1.0), 0.0)
 
     tiny = _DBL_MIN
 
@@ -231,19 +232,26 @@ def jackel_iv_kernel(
 
 def jackel_iv_triton(
     price: torch.Tensor,
-    F: float,
+    F: float | torch.Tensor,
     K: torch.Tensor,
-    T: float,
+    T: float | torch.Tensor,
     is_call: torch.Tensor | bool = True,
 ) -> torch.Tensor:
-    """Jäckel IV for Black-76 — single-pass Triton kernel.
+    """Jäckel IV for Black-76 — single-pass Triton kernel (experimental).
+
+    .. warning::
+       Experimental, and it fails the v0.2.5 validation protocol: it solves 4,230 of the
+       5,474 strict rows of the canonical grid within tolerance. It has no row policy (no
+       domain check, repricing check or error signal). The Jäckel route of the public
+       functions does not use it; use ``fast_implied_volatility(..., solver="jackel")`` or
+       ``solver="halley"`` instead.
 
     Parameters
     ----------
     price   : undiscounted option price (GPU tensor, float64)
-    F       : forward price (scalar)
+    F       : forward price (scalar or GPU tensor broadcastable to price)
     K       : strike (GPU tensor, float64)
-    T       : time to expiry in years (scalar)
+    T       : time to expiry in years (scalar or GPU tensor broadcastable to price)
     is_call : True = call, False = put (tensor or scalar bool)
 
     Returns
@@ -258,8 +266,12 @@ def jackel_iv_triton(
     else:
         is_call_t = is_call.to(torch.int8)
 
-    sqrt_T = math.sqrt(max(T, 0.0))
-    inv_sqrt_T = 1.0 / sqrt_T if sqrt_T > 0.0 else 0.0
+    def _f64(v: float | torch.Tensor) -> torch.Tensor:
+        t = torch.as_tensor(v, dtype=torch.float64, device=price.device)
+        return t.expand(n).contiguous()
+
+    F_t = _f64(F)
+    T_t = _f64(T)
 
     grid = lambda meta: (triton.cdiv(n, meta["BLOCK_SIZE"]),)  # noqa: E731
     jackel_iv_kernel[grid](
@@ -267,10 +279,8 @@ def jackel_iv_triton(
         K,
         is_call_t,
         out,
-        F,
-        T,
-        inv_sqrt_T,
-        sqrt_T,
+        F_t,
+        T_t,
         n,
         BLOCK_SIZE=512,
     )

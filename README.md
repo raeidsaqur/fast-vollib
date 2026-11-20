@@ -20,8 +20,8 @@
   <a href="https://pypi.org/project/fast-vollib/">
     <img src="https://img.shields.io/pypi/pyversions/fast-vollib.svg" alt="Python versions" />
   </a>
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" />
+  <a href="https://www.apache.org/licenses/LICENSE-2.0">
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0" />
   </a>
   <a href="https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml">
     <img src="https://github.com/raeidsaqur/fast-vollib/actions/workflows/tests.yml/badge.svg" alt="Tests" />
@@ -29,8 +29,8 @@
   <a href="https://raeidsaqur.github.io/fast-vollib/">
     <img src="https://github.com/raeidsaqur/fast-vollib/actions/workflows/docs.yml/badge.svg" alt="Docs" />
   </a>
-  <a href="https://doi.org/10.5281/zenodo.22150802">
-    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22150802.svg" alt="DOI" />
+  <a href="https://doi.org/10.5281/zenodo.22150801">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.22150801.svg" alt="DOI" />
   </a>
   <a href="https://arxiv.org/abs/2604.27210">
     <img src="https://img.shields.io/badge/arXiv-2604.27210-b31b1b.svg" alt="arXiv paper" />
@@ -58,6 +58,17 @@ API modeled on `py_vollib_vectorized`.
 ---
 
 ## What's New?
+
+**v0.2.5 — Implied-volatility validation.**
+
+- Halley uses an out-of-the-money objective and a sign-checked bracket.
+- Select a solver with `solver=` in functional and DataFrame implied-volatility calls.
+- Both solvers use the documented row policy and error signal. See the validation
+  results and limits in the [Jäckel guide](https://raeidsaqur.github.io/fast-vollib/jackel/).
+- v0.2.5 uses the Apache License 2.0.
+
+See the [v0.2.5 changelog](https://raeidsaqur.github.io/fast-vollib/changelog/#025-2026-11-20)
+and [benchmark guide](https://raeidsaqur.github.io/fast-vollib/benchmarks/).
 
 **v0.2.4 — Listed-option P&L workflows.** Build observation-backed positions and
 inspect their terminal payoff, current quote indications and European model value:
@@ -142,7 +153,7 @@ See the [v0.2.0 changelog](https://raeidsaqur.github.io/fast-vollib/changelog/#0
 complete contracts and examples.
 
 **v0.1.8 — Differentiable Jäckel implied volatility.** `fast_vollib.jackel` now
-ships autograd wrappers around the machine-precision "Let's Be Rational" solver
+ships autograd wrappers around the "Let's Be Rational" solver
 for PyTorch and JAX:
 
 - **`implied_volatility_autograd`** (PyTorch) and
@@ -209,12 +220,15 @@ and the [changelog](https://raeidsaqur.github.io/fast-vollib/changelog/) for det
 ## Features
 
 - **Three pricing models** — Black-76, Black-Scholes, Black-Scholes-Merton
-- **Vectorized IV solver** — Halley's method with compiled bisection fallback
+- **Two implied-volatility solvers.** Halley is the default for functional calls.
+  Use `solver="jackel"` to select Jäckel's *"Let's Be Rational"* solver.
+  See the [Jäckel guide](https://raeidsaqur.github.io/fast-vollib/jackel/) for validation and gradient support.
+
 - **Full Greeks** — delta, gamma, theta, rho, vega; all five in one `get_all_greeks` call
 - **Pluggable backends** — NumPy (default), PyTorch (CUDA), JAX (JIT)
 - **Automatic backend selection** — prefers CUDA > JAX > NumPy
 - **DataFrame-native** — `price_dataframe` works directly on a `pandas.DataFrame`
-- **Drop-in compatibility** — `patch_py_vollib()` and `patch_py_vollib_vectorized()` patch the scalar and vectorized upstream namespaces
+- **API compatibility** — `patch_py_vollib()` and `patch_py_vollib_vectorized()` patch the scalar and vectorized upstream namespaces
 - **Surface arbitrage harness** — `fast_vollib.surface` scores generated IV surfaces for static arbitrage with normalized, cross-model metrics and a differentiable training penalty ([guide](https://raeidsaqur.github.io/fast-vollib/surface/))
 - **Typed instruments** — immutable vanilla, digital, Asian, barrier, lookback, and variance-swap contracts with strict serialization and columnar option batches
 - **Processes and scenarios** — backend-native GBM paths on regular or irregular grids, preserving NumPy, PyTorch, and JAX semantics
@@ -336,7 +350,7 @@ result = fast_vollib.price_dataframe(
 # Columns: Price, delta, gamma, theta, rho, vega
 ```
 
-### Drop-in `py_vollib_vectorized` replacement
+### Compatibility with `py_vollib_vectorized`
 
 The [`py_vollib_vectorized`](https://github.com/marcdemers/py_vollib_vectorized)
 API can be kept intact in your codebase via the included monkey-patching helper.
@@ -464,19 +478,19 @@ To cite the software itself (archived on Zenodo):
       title     = {fast-vollib},
       year      = {2026},
       publisher = {Zenodo},
-      doi       = {10.5281/zenodo.22150802},
-      url       = {https://doi.org/10.5281/zenodo.22150802},
+      doi       = {10.5281/zenodo.22150801},
+      url       = {https://doi.org/10.5281/zenodo.22150801},
 }
 ```
 
 Machine-readable citation metadata lives in [`CITATION.cff`](CITATION.cff), which
 also powers GitHub's **Cite this repository** button. Each tagged release is
 archived on Zenodo with its own DOI; the badge above resolves to the concept DOI
-`10.5281/zenodo.22150802`, which always points at the latest version. Cite a
+`10.5281/zenodo.22150801`, which always points at the latest version. Cite a
 specific version's DOI instead if you need exact reproducibility.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).

@@ -29,12 +29,13 @@ import jax.numpy as jnp
 import jax.scipy.special as jss
 import numpy as np
 
-from ..types import ModelLiteral
+from ..types import ModelLiteral, OnErrorLiteral
+from ..utils.validation import ensure_on_error
+from . import _policy
 
 # Make sure x64 is enabled before any JAX op (JAX defaults to float32).
 jax.config.update("jax_enable_x64", True)
 
-_BELOW_INTRINSIC_SLACK = 1e-12
 _LOW_VEGA_THRESHOLD = 1e-14
 
 _SQRT2 = math.sqrt(2.0)
@@ -114,85 +115,43 @@ def _q_for_price(model: str, r, q):
     raise ValueError(f"Unsupported model: {model!r}")
 
 
-def _forward_for_solver(model: str, s, k, t, r, q):
-    """Solver-side forward (F)."""
-    if model == "black":
-        return s
-    if model == "black_scholes":
-        return s * jnp.exp(r * t)
-    if model == "black_scholes_merton":
-        return s * jnp.exp((r - q) * t)
-    raise ValueError(f"Unsupported model: {model!r}")
+def _jackel_otm_j(tv, fo, ko, t):
+    """Jäckel on the out-of-the-money call (fo <= ko) at time value tv (native JAX)."""
+    from .jax_backend import _jackel_iv_normalized_j, _jit_jackel_iv_normalized
+
+    solver = _jit_jackel_iv_normalized or _jackel_iv_normalized_j
+    beta = tv / (jnp.sqrt(fo) * jnp.sqrt(ko))
+    x = -jnp.abs(jnp.log(fo / ko))
+    return solver(beta, x) / jnp.sqrt(t)
 
 
-# ---------------------------------------------------------------------------
-# Solver core (NaN-mask invalid-domain, return both clean and pre-clean).
-# ---------------------------------------------------------------------------
+def _policy_j(price, s, k, t, r, q, is_call_float, model: str):
+    """Shared row policy (``jackel._policy.solve_native``) on JAX arrays: (sigma, invalid, code)."""
+    q_model = q if model == "black_scholes_merton" else jnp.zeros_like(r)
+    return _policy.solve_native(
+        jnp,
+        jss.ndtr,
+        _jackel_otm_j,
+        model,
+        price,
+        s,
+        k,
+        t,
+        r,
+        q_model,
+        is_call_float > 0.5,
+        zero_vol_value=float("nan"),  # no gradient exists there; NaN as in v0.2.4
+    )
 
 
 def _solve_iv(price, s, k, t, r, q, is_call_float, model: str):
-    """Run the JAX Jaeckel solver and apply the invalid-domain mask.
+    """Forward solve: ``(sigma_out, sigma_for_backward, invalid_mask)``.
 
-    ``is_call_float`` is a 0/1-valued float64 tensor.  We use a float dtype
-    rather than bool so the call flag can ride through ``custom_vjp`` as a
-    regular positional argument (JAX forbids tracer-valued bool arrays in
-    ``nondiff_argnums``).  Inside the solver we recover the bool with a
-    ``> 0.5`` comparison.
-
-    Returns ``(sigma_out, sigma_for_backward, invalid_mask)``.  Replicates
-    the PyTorch ``forward`` exactly: invalid-domain rows return NaN in
-    ``sigma_out`` while ``sigma_for_backward`` falls back to ``0.1`` so the
-    backward's price helper does not encounter NaN.
+    Rows the policy refuses return NaN in ``sigma_out`` while ``sigma_for_backward`` falls back to
+    ``0.1`` so the backward's price helper does not encounter NaN.
     """
-    from .jax_backend import _jackel_iv_normalized_j, _jit_jackel_iv_normalized
-
-    is_call = is_call_float > 0.5
-    qm = _q_for_price(model, r, q)
-
-    # Build the discounted/undiscounted price the solver expects.
-    forward = _forward_for_solver(model, s, k, t, r, q)
-    undiscounted_price = price * jnp.exp(r * t)
-
-    # Reproduce the inner solver pipeline at array level (mirrors
-    # ``jackel_iv_black_jax`` but inlined so we can use heterogeneous
-    # F/T tensors).
-    tiny = 2.2250738585072014e-308
-    sqrt_T = jnp.sqrt(jnp.clip(t, min=0.0))
-    q_arr = jnp.where(is_call, 1.0, -1.0)
-    sqrt_FK = jnp.sqrt(forward * k)
-    x = jnp.log(jnp.clip(forward, min=tiny) / jnp.clip(k, min=tiny))
-    intrinsic = jnp.abs(jnp.maximum(q_arr * (forward - k), 0.0))
-    itm = (q_arr * x) > 0.0
-    price_red = jnp.where(
-        itm, jnp.abs(jnp.maximum(undiscounted_price - intrinsic, 0.0)), undiscounted_price
-    )
-    x_red = jnp.where(x > 0.0, -x, x)
-    beta = price_red / jnp.where(sqrt_FK > 0.0, sqrt_FK, tiny)
-
-    if _jit_jackel_iv_normalized is not None:
-        sigma_hat = _jit_jackel_iv_normalized(beta, x_red)
-    else:
-        sigma_hat = _jackel_iv_normalized_j(beta, x_red)
-
-    sqrt_T_safe = jnp.where(sqrt_T > 0.0, sqrt_T, 1.0)
-    sigma_solver = jnp.where(sqrt_T > 0.0, sigma_hat / sqrt_T_safe, 0.0)
-
-    # Invalid-domain mask matches the PyTorch contract exactly.
-    disc_spot = s * jnp.exp(-qm * t)
-    disc_strike = k * jnp.exp(-r * t)
-    call_intrinsic = jnp.maximum(disc_spot - disc_strike, 0.0)
-    put_intrinsic = jnp.maximum(disc_strike - disc_spot, 0.0)
-    intrinsic_disc = jnp.where(is_call, call_intrinsic, put_intrinsic)
-    invalid = (
-        (price < intrinsic_disc - _BELOW_INTRINSIC_SLACK)
-        | (price <= 0.0)
-        | (t <= 0.0)
-        | (s <= 0.0)
-        | (k <= 0.0)
-    )
-    nan = jnp.full_like(sigma_solver, jnp.nan)
-    sigma_out = jnp.where(invalid, nan, sigma_solver)
-    sigma_backward = jnp.where(invalid, jnp.full_like(sigma_solver, 0.1), sigma_solver)
+    sigma_out, invalid, _ = _policy_j(price, s, k, t, r, q, is_call_float, model)
+    sigma_backward = jnp.where(invalid, jnp.full_like(sigma_out, 0.1), sigma_out)
     return sigma_out, sigma_backward, invalid
 
 
@@ -326,6 +285,7 @@ def implied_volatility_autograd_jax(
     q=None,
     *,
     model: ModelLiteral = "black_scholes",
+    on_error: OnErrorLiteral = "warn",
 ):
     """Differentiable Jaeckel implied volatility for JAX.
 
@@ -337,11 +297,14 @@ def implied_volatility_autograd_jax(
     ``d sigma / d theta = -(d price_model / d theta) / vega`` for
     ``theta in {S, K, t, r, q}``.
 
-    Invalid-domain contract:
-        Entries where the price is below the discounted intrinsic value,
-        non-positive, or where ``t``, ``S``, or ``K`` is non-positive
-        return ``NaN`` in the forward and propagate ``NaN`` gradients for
-        all differentiable inputs.
+    Row policy (shared with every implied-volatility route, see ``jackel._policy``):
+        Quotes exactly at intrinsic and ``t == 0`` return ``NaN`` here (the functional routes
+        return 0.0 there; no gradient exists), without a signal. Zero prices, prices below
+        intrinsic or at/above the upper bound, invalid inputs, normalised prices below the
+        smallest normal double, and solutions that do not reproduce the quote return ``NaN``
+        and propagate ``NaN`` gradients. Called eagerly, the wrapper emits one aggregated
+        ``on_error`` signal per call; under ``jax.jit`` (traced inputs) no Python-level signal
+        is possible and only the ``NaN`` remains.
 
     Low-vega contract:
         The forward returns the solver's best estimate at low-vega inputs
@@ -373,6 +336,12 @@ def implied_volatility_autograd_jax(
         price_a, S_a, K_a, t_a, r_a, q_a, is_call_a
     )
 
+    ensure_on_error(on_error)
+    if model not in ("black", "black_scholes", "black_scholes_merton"):
+        raise ValueError(f"Unsupported model: {model!r}")
+    if on_error != "ignore" and not isinstance(price_a, jax.core.Tracer):
+        _, _, code = _policy_j(price_a, S_a, K_a, t_a, r_a, q_a, is_call_a, model)
+        _policy.report_codes(code, on_error)
     return _jackel_iv_jax_inner(price_a, S_a, K_a, t_a, r_a, q_a, is_call_a, model)
 
 

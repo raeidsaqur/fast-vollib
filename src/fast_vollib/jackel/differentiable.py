@@ -4,9 +4,20 @@ import numpy as np
 import torch
 
 from ..backends.torch_backend import _price_vega_d1d2_t
-from ..types import ModelLiteral
+from ..types import ModelLiteral, OnErrorLiteral
 from ..utils.broadcast import preprocess_flags
+from ..utils.validation import ensure_on_error
+from . import _policy
 from .torch_backend import jackel_iv_black_torch
+
+_INV_SQRT2 = 1.0 / np.sqrt(2.0)
+
+
+def _ndtr(x: torch.Tensor) -> torch.Tensor:
+    """Normal CDF via erfc. ``torch.special.ndtr`` loses relative accuracy in the lower tail
+    (about 1e-10 at -6, zero by -10), which made the repricing check reject correct volatilities
+    of low-volatility rows."""
+    return 0.5 * torch.special.erfc(-x * _INV_SQRT2)
 
 
 def _as_tensor_like(value, ref: "torch.Tensor") -> "torch.Tensor":
@@ -30,56 +41,20 @@ def _flag_to_bool_tensor(flag, ref: "torch.Tensor") -> "torch.Tensor":
     return torch.as_tensor(flags == "c", dtype=torch.bool, device=ref.device)
 
 
-_BELOW_INTRINSIC_SLACK = 1e-12
+def _jackel_otm_torch(tv, fo, ko, t):
+    """Jäckel on the out-of-the-money call (fo <= ko) at time value tv (native torch)."""
+    return jackel_iv_black_torch(tv, fo, ko, t, True)
 
 
 class _JackelImpliedVolatilityFunction(torch.autograd.Function):  # type: ignore[name-defined]
+    """Carries the policy-checked forward solution; backward applies the implicit-function rule."""
+
     @staticmethod
-    def forward(ctx, price, s, k, t, r, q, is_call, model: str):
-        import torch
-
-        with torch.no_grad():
-            if model == "black":
-                forward = s
-                q_for_model = r
-            elif model == "black_scholes":
-                forward = s * torch.exp(r * t)
-                q_for_model = torch.zeros_like(r)
-            elif model == "black_scholes_merton":
-                forward = s * torch.exp((r - q) * t)
-                q_for_model = q
-            else:
-                raise ValueError(f"Unsupported model: {model!r}")
-
-            undiscounted_price = price * torch.exp(r * t)
-            sigma = jackel_iv_black_torch(undiscounted_price, forward, k, t, is_call)
-
-            # Invalid-domain mask: below-intrinsic prices cannot be inverted.
-            # Mirrors the numpy pipeline contract so forward output and backward
-            # gradient agree instead of the solver clamping to a bogus sigma.
-            disc_spot = s * torch.exp(-q_for_model * t)
-            disc_strike = k * torch.exp(-r * t)
-            call_intrinsic = torch.clamp(disc_spot - disc_strike, min=0.0)
-            put_intrinsic = torch.clamp(disc_strike - disc_spot, min=0.0)
-            intrinsic = torch.where(is_call, call_intrinsic, put_intrinsic)
-            invalid = (
-                (price < intrinsic - _BELOW_INTRINSIC_SLACK)
-                | (price <= 0.0)
-                | (t <= 0.0)
-                | (s <= 0.0)
-                | (k <= 0.0)
-            )
-            sigma_out = torch.where(invalid, torch.full_like(sigma, float("nan")), sigma)
-            # Sentinel so backward's _price_vega_d1d2_t does not encounter NaN
-            # at invalid positions.  Ill-conditioned (low-vega) handling stays
-            # in the backward via the saved ``invalid`` mask plus the usual
-            # |vega| > 1e-14 check.
-            sigma_backward = torch.where(invalid, torch.full_like(sigma, 0.1), sigma)
-
+    def forward(ctx, price, s, k, t, r, q, is_call, model: str, sigma_out, sigma_backward, invalid):
         ctx.model = model
         ctx.invalid = invalid
         ctx.save_for_backward(s, k, t, r, q, is_call, sigma_backward)
-        return sigma_out
+        return sigma_out.clone()
 
     @staticmethod
     def backward(ctx, grad_output):
@@ -153,7 +128,7 @@ class _JackelImpliedVolatilityFunction(torch.autograd.Function):  # type: ignore
         if model == "black_scholes_merton" and ctx.needs_input_grad[5]:
             grad_q = grads[4]
 
-        return grad_price, grad_s, grad_k, grad_t, grad_r, grad_q, None, None
+        return grad_price, grad_s, grad_k, grad_t, grad_r, grad_q, None, None, None, None, None
 
 
 def implied_volatility_autograd(
@@ -166,6 +141,7 @@ def implied_volatility_autograd(
     q=None,
     *,
     model: ModelLiteral = "black_scholes",
+    on_error: OnErrorLiteral = "warn",
 ) -> "torch.Tensor":
     """Differentiable Jäckel implied volatility for PyTorch.
 
@@ -175,11 +151,14 @@ def implied_volatility_autograd(
     ``d sigma / d price = 1 / vega`` and
     ``d sigma / d theta = -(d price_model / d theta) / vega``.
 
-    Invalid-domain contract:
-        Entries where the price is below the discounted intrinsic value,
-        non-positive, or where ``t``, ``s``, or ``k`` is non-positive return
-        ``NaN`` in the forward pass and propagate ``NaN`` gradients for all
-        differentiable inputs.
+    Row policy (shared with every implied-volatility route, see ``jackel._policy``):
+        Quotes exactly at intrinsic and ``t == 0`` return ``NaN`` here (the functional routes
+        return 0.0 there; no gradient exists), without a signal. Zero prices, prices below
+        intrinsic or at/above the upper bound, invalid inputs, normalised prices below the
+        smallest normal double, and solutions that do not reproduce the quote return ``NaN``
+        with one aggregated ``on_error`` signal per call (``"warn"``, ``"raise"`` or
+        ``"ignore"``). All of these rows propagate ``NaN`` gradients (0 where the upstream
+        gradient is exactly zero).
 
     Low-vega contract:
         The forward pass returns the solver's best estimate at low-vega
@@ -212,8 +191,29 @@ def implied_volatility_autograd(
     price_t, s_t, k_t, t_t, r_t, q_t, is_call_t = torch.broadcast_tensors(
         price_t, s_t, k_t, t_t, r_t, q_t, is_call_t
     )
+    ensure_on_error(on_error)
+    if model not in ("black", "black_scholes", "black_scholes_merton"):
+        raise ValueError(f"Unsupported model: {model!r}")
+    with torch.no_grad():
+        q_model = q_t if model == "black_scholes_merton" else torch.zeros_like(r_t)
+        sigma_out, invalid, code = _policy.solve_native(
+            torch,
+            _ndtr,
+            _jackel_otm_torch,
+            model,
+            price_t.detach(),
+            s_t.detach(),
+            k_t.detach(),
+            t_t.detach(),
+            r_t.detach(),
+            q_model.detach(),
+            is_call_t,
+            zero_vol_value=float("nan"),  # no gradient exists there; NaN as in v0.2.4
+        )
+        sigma_backward = torch.where(invalid, torch.full_like(sigma_out, 0.1), sigma_out)
+    _policy.report_codes(code.cpu(), on_error)
     return _JackelImpliedVolatilityFunction.apply(
-        price_t, s_t, k_t, t_t, r_t, q_t, is_call_t, model
+        price_t, s_t, k_t, t_t, r_t, q_t, is_call_t, model, sigma_out, sigma_backward, invalid
     )
 
 

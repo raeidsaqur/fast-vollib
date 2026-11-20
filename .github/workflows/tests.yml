@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, "feature/**"]
   workflow_dispatch:
+  schedule:
+    # Nightly: the slow implied-volatility validation sweeps (full canonical grid, held-out).
+    - cron: "17 3 * * *"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -92,6 +95,12 @@ jobs:
       - name: Install with torch extra
         run: uv sync --all-groups --extra torch
 
+      - name: Assert the pinned route (default calls run on torch)
+        run: uv run pytest tests/test_ci_route_identity.py -v --tb=short
+        env:
+          FAST_VOLLIB_BACKEND: torch
+          FV_REQUIRE_BACKENDS: torch
+
       - name: Run tests with torch backend
         run: uv run pytest tests/ -v --tb=short
         env:
@@ -126,8 +135,67 @@ jobs:
       - name: Install with jax extra
         run: uv sync --all-groups --extra jax
 
+      - name: Assert the pinned route (default calls run on JAX)
+        run: uv run pytest tests/test_ci_route_identity.py -v --tb=short
+        env:
+          FAST_VOLLIB_BACKEND: jax
+          FV_REQUIRE_BACKENDS: jax
+
       - name: Run tests with jax backend
         run: uv run pytest tests/ -v --tb=short
         env:
           FAST_VOLLIB_BACKEND: jax
           FV_REQUIRE_BACKENDS: jax
+
+  test-numpy-only:
+    name: IV validation without Numba / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      FAST_VOLLIB_BACKEND: numpy
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install base dependencies and test tools
+        run: uv sync --locked
+
+      - name: Assert NumPy-only execution
+        run: >-
+          uv run --no-sync python -c "from importlib.util import find_spec;
+          from fast_vollib.config import get_backend;
+          assert find_spec('numba') is None; assert get_backend() == 'numpy'"
+
+      - name: Validate fixtures, canonical grid and varied-parameter sample
+        run: >-
+          uv run --no-sync python -m pytest tests/test_iv_adjudicated.py tests/test_iv_domain.py
+          -o addopts= -q --tb=short
+
+  test-slow:
+    name: pytest / slow IV validation sweeps
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install with all CPU backends
+        run: uv sync --all-groups --extra torch --extra jax --extra numba
+
+      - name: Run slow sweeps
+        run: uv run pytest tests/test_iv_domain.py -m slow -v --tb=short
+        env:
+          FV_REQUIRE_BACKENDS: torch,jax,numba

@@ -15,6 +15,97 @@ separate changelog entries.
 
 ---
 
+## [0.2.5] — 2026-11-20
+
+### Fixed
+
+- **Halley.** In v0.2.4, Halley could return an incorrect result without a signal
+  for in-the-money (ITM) quotes and quotes with low time value.
+  For F = 100, K = 100·e^−0.1, T = 1, and σ = 0.0182, the solver returned 0.01762.
+  Halley now uses the out-of-the-money price and checks the sign at each bracket limit.
+  Halley uses a relative accuracy target and calls `log_ndtr` for deep tails.
+  Halley can return implied volatilities greater than 10.
+  Results can change for rows with these quotes.
+- **Solver selection.** The `solver=` argument now selects the solver in
+  `fast_implied_volatility` and `fast_implied_volatility_black`.
+  Halley remains the default for functional calls and DataFrames.
+  Jäckel remains the default for instruments.
+- **Backend selection.** fast-vollib uses the backend that you specify.
+  For `backend="auto"`, it now checks `set_backend()` before `FAST_VOLLIB_BACKEND`.
+  If neither setting specifies a backend, fast-vollib selects one automatically.
+- **`patch_py_vollib()`.** The adapters keep the original `py_vollib` function signatures.
+  They return floats for scalar inputs. The Black-Scholes-Merton adapter uses `q`.
+  The Black-76 adapters use the Black-76 model. Only the first call applies the patch.
+  The patch keeps the fast-vollib functions and their signatures.
+- **Jäckel on PyTorch and JAX.** In zones 1 and 4, the kernels now use the
+  rational-cubic initial guess from the Jäckel method.
+  The kernels now accept different `T` and `F` values in the same batch.
+  In v0.2.4, these batches could run on NumPy without a signal.
+- **Jäckel without Numba.** The NumPy path uses the stable Black price evaluator.
+  This reduces loss of precision near the money at low total volatility.
+- **Jäckel wrappers.** The full-model wrappers now use the implied-volatility row policy below.
+- **Direct Triton Jäckel kernel.** `jackel_iv_triton` now passes `F` and `T` as `float64`.
+- **Numba cache.** Numba kernels now use the same disk cache across processes.
+  If the cache contains compiled code, the first implied-volatility call takes milliseconds.
+  Previously, the first call took seconds.
+
+### Changed
+
+- v0.2.5 uses the Apache License 2.0. See the repository license and notice files.
+- **Implied-volatility row policy.** Both solvers still return `0.0` for a valid row at expiry.
+  Before expiry, they now return `0.0` when a positive price equals intrinsic value.
+  Before expiry, a zero price with no intrinsic value now gives `NaN` and a signal.
+  Before expiry, a price below intrinsic value or at or above the upper bound gives `NaN` and a signal.
+  Both solvers now check the price bounds in double-double precision.
+
+    In v0.2.4, a quote at a positive intrinsic value before expiry could give a
+    positive volatility from Halley or `NaN` from Jäckel.
+    Both solvers could return `NaN` without a row error signal for a zero price with no intrinsic value.
+    The lower-bound check gave a signal only for a price below intrinsic value minus `1e-10`.
+    At or above the upper bound, Halley could return a finite volatility and Jäckel could return `NaN`.
+    Both solvers could give these results without an upper-bound signal.
+
+- **Other row errors.** The solver returns `NaN` for a negative time to expiry or a solver failure.
+  By default, a call with row errors gives one `UserWarning` for all affected rows.
+  Set `on_error="raise"` to get a `ValueError`.
+  Set `on_error="ignore"` to prevent the signal.
+  For prices below intrinsic value, the message still contains "below intrinsic value".
+- **Jäckel limits.** Jäckel rejects a normalized out-of-the-money price below the smallest normal double.
+  It also rejects a solution that fails the repricing check.
+  The error message gives `solver="halley"` as an alternative.
+- **Direct Triton Jäckel kernel.** This kernel is experimental.
+  It meets the tolerance on 4,230 of 5,474 strict grid rows.
+  The public Jäckel route uses a different kernel.
+- **Gradients.** `implied_volatility_autograd` and `implied_volatility_autograd_jax`
+  accept `on_error=`. The default is `"warn"`.
+  Both functions still return `NaN` for quotes at expiry or at intrinsic value.
+  These quotes have no gradient.
+  Python error signals are possible only outside `jax.jit`.
+- **Unknown backend.** fast-vollib raises `ValueError` for an unknown backend name.
+- **Halley support.** This release removes the Halley deprecation that started in v0.2.0.
+  Halley is still the default for functional calls.
+
+### Known limitations
+
+- **Jäckel coverage.** Jäckel rejects some quotes near the upper price bound.
+  On the x86-64 NumPy development set, v0.2.5 Jäckel rejects 177 rows that v0.2.4 Jäckel solved
+  within tolerance. Halley solves 173 of these rows.
+- **Halley accuracy.** The development set contains spot-form quotes near the smallest subnormal double.
+  Halley returns incorrect finite values for some of these quotes.
+  Refer to [Jäckel IV](jackel.md) for the results.
+- **Jäckel performance.** The NumPy and JAX routes are slower than in v0.2.4.
+  The routes classify rows and verify solutions on the host.
+- **JAX compilation.** JAX compiles a second Halley solver version for the first batch
+  with quotes near the bounds. Refer to [Backends](backends.md) for the compilation cache.
+
+### Added
+
+- `price_dataframe` accepts `solver=` when it calculates implied volatility.
+- The validation data include test fixtures and a scoring protocol in `tests/fixtures/iv_adjudication/`.
+  The `scripts/reference_inverse.py` script uses `mpmath` to calculate the independent reference.
+
+---
+
 ## [0.2.4] — 2026-10-18
 
 ### Added

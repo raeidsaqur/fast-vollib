@@ -1,17 +1,21 @@
 # Benchmarks
 
-fast-vollib ships benchmark and validation artifacts, but the exact throughput
-you observe depends heavily on hardware, backend choice, package versions, and
-whether JIT compilation has already been warmed up. This page focuses on what
-is reproducible from the repository and what should be cited from upstream
-baselines.
+The hardware, backend, and package versions can change the measured throughput.
+Throughput can also change if just-in-time (JIT) compilation occurs during the
+measurement. This page gives instructions to run the tests from the repository.
+For baseline results, refer to the published sources.
 
 ---
 
 ## Shipped benchmark artifacts
 
-The repository includes four reproducibility entry points:
+The fast-vollib repository contains the benchmark and validation files below.
 
+- `scripts/benchmark_matrix.py` (also `python scripts/benchmark.py --matrix`)
+  Same-host benchmark matrix with per-record timings and a manifest (below).
+- `scripts/validation_matrix.py`
+  Implied-volatility validation records for every route under the frozen
+  protocol of `tests/fixtures/iv_adjudication/`.
 - `notebooks/fast_vollib_comparison.ipynb`
   Interactive notebook for pricing, IV, and Greeks comparisons.
 - `scripts/benchmark.py`
@@ -66,6 +70,29 @@ This script prints timing summaries for:
 
 It also reports NumPy-only timings and a larger-batch timing pass.
 
+### Benchmark matrix (same-host protocol)
+
+```bash
+python scripts/benchmark_matrix.py --out bench/ --sizes 100,1000,10000,100000,1000000
+python scripts/benchmark_matrix.py --list-routes
+```
+
+The matrix measures fast-vollib and the baselines on the same host.
+The baselines are `py_vollib`, `py_vollib_vectorized` and `py_lets_be_rational`.
+
+- Each route, workload and batch size runs in a new process.
+- The script checks the backend and the output before it measures time.
+- On CUDA, the PyTorch IV check confirms that the fused Triton kernel runs.
+- If a check fails, the script records the failure without a time.
+- The script measures pricing, implied volatility and Greeks separately.
+- Each IV route uses the same precomputed prices.
+- The script records the first call with compilation and seven subsequent calls.
+- The GPU times include transfers and synchronization. The GPU Halley routes also report device-resident times.
+- The script measures scalar baselines through N = 10⁵. It marks measurements that exceed `--timeout` as censored.
+
+`records.jsonl` has one record for each combination of route, workload and batch size.
+`manifest.json` gives the source commit, library versions, CPU and GPU models, and thread settings.
+
 ### Numerical parity against `py_vollib_vectorized`
 
 ```bash
@@ -97,12 +124,10 @@ test.
 
 ---
 
-## Jäckel IV solver performance
+## Jäckel IV solver: development history (v0.1.4)
 
-The `jackel/` module provides a machine-precision IV solver using Jäckel's
-*"Let's Be Rational"* algorithm.  The table below shows the optimisation
-trajectory on the canonical benchmark grid (N = 100,000 options,
-H100 NVL GPU).
+The tables show kernel timings from v0.1.4 development on H100 NVL, for 100,000 options.
+Run the benchmark matrix above for current timings.
 
 ### CPU chain (NumPy → Numba, 100k options)
 
@@ -122,10 +147,11 @@ H100 NVL GPU).
 |---|---:|---:|---|
 | torch.compile (I-5) | 2.7 | 4.8 | 2.8 × 10⁻¹⁵ |
 | JAX lax.fori_loop (I-6) | 2.4 | 2.4 | 4.9 × 10⁻¹⁵ |
-| **Triton single-pass (I-7)** | **0.056** | 2.1 | 9.3 × 10⁻¹⁴ |
+| Triton single-pass (I-7)† | 0.056 | 2.1 | 9.3 × 10⁻¹⁴ |
 
-The Triton kernel is **11× faster** than the 0.636 ms Halley×8 target and
-**1905× faster** than the CPU baseline.
+† **Experimental kernel.** The direct Triton kernel meets the v0.2.5 tolerance on
+4,230 of 5,474 strict grid rows. The public functions use a different route.
+The error in the table applies only to the near-at-the-money v0.1.4 benchmark grid.
 
 To reproduce:
 
