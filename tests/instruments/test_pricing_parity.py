@@ -363,37 +363,46 @@ def test_ignoring_the_notional_would_give_a_different_answer() -> None:
 # --- the Jäckel routing contract ----------------------------------------------
 
 
-def test_the_adapter_never_reaches_the_raw_undiscounted_solver() -> None:
-    """``jackel_iv_black`` takes an undiscounted Black-76 price and a forward.
+def test_the_adapter_hands_the_solver_undiscounted_normalised_inputs() -> None:
+    """The Jäckel solver works on the undiscounted, normalised out-of-the-money price.
 
-    Market prices are discounted, so feeding one to the raw solver silently
-    produces a wrong volatility. The adapter goes through the full-model
-    wrappers instead; here we watch what the raw solver actually receives.
+    Market prices are discounted, so feeding one to the solver unconverted silently produces a
+    wrong volatility. The adapter goes through the full-model wrappers, which reduce each row to
+    beta = (undiscounted out-of-the-money price) / sqrt(F K) and x = -|ln(F / K)|; here we watch
+    what the normalised solver actually receives.
     """
     from fast_vollib.jackel import numpy_backend
 
     captured: dict[str, np.ndarray] = {}
-    original = numpy_backend._jackel_iv_black
+    original = numpy_backend._jackel_iv_normalized
 
-    def spy(price: np.ndarray, forward: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
-        captured["price"] = np.array(price, copy=True)
-        captured["forward"] = np.array(forward, copy=True)
-        return original(price, forward, *args, **kwargs)
+    def spy(beta: np.ndarray, x: np.ndarray, *args: Any, **kwargs: Any) -> np.ndarray:
+        captured["beta"] = np.array(beta, copy=True)
+        captured["x"] = np.array(x, copy=True)
+        return original(beta, x, *args, **kwargs)
 
-    numpy_backend._jackel_iv_black = spy
+    numpy_backend._jackel_iv_normalized = spy
     try:
         market = observed_market("black_scholes")
         implied_volatility_instrument(
             batch(), market, model="black_scholes", solver="jackel", backend="numpy"
         )
     finally:
-        numpy_backend._jackel_iv_black = original
+        numpy_backend._jackel_iv_normalized = original
 
-    discount = np.exp(RATE * MATURITIES)
-    np.testing.assert_allclose(captured["price"], np.asarray(market.price) * discount)
-    np.testing.assert_allclose(captured["forward"], UNDERLYING * discount)
-    # The discounted price itself was never what the raw solver saw.
-    assert not np.allclose(captured["price"], np.asarray(market.price))
+    discount = np.exp(-RATE * MATURITIES)
+    forward = UNDERLYING / discount
+    undiscounted = np.asarray(market.price) / discount
+    is_call = np.array(FLAGS) == "c"
+    intrinsic = np.where(
+        is_call, np.maximum(forward - STRIKES, 0.0), np.maximum(STRIKES - forward, 0.0)
+    )
+    expected_beta = (undiscounted - intrinsic) / np.sqrt(forward * STRIKES)
+    np.testing.assert_allclose(captured["beta"], expected_beta, rtol=1e-12)
+    np.testing.assert_allclose(captured["x"], -np.abs(np.log(forward / STRIKES)), rtol=1e-12)
+    # The discounted market price itself was never what the solver normalised.
+    naive = np.asarray(market.price) / np.sqrt(UNDERLYING * STRIKES)
+    assert not np.allclose(captured["beta"], naive)
 
 
 def test_the_pricing_adapter_does_not_reference_the_raw_solver() -> None:

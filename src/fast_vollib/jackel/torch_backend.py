@@ -17,11 +17,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from ._rational_guess import TorchOps as _TorchOps, zone_1_4_guess as _zone_1_4_guess
+
 if TYPE_CHECKING:
     import torch
 
 from ..types import ModelLiteral
-from ..utils.validation import handle_error
+from . import _policy
 
 # ---------------------------------------------------------------------------
 # Availability
@@ -327,6 +329,12 @@ def jackel_iv_black_torch(
 
     # Initial guess
     s_init = _hermite_guess_t(beta, s_l, b_l, v_l_safe, s_c, b_c, v_c_safe, s_h, b_h, v_h_safe)
+    # Zones 1 and 4 (beta < b_l, beta > b_h): Jäckel's rational-cubic guess on the lower/upper
+    # maps, as on the host. The Hermite guess is clamped there and the Householder steps that
+    # follow do not reach the root from it.
+    s_rc, z14 = _zone_1_4_guess(_TorchOps(), beta, x_red, b_max, s_l, b_l, s_h, b_h)
+    s_init = torch.where(z14, s_rc, s_init)
+    s_init = torch.where(s_init > 0.0, s_init, s_c)
 
     # Householder(3) × 2 — compiled
     use_lower = beta < b_l
@@ -363,7 +371,7 @@ def implied_volatility(
 ) -> np.ndarray:
     """Machine-precision IV using Jäckel "Let's Be Rational" (2016) — torch backend.
 
-    Uses native torch ops + torch.compile(dynamic=True) on GPU.
+    Rows are classified by the shared policy (``jackel._policy``); interior rows are solved by the native torch kernel, per row, on the active device.
 
     Parameters
     ----------
@@ -375,77 +383,19 @@ def implied_volatility(
     r       : risk-free rate
     flag    : "c" for call, "p" for put (array of str)
     q       : dividend yield (Black-Scholes-Merton only)
-    on_error: "warn" | "raise" | "ignore"
+    on_error: "warn" | "raise" | "ignore" (one aggregated signal per call)
 
     Returns
     -------
-    sigma : annualised implied volatility (NaN for degenerate inputs)
+    sigma : annualised implied volatility (float64, input shape); NaN on refused rows
     """
     import torch
 
-    price_a = np.asarray(price, dtype=float)
-    s_a = np.asarray(s, dtype=float)
-    k_a = np.asarray(k, dtype=float)
-    t_a = np.asarray(t, dtype=float)
-    r_a = np.asarray(r, dtype=float)
-
-    q_a = (
-        r_a
-        if (model == "black" and q is None)
-        else (np.zeros_like(r_a) if q is None else np.asarray(q, dtype=float))
-    )
-
-    is_call = flag == "c"
-    valid = t_a > 0
-
-    disc_spot = s_a * np.exp(-q_a * t_a)
-    disc_strike = k_a * np.exp(-r_a * t_a)
-    intrinsic_np = np.where(
-        is_call,
-        np.maximum(disc_spot - disc_strike, 0.0),
-        np.maximum(disc_strike - disc_spot, 0.0),
-    )
-    below_intrinsic = price_a < intrinsic_np - 1e-10
-    if np.any(below_intrinsic):
-        handle_error("Option price is below intrinsic value.", on_error)
-
-    disc_factor = np.exp(r_a * t_a)
-    undiscounted_price = price_a * disc_factor
-
-    if model == "black":
-        F_fwd = s_a
-    elif model == "black_scholes":
-        F_fwd = s_a * disc_factor
-    else:
-        F_fwd = s_a * np.exp((r_a - q_a) * t_a)
-
-    # Handle scalar vs. array T/F (batch them by unique T × F combinations for
-    # the common single-expiry case to keep the torch call simple).
-    # For generality, process all as arrays by iterating unique (T, F) values.
-    # Common fast path: all T same, all F same.
-    T_unique = np.unique(t_a[valid]) if np.any(valid) else np.array([])
-    F_unique = np.unique(F_fwd[valid]) if np.any(valid) else np.array([])
-
-    dev = _device()
-    sigma = np.zeros_like(price_a)
-
-    if len(T_unique) == 1 and len(F_unique) == 1:
-        # Single expiry / single forward — use fast path
-        T_val = float(T_unique[0])
-        F_val = float(F_unique[0])
-        mask = valid
-        idx = np.where(mask)[0]
-        price_t = torch.as_tensor(undiscounted_price[idx], dtype=torch.float64, device=dev)
-        k_t = torch.as_tensor(k_a[idx], dtype=torch.float64, device=dev)
-        ic_t = torch.as_tensor(is_call[idx], dtype=torch.bool, device=dev)
-        sigma_t = jackel_iv_black_torch(price_t, F_val, k_t, T_val, ic_t)
-        sigma[idx] = sigma_t.detach().cpu().numpy()
-    else:
-        # General path: fallback per-row (handles mixed T, F, model types)
-        from .jackel_iv import jackel_iv_black as _jackel_iv_black_np
-
-        sigma = _jackel_iv_black_np(undiscounted_price, F_fwd, k_a, t_a, is_call)
-
-    result = np.where(valid, sigma, 0.0)
-    result = np.where(below_intrinsic, np.nan, result)
-    return result
+    prep = _policy.prepare(model, price, s, k, t, r, flag, q)
+    sigma = np.empty(0)
+    if prep.solve.size:
+        dev = _device()
+        tt = lambda v: torch.as_tensor(v, dtype=torch.float64, device=dev)  # noqa: E731
+        out = jackel_iv_black_torch(tt(prep.tv), tt(prep.fo), tt(prep.ko), tt(prep.t), True)
+        sigma = out.detach().cpu().numpy()
+    return _policy.finish(prep, sigma, on_error)

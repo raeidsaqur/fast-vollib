@@ -107,6 +107,38 @@ name to a native backend array or tensor.
 
 ---
 
+## JAX compilation on the first call
+
+The first implied-volatility call in a process compiles the JAX solver.
+For rows near the price bounds, Halley compiles a second version with higher precision.
+For a batch of 10⁶ rows on GH200, the first call took 5.3 s in v0.2.5 and 1.8 s in v0.2.4.
+Later calls in the same process reuse the compiled code.
+
+To reuse this code in other processes, enable the JAX compilation cache before the first call.
+
+```python
+import jax
+
+jax.config.update("jax_compilation_cache_dir", "/path/to/jax-cache")
+# fast-vollib's kernels compile in under JAX's default 1 s threshold; cache them anyway
+jax.config.update("jax_persistent_cache_min_compile_time_secs", 0.0)
+```
+
+In this test, the batch size was 10⁵. The shared H100 host ran JAX 0.9.2.
+
+| Device | Solver | First call without cached code | First call with cached code |
+|---|---|---:|---:|
+| GPU | Halley | 2.4 s | 0.6 s |
+| GPU | Jäckel | 1.8 s | 0.2 s |
+| CPU | Halley | 0.4 s | 0.2 s |
+| CPU | Jäckel | 1.0 s | 0.3 s |
+
+JAX reported CPU feature differences when it loaded compiled code from the CPU cache.
+Use a separate CPU cache directory for each machine.
+
+
+---
+
 ## Numba backend
 
 The Numba backend compiles Black-Scholes pricing, Greeks, and the
@@ -143,7 +175,7 @@ python my_script.py
 - Environments where PyTorch / JAX cannot be installed (e.g. minimal Docker images)
 - When you need deterministic, portable CPU performance without GPU drivers
 
-## Jäckel IV — a separate high-precision solver
+## Jäckel IV — direct solver functions
 
 The `fast_vollib.jackel` module is **not** routed through the backend system
 described above.  It is a self-contained implementation of Peter Jäckel's
@@ -154,6 +186,8 @@ described above.  It is a self-contained implementation of Peter Jäckel's
 | NumPy + Numba (CPU) | `fast_vollib.jackel.jackel_iv.jackel_iv_black` | Parallel Numba kernels; ~8.5 ms / 100k |
 | PyTorch (GPU) | `fast_vollib.jackel.torch_backend.jackel_iv_black_torch` | `torch.compile` fused; ~2.7 ms / 100k |
 | JAX (GPU) | `fast_vollib.jackel.jax_backend.jackel_iv_black_jax` | XLA fused; ~2.4 ms / 100k |
-| Triton (GPU) | `fast_vollib.jackel.triton_kernels.jackel_iv_triton` | Single-pass kernel; **0.056 ms / 100k** |
+| Triton (GPU) | `fast_vollib.jackel.triton_kernels.jackel_iv_triton` | **Experimental**: fails validation (4,230 of 5,474 strict grid rows) |
 
-See [Jäckel IV](jackel.md) for full documentation and usage examples.
+The v0.1.4 timings are for 100,000 options on H100 NVL. The table lists direct kernels.
+For the row policy and error signal, use `fast_implied_volatility(..., solver="jackel")`.
+See [Jäckel IV](jackel.md) for the validation results.

@@ -24,12 +24,18 @@ The following parameters appear across pricing, IV, and Greek functions:
 | `q` | `float \| array-like` | Continuous dividend yield (BSM only) |
 | `model` | `str` | `"black"`, `"black_scholes"` (default), or `"black_scholes_merton"` |
 | `return_as` | `str` | Output container; see each function below |
-| `dtype` | `numpy.dtype` | Input coercion dtype; default `numpy.float64` |
+| `dtype` | `numpy.dtype` | Input coercion dtype; default `numpy.float64` (see the `float32` note below) |
 | `backend` | `str` | `"auto"` (default), `"numpy"`, `"torch"`, or `"jax"` |
 | `return_native` | `bool` | Return backend-native arrays for torch/jax instead of formatted pandas/NumPy output |
 
 All array-like parameters are broadcast against each other using NumPy
 broadcasting rules.
+
+!!! note "`dtype=numpy.float32`"
+    All backends round the inputs to `float32`.
+    All backends calculate and return implied volatility in `float64`.
+    NumPy returns prices in `float32`. Numba, PyTorch and JAX return prices in `float64`.
+    The validation protocol covers `float64` inputs.
 
 !!! tip "Shape-aware type hints"
     Every public entry point carries [`jaxtyping`](https://docs.kidger.site/jaxtyping/)
@@ -52,6 +58,15 @@ formats are:
 - `return_as="series"`: `pandas.Series`
 - `return_as="numpy"`: `numpy.ndarray`
 - `return_native=True` with `backend="torch"` or `backend="jax"`: native tensor/array
+
+!!! note "Deep out-of-the-money prices"
+    The pricing formula subtracts two discounted terms. For a put, it uses
+    `D·K·(1 − N(d2)) − D·S·(1 − N(d1))`.
+    For deep out-of-the-money options, both terms can be much larger than the price.
+    The subtraction can cause a large relative error even when the absolute error is small.
+    For an underlying near 100, prices near or below 10⁻¹² can have relative errors of tens
+    of percent. Backends can differ by a few percent at these prices.
+    The implied-volatility solvers use different formulas.
 
 ### `fast_black`
 
@@ -148,16 +163,44 @@ fast_vollib.fast_implied_volatility(
     dtype=numpy.float64,
     backend="auto",
     return_native=False,
+    solver=None,
 )
 ```
 
-**Returns:** Implied volatility shaped by broadcasting rules. Below-intrinsic
-inputs return `NaN` when `on_error` is `"warn"` or `"ignore"`.
+**Returns:** Implied volatility (float64) shaped by broadcasting rules.
+
+Use `solver="halley"` for the Halley solver. The default value, `None`, also selects Halley.
+
+Use `solver="jackel"` for Jäckel's *"Let's Be Rational"* solver on NumPy, PyTorch or JAX.
+
+An unknown solver or an unsupported solver and backend combination raises
+`UnsupportedSolverError`. For example, `backend="numba"` does not support `solver="jackel"`.
+For compatibility with `py_vollib_vectorized`, the function ignores other unknown keyword arguments.
+
+**Row policy** (every backend and both solvers):
+
+| Row | Result |
+|---|---|
+| `t == 0` | `0.0` |
+| price exactly at the discounted intrinsic value | `0.0` |
+| price `0` with no intrinsic value | `NaN` + signal |
+| price below the discounted intrinsic value | `NaN` + signal |
+| price at or above the upper bound (`S·e^(−qT)` call, `K·e^(−rT)` put) | `NaN` + signal |
+| non-positive `S` or `K`, negative `t` or price | `NaN` + signal |
+| solver did not reach its target | `NaN` + signal |
+| Jäckel only: normalised out-of-the-money price below the smallest normal double, or a solution that does not reproduce the quote | `NaN` + signal |
+
+The solver compares the quote with the bounds in double-double precision.
+A quote one ULP below intrinsic value is below the lower bound.
+Non-finite inputs raise `ValueError` before the solver processes the rows.
 
 !!! note "`on_error`"
-    - `"raise"`: raise `ValueError` for below-intrinsic inputs
-    - `"warn"`: emit a warning and return `NaN`
-    - `"ignore"`: silently return `NaN`
+    For affected rows, `"warn"` and `"raise"` give one signal per call.
+    The signal gives the number of affected rows for each condition.
+
+    - `"warn"` (default): one `UserWarning`; the affected rows are `NaN`
+    - `"raise"`: one `ValueError`
+    - `"ignore"`: no signal; the same values as `"warn"`
 
 ### `fast_implied_volatility_black`
 
@@ -178,10 +221,12 @@ fast_vollib.fast_implied_volatility_black(
     dtype=numpy.float64,
     backend="auto",
     return_native=False,
+    solver=None,
 )
 ```
 
-**Returns:** Implied volatility under Black-76.
+**Returns:** Implied volatility under Black-76. See `fast_implied_volatility` for
+`solver`, `on_error` and the row policy.
 
 ---
 
@@ -232,7 +277,12 @@ Rate of change of price with respect to time (∂V/∂t), expressed as daily dec
 
 ### `vectorized_rho`
 
-Sensitivity to the risk-free rate (∂V/∂r).
+Sensitivity to the risk-free rate (∂V/∂r), per 1% move in the rate.
+
+With `model="black"`, rho is `K·t·e^(−r·t)·N(d2)/100` for calls and
+`−K·t·e^(−r·t)·N(−d2)/100` for puts: the Black-Scholes formula with `q = r`.
+py_vollib calculates Black-76 rho at a fixed forward, which gives `−t·V/100`.
+The `patch_py_vollib()` adapter returns this value.
 
 ### `vectorized_vega`
 
@@ -294,8 +344,12 @@ fast_vollib.price_dataframe(
     dtype=numpy.float64,
     backend="auto",
     return_native=False,
+    solver=None,
 )
 ```
+
+`solver` applies only when the function calculates implied volatility from `price_col`.
+The default is Halley. See `fast_implied_volatility`.
 
 You must supply at least one of `sigma_col` or `price_col`:
 
@@ -323,8 +377,16 @@ affects intermediate backend execution.
 fast_vollib.get_backend(explicit=None) -> str
 ```
 
-Return the backend that would be used for a given explicit choice, or the
-auto-resolved backend when called without arguments.
+Return the backend the call uses. The function checks these settings in order.
+
+1. The `backend=` argument.
+2. The value from `set_backend()`.
+3. The `FAST_VOLLIB_BACKEND` environment variable.
+4. Automatic selection.
+
+The value `"auto"` tells the function to check the next setting. An unknown name raises
+`ValueError`. Automatic selection uses PyTorch if CUDA is available. Otherwise it uses JAX if installed.
+It uses NumPy if JAX is unavailable.
 
 ### `set_backend`
 
@@ -332,12 +394,12 @@ auto-resolved backend when called without arguments.
 fast_vollib.set_backend(name: str) -> None
 ```
 
-Set a process-level backend override. Valid values are `"auto"`, `"numpy"`,
-`"torch"`, and `"jax"`.
+Set the backend for calls in this process that use `backend="auto"`.
+Use `"numpy"`, `"numba"`, `"torch"` or `"jax"`. Use `"auto"` to clear the setting.
 
 ---
 
-## Jäckel IV — machine-precision solver
+## Jäckel IV — direct solver functions
 
 The `fast_vollib.jackel` module provides a standalone implementation of Peter
 Jäckel's *"Let's Be Rational"* algorithm.  These functions are called directly
@@ -385,7 +447,7 @@ jackel_iv_black_jax(price, F, K, T, is_call=True) -> jax.Array
 Uses `jax.lax.fori_loop` inside a `@jax.jit`-compiled function.
 Float64 mode is enabled automatically at import.
 
-### `jackel_iv_triton` (GPU — Triton, fastest)
+### `jackel_iv_triton` (direct kernel — not a public route)
 
 ```python
 from fast_vollib.jackel.triton_kernels import jackel_iv_triton
@@ -393,9 +455,15 @@ from fast_vollib.jackel.triton_kernels import jackel_iv_triton
 jackel_iv_triton(price, F, K, T, is_call=True) -> torch.Tensor
 ```
 
-Single-pass `@triton.jit` kernel.  All pipeline stages (preproc, boundary,
-Hermite guess, Householder×3) execute in registers with one HBM read and one
-HBM write per element.
+**Experimental.** Call this single-pass `@triton.jit` kernel directly. It accepts
+scalars or tensors for `F` and `T`. The kernel has no row policy. The `backend=`
+and `solver=` parameters cannot select it.
+
+The kernel meets the tolerance on 4,230 of 5,474 strict rows in the canonical grid.
+In deep out-of-the-money rows in Zones 1 and 4, the cubic Hermite initial guess
+can prevent it from finding the root. For the public solvers, use
+`fast_implied_volatility(..., solver="jackel")` or `solver="halley"`.
+
 
 ---
 

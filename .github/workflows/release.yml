@@ -32,6 +32,48 @@ jobs:
       - name: Check distribution metadata
         run: uv tool run twine check dist/*
 
+      - name: Check distribution contents
+        run: |
+          python - <<'PY'
+          from pathlib import Path, PurePosixPath
+          import tarfile
+          import tomllib
+          import zipfile
+
+          forbidden = {
+              "artifacts", ".git", ".env_secrets",
+              "evidence_figures.py", "make_evidence_tables.py", "__pycache__",
+          }
+          wheel, = Path("dist").glob("*.whl")
+          sdist, = Path("dist").glob("*.tar.gz")
+          with zipfile.ZipFile(wheel) as archive:
+              wheel_names = archive.namelist()
+          with tarfile.open(sdist) as archive:
+              sdist_names = archive.getnames()
+
+          for artifact, names in [(wheel, wheel_names), (sdist, sdist_names)]:
+              for name in names:
+                  parts = PurePosixPath(name).parts
+                  if (
+                      name.startswith(("/", "\\")) or ".." in parts
+                      or any(part in forbidden or part.startswith(("DESIGN_", ".venv")) for part in parts)
+                  ):
+                      raise SystemExit(f"Unexpected member in {artifact.name}: {name}")
+              print(f"{artifact.name}: checked {len(names)} members")
+
+          roots = {PurePosixPath(name).parts[0] for name in wheel_names}
+          dist_info = {root for root in roots if root.endswith(".dist-info")}
+          if len(dist_info) != 1 or roots - dist_info != {"fast_vollib"}:
+              raise SystemExit(f"Unexpected wheel roots: {sorted(roots)}")
+
+          config = tomllib.loads(Path("pyproject.toml").read_text())
+          included = config["tool"]["hatch"]["build"]["targets"]["sdist"]["only-include"]
+          allowed = set(included) | {"PKG-INFO"}
+          roots = {parts[1] for name in sdist_names if len(parts := PurePosixPath(name).parts) > 1}
+          if unexpected := roots - allowed:
+              raise SystemExit(f"Unexpected sdist roots: {sorted(unexpected)}")
+          PY
+
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:

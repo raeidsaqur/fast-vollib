@@ -6,7 +6,7 @@ import numpy as np
 from scipy.special import log_ndtr, ndtr
 
 from ..types import ModelLiteral, OnErrorLiteral
-from ..utils.validation import handle_error
+from . import _iv_common as _ivc
 
 if TYPE_CHECKING:
     from .._typing import FlagArray, Float1D, OptionalFloat1D  # noqa: F401
@@ -19,30 +19,6 @@ _SQRT2PI_INV = (2.0 * 3.141592653589793) ** -0.5
 
 def _norm_pdf(x: np.ndarray) -> np.ndarray:
     return np.exp(-0.5 * x * x) * _SQRT2PI_INV
-
-
-def _intrinsic_vec(
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    q: np.ndarray,
-    model: ModelLiteral,
-) -> np.ndarray:
-    """Vectorized intrinsic value computation."""
-    disc = np.exp(-r * t)
-    carry = np.exp(-q * t)
-    if model == "black":
-        call_iv = disc * np.maximum(0.0, s - k)
-        put_iv = disc * np.maximum(0.0, k - s)
-    elif model == "black_scholes":
-        call_iv = np.maximum(0.0, s - k * disc)
-        put_iv = np.maximum(0.0, k * disc - s)
-    else:  # black_scholes_merton
-        call_iv = np.maximum(0.0, s * carry - k * disc)
-        put_iv = np.maximum(0.0, k * disc - s * carry)
-    return np.where(flag == "c", call_iv, put_iv)
 
 
 def _d1_d2(
@@ -188,95 +164,100 @@ def greeks(
 
 
 # ---------------------------------------------------------------------------
-# Implied volatility — Halley's method (3rd-order) + bisection fallback
+# Implied volatility — safeguarded Halley on the out-of-the-money price
+# (problem statement, constants and row policy: backends/_iv_common.py)
 # ---------------------------------------------------------------------------
 
 
-def _iv_initial_guess(price: np.ndarray, s: np.ndarray, t: np.ndarray) -> np.ndarray:
-    """Brenner-Subrahmanyam ATM approximation as Halley seed.
+def _iv_log_objective(a, s, l_fo, l_ko, upper, tiny):
+    """Return (ln w, |w'|/w, d1, d2) with w = c(s) (lower branch) or u(s) = Fo - c(s) (upper).
 
-    Floor is 0.30: for OTM options the BS approximation underestimates sigma
-    severely, landing iteration in a near-zero-vega region where it stalls.
-    A floor of 0.30 eliminates bisection fallback for typical equity smile data
-    while still converging to any true sigma.
+    c = Fo N(d1) - Ko N(d2) is increasing in s; u = Fo N(-d1) + Ko N(d2) is decreasing and has no
+    cancellation. Rows flagged ``tiny`` (deep tail or sub-normal target) use log_ndtr throughout.
     """
-    sqrt_t = np.sqrt(np.maximum(t, 1e-8))
-    approx = price / np.maximum(s * sqrt_t, 1e-12) * np.sqrt(2.0 * np.pi)
-    return np.clip(approx, 0.30, 5.0)
+    d1 = a / s + 0.5 * s
+    d2 = d1 - s
+    with np.errstate(divide="ignore", invalid="ignore", over="ignore", under="ignore"):
+        fo = np.exp(l_fo)
+        ko = np.exp(l_ko)
+        n1 = _norm_cdf(np.where(upper, -d1, d1))
+        n2 = _norm_cdf(d2)
+        w = np.where(upper, fo * n1 + ko * n2, fo * n1 - ko * n2)
+        lw = np.where(w > 0, np.log(w), -np.inf)  # w <= 0: c underflowed (sub-normal cancellation)
+        if tiny.any():
+            ti = np.flatnonzero(tiny)
+            up = upper[ti]
+            la = l_fo[ti] + log_ndtr(np.where(up, -d1[ti], d1[ti]))
+            lb = l_ko[ti] + log_ndtr(d2[ti])
+            lw[ti] = np.where(up, np.logaddexp(la, lb), la + np.log1p(-np.exp(lb - la)))
+        dlw = np.exp(l_fo - 0.5 * d1 * d1 - _ivc.LOG_SQRT2PI - lw)
+    return lw, dlw, d1, d2
 
 
-_HALLEY_ITERS = 8  # 8 Halley steps ≡ ~12 Newton steps in accuracy
-_BISECT_ITERS = 30  # 10/(2^30)≈9e-9 < _IV_LO → sufficient accuracy
-_IV_LO = 1e-8
-_IV_HI = 10.0
+def _iv_step(s, lo, hi, a, l_target, l_fo, l_ko, upper, tiny):
+    """One safeguarded Halley step on G(s) = +-(ln w(s) - ln target), increasing in s.
 
-
-def _halley_step_precomputed(
-    sigma: np.ndarray,
-    price: np.ndarray,
-    is_call: np.ndarray,
-    discounted_spot: np.ndarray,
-    discounted_strike: np.ndarray,
-    sqrt_t: np.ndarray,
-    log_sk: np.ndarray,
-    carry_drift_t: np.ndarray,
-    t: np.ndarray,
-) -> np.ndarray:
-    """Single Halley step using pre-computed loop-invariant quantities.
-
-    Avoids recomputing exp(-q*t), exp(-r*t), sqrt(t), log(s/k), and (r-q)*t
-    on every iteration — those are hoisted once before the Halley loop.
+    The sign of G at every iterate tightens the bracket [lo, hi]; a step that leaves the bracket
+    (or is not finite) is replaced by bisection in log s, or by expansion while hi is unbounded.
     """
-    vol_term = np.maximum(sigma * sqrt_t, 1e-32)
-    d1 = (log_sk + carry_drift_t + 0.5 * sigma * sigma * t) / vol_term
-    d2 = d1 - sigma * sqrt_t
-    cdf_d1 = _norm_cdf(d1)
-    cdf_d2 = _norm_cdf(d2)
-    call = discounted_spot * cdf_d1 - discounted_strike * cdf_d2
-    put = discounted_strike * (1.0 - cdf_d2) - discounted_spot * (1.0 - cdf_d1)
-    px = np.where(is_call, call, put)
-    vega = discounted_spot * _norm_pdf(d1) * sqrt_t
-    residual = px - price
-    safe_vega = np.where(vega > 1e-14, vega, np.inf)
-    newton_step = residual / safe_vega
-    safe_sigma = np.where(sigma > 1e-8, sigma, np.inf)
-    halley_denom = 1.0 - newton_step * d1 * d2 / safe_sigma
-    halley_denom = np.where(
-        np.abs(halley_denom) > 0.05, halley_denom, np.sign(halley_denom + 1e-15) * 0.05
-    )
-    return np.clip(sigma - newton_step / halley_denom, _IV_LO, _IV_HI)
+    lw, dlw, d1, d2 = _iv_log_objective(a, s, l_fo, l_ko, upper, tiny)
+    sgn = np.where(upper, -1.0, 1.0)
+    with np.errstate(invalid="ignore", divide="ignore", over="ignore"):
+        g = sgn * (lw - l_target)
+        below = g < 0  # the root lies above s (includes ln c = -inf on underflow)
+        lo = np.where(below, s, lo)
+        hi = np.where(below, hi, s)
+        delta = g / dlw  # Newton step on G (G' = dlw > 0)
+        den = 1.0 - 0.5 * delta * (d1 * d2 / s - sgn * dlw)  # Halley: G''/G' = d1 d2 / s - sgn dlw
+        den = np.where(np.abs(den) < 0.5, np.where(den < 0, -0.5, 0.5), den)
+        step = delta / den
+        cand = s - step
+        small = np.abs(step) <= _ivc.ACCEPT_RTOL * s
+        ok = np.isfinite(cand) & (((cand > lo) & (cand < hi)) | small)
+        fallback = np.where(np.isinf(hi), 4.0 * s, np.where(lo > 0, np.sqrt(lo * hi), 0.25 * s))
+        s_new = np.minimum(np.where(ok, cand, fallback), _ivc.S_MAX)
+    return s_new, lo, hi, ok & small
 
 
-def _price_for_model_full(
-    model: ModelLiteral,
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Return (price, raw_vega, d1, d2) for the chosen model in one pass."""
-    if model == "black":
-        return _bsm_price_full(flag, s, k, t, r, sigma, r)  # q=r → Black-76
-    if model == "black_scholes":
-        return _bsm_price_full(flag, s, k, t, r, sigma, np.zeros_like(r))
-    return _bsm_price_full(flag, s, k, t, r, sigma, q)
-
-
-def _price_for_model(
-    model: ModelLiteral,
-    flag: np.ndarray,
-    s: np.ndarray,
-    k: np.ndarray,
-    t: np.ndarray,
-    r: np.ndarray,
-    sigma: np.ndarray,
-    q: np.ndarray,
-) -> np.ndarray:
-    px, _, _, _ = _price_for_model_full(model, flag, s, k, t, r, sigma, q)
-    return px
+def _iv_solve_otm(tv, gap, fo, ko, a, s0):
+    """Solve c(s) = tv (or u(s) = gap) for the total volatility s; returns (s, converged)."""
+    upper = gap < tv
+    with np.errstate(divide="ignore"):
+        l_target = np.log(np.where(upper, gap, tv))
+    l_fo = np.log(fo)
+    l_ko = np.log(ko)
+    tiny = (l_target - l_fo) < _ivc.TINY_LOG
+    s = s0
+    lo = np.zeros_like(s)
+    hi = np.full_like(s, np.inf)
+    conv = np.zeros(s.shape, dtype=bool)
+    for _ in range(_ivc.MAIN_ITERS):
+        s, lo, hi, conv = _iv_step(s, lo, hi, a, l_target, l_fo, l_ko, upper, tiny)
+    # Bracket phase: only the rows that have not converged, until the step or the bracket meets
+    # the relative target (or the bracket endpoints are adjacent floats).
+    todo = np.flatnonzero(~conv)
+    for _ in range(_ivc.MAX_ITERS):
+        if todo.size == 0:
+            break
+        sn, ln, hn, cv = _iv_step(
+            s[todo],
+            lo[todo],
+            hi[todo],
+            a[todo],
+            l_target[todo],
+            l_fo[todo],
+            l_ko[todo],
+            upper[todo],
+            tiny[todo],
+        )
+        s[todo], lo[todo], hi[todo] = sn, ln, hn
+        bounded = np.isfinite(hn) & (ln > 0)
+        done = cv | (
+            bounded & ((hn <= ln * (1.0 + _ivc.BRACKET_RTOL)) | (np.nextafter(ln, np.inf) >= hn))
+        )
+        conv[todo] = done
+        todo = todo[~done]
+    return s, conv
 
 
 def implied_volatility(
@@ -290,67 +271,22 @@ def implied_volatility(
     q: OptionalFloat1D = None,
     on_error: OnErrorLiteral = "warn",
 ) -> Float1D:
-    # Black-76: q=r so carry=disc and d1 = [ln(F/K)+0.5σ²T]/(σ√T) (correct)
-    qv = r if (model == "black" and q is None) else (np.zeros_like(r) if q is None else q)
-
-    # --- intrinsic check ---
-    intrinsic = _intrinsic_vec(flag, s, k, t, r, qv, model)
-    below_intrinsic = price < intrinsic - 1e-10
-    if np.any(below_intrinsic):
-        handle_error("Option price is below intrinsic value.", on_error)
-
-    valid = t > 0
+    shape, price, s, k, t, r, flag, q = _ivc.flatten_inputs(price, s, k, t, r, flag, q)
+    qv = q if (q is not None and model == "black_scholes_merton") else np.zeros_like(r)
     is_call = flag == "c"
-
-    # Pre-compute loop-invariant quantities — hoisted out of 8 Halley iterations
-    # (saves 5 array ops × 8 iters = 40 redundant passes over the data)
-    if model == "black":
-        discounted_spot = s * np.exp(-qv * t)
-        discounted_strike = k * np.exp(-r * t)
-        carry_drift_t = 0.5 * t  # (r - r) * t + 0.5*sigma^2*t → only σ² term left; (r-q)=0
-        # actually carry_drift_t captures (r-q)*t; for black q=r so carry_drift_t=0
-        carry_drift_t = np.zeros_like(t)
-    else:
-        carry_val = qv if model == "black_scholes_merton" else np.zeros_like(r)
-        discounted_spot = s * np.exp(-carry_val * t)
-        discounted_strike = k * np.exp(-r * t)
-        carry_drift_t = (r - carry_val) * t
-    sqrt_t = np.sqrt(np.maximum(t, 1e-32))
-    log_sk = np.log(np.maximum(s, 1e-32) / np.maximum(k, 1e-32))
-
-    # --- Halley's method (using pre-computed invariants) ---
-    sigma = _iv_initial_guess(price, s, t)
-    for _ in range(_HALLEY_ITERS):
-        sigma = _halley_step_precomputed(
-            sigma,
-            price,
-            is_call,
-            discounted_spot,
-            discounted_strike,
-            sqrt_t,
-            log_sk,
-            carry_drift_t,
-            t,
+    rows = _ivc.classify_np(model, price, s, k, t, r, qv, is_call)
+    code = np.asarray(rows["code"], dtype=np.int8)
+    result = np.full(price.shape, np.nan)
+    result[rows["zero_vol"]] = 0.0
+    idx = np.flatnonzero(rows["interior"])
+    if idx.size:
+        sqrt_t = np.sqrt(t[idx])
+        tv, fo = rows["tv"][idx], rows["Fo"][idx]
+        sigma0 = np.clip(tv / (fo * sqrt_t) * _ivc.SQRT2PI, _ivc.SEED_SIGMA_LO, _ivc.SEED_SIGMA_HI)
+        sol, conv = _iv_solve_otm(
+            tv, rows["gap"][idx], fo, rows["Ko"][idx], rows["a"][idx], sigma0 * sqrt_t
         )
-
-    # --- Bisection fallback for poorly converged points ---
-    px_final = _price_for_model(model, flag, s, k, t, r, sigma, qv)
-    underflow_stuck = (px_final == 0.0) & (price > 0.0)
-    not_converged = (np.abs(px_final - price) > 1e-6) | underflow_stuck
-
-    if np.any(not_converged):
-        sigma_lo = np.where(not_converged, _IV_LO, sigma)
-        sigma_hi = np.where(not_converged, _IV_HI, sigma)
-        for _ in range(_BISECT_ITERS):
-            sigma_mid = 0.5 * (sigma_lo + sigma_hi)
-            px_mid = _price_for_model(model, flag, s, k, t, r, sigma_mid, qv)
-            mid_res = px_mid - price
-            sigma_lo = np.where(not_converged & (mid_res < 0), sigma_mid, sigma_lo)
-            sigma_hi = np.where(not_converged & (mid_res >= 0), sigma_mid, sigma_hi)
-        sigma = np.where(not_converged, 0.5 * (sigma_lo + sigma_hi), sigma)
-
-    result = np.where(valid, sigma, 0.0)
-    # Zero-price OTM options: sigma is undetermined (any σ gives price≈0) → NaN
-    zero_price = (price <= 0.0) & valid
-    result = np.where(below_intrinsic | zero_price, np.nan, result)
-    return result
+        result[idx] = np.where(conv, sol / sqrt_t, np.nan)
+        code[idx[~conv]] = _ivc.NOT_CONVERGED
+    _ivc.report_row_errors(_ivc.count_codes(code), price.size, on_error)
+    return result.reshape(shape)

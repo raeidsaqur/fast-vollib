@@ -24,17 +24,42 @@ def _jax_available() -> bool:
     return _has_module("jax")
 
 
+_VALID_BACKENDS = frozenset({"auto", "numpy", "torch", "jax", "numba"})
+
+
+def _validated(name: str, source: str) -> BackendLiteral:
+    if name not in _VALID_BACKENDS:
+        valid = ", ".join(sorted(_VALID_BACKENDS))
+        raise ValueError(f"Unsupported backend {name!r} from {source}. Valid backends: {valid}.")
+    return name  # type: ignore[return-value]
+
+
 def set_backend(name: BackendLiteral) -> None:
+    """Set the process-wide backend used wherever ``backend="auto"`` (the default) is passed.
+
+    ``set_backend("auto")`` clears the override.
+    """
     global _BACKEND_OVERRIDE
-    if name not in {"auto", "numpy", "torch", "jax", "numba"}:
-        raise ValueError(f"Unsupported backend: {name}")
-    _BACKEND_OVERRIDE = name
+    _BACKEND_OVERRIDE = _validated(name, "set_backend()")
 
 
 def get_backend(explicit: BackendLiteral | None = None) -> BackendLiteral:
-    choice = explicit or _BACKEND_OVERRIDE or os.getenv("FAST_VOLLIB_BACKEND", "auto")
-    if choice != "auto":
-        return choice
+    """Resolve the backend for one call.
+
+    Precedence: an explicit ``backend=`` other than ``"auto"``, then :func:`set_backend`, then
+    the ``FAST_VOLLIB_BACKEND`` environment variable, then auto-detection (torch when CUDA is
+    available, else JAX when installed, else NumPy). ``"auto"`` at any level defers to the next.
+    """
+    sources = (
+        (explicit, "the backend= argument"),
+        (_BACKEND_OVERRIDE, "set_backend()"),
+        (os.getenv("FAST_VOLLIB_BACKEND"), "the FAST_VOLLIB_BACKEND environment variable"),
+    )
+    for choice, source in sources:
+        if choice is not None and choice != "":
+            resolved = _validated(choice, source)
+            if resolved != "auto":
+                return resolved
     if _torch_cuda_available():
         return "torch"
     if _jax_available():

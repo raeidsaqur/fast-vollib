@@ -104,4 +104,4 @@ accurate, but the two publications are not an atomic operation.
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
-[MIT License](LICENSE) that covers this project.
+[Apache License 2.0](LICENSE) that covers this project.

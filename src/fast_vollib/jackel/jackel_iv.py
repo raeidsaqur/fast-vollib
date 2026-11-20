@@ -850,21 +850,9 @@ def normalised_vega(x: np.ndarray, s: np.ndarray) -> np.ndarray:
 
 
 def _normalised_black_and_vega(x: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Fused normalised Black call + vega — shares exp(-0.5*(h²+t²)) between b and bp.
-
-    Assumes x ≤ 0 (OTM-call-reduced domain, as set by jackel_iv_black).
-    Uses the erfcx Region-4 formula.  Saves one exp call per iteration vs calling
-    normalised_black_call + normalised_vega separately.
-    """
-    tiny = np.finfo(float).tiny
-    s_safe = np.where(s > 0.0, s, tiny)
-    h = x / s_safe  # x ≤ 0, h ≤ 0
-    t = 0.5 * s
-    factor = np.exp(-0.5 * (h * h + t * t))
-    diff = _sp_erfcx(-_ONE_OVER_SQRT2 * (h + t)) - _sp_erfcx(-_ONE_OVER_SQRT2 * (h - t))
-    b = np.abs(np.maximum(0.5 * factor * diff, 0.0))
-    bp = factor * _ONE_OVER_SQRT2PI
-    return b, bp
+    """Evaluate the normalised Black price and vega for the NumPy solver."""
+    # The erfcx difference loses precision near the money at small total volatility.
+    return normalised_black_call(x, s), normalised_vega(x, s)
 
 
 # ── Numba JIT Householder kernel (optional — skipped if numba not installed) ────
@@ -901,7 +889,7 @@ if _NUMBA_AVAILABLE:
     ) -> np.ndarray:
         """Numba-JIT Householder(3) × n_iters over all N elements.
 
-        Fuses _normalised_black_and_vega (shared exp factor) and the three-branch
+        Fuses the erfcx price and vega (shared exp factor) and the three-branch
         objective dispatch into a single parallel loop.  Uses Intel SVML for
         exp/erfc/erfcx when available (fastmath=True on AVX2+ CPUs).
         """
@@ -919,7 +907,7 @@ if _NUMBA_AVAILABLE:
                 bi = beta[i]
                 bm = b_max[i]
 
-                # _normalised_black_and_vega — shared exp factor
+                # Normalised Black price and vega share the exp factor.
                 h = xi / s_safe
                 t = 0.5 * s_safe
                 factor = math.exp(-0.5 * (h * h + t * t))
@@ -1058,7 +1046,7 @@ if _NUMBA_AVAILABLE:
         """Compute all 3 boundary (b, v) pairs in a single parallel loop.
 
         Returns (s_c, b_c, v_c_safe, s_l, b_l, v_l_safe, s_h, b_h, v_h_safe).
-        Fuses the 3 × _normalised_black_and_vega calls into one pass,
+        Evaluates the three boundary prices and vegas in one pass,
         eliminating Python function-call overhead and temporary array allocations.
         """
         N = len(x)
@@ -1531,9 +1519,7 @@ def jackel_iv_normalized(beta: np.ndarray, x: np.ndarray, n_iters: int = 2) -> n
 
     # Branch boundaries — computed ONCE and shared between initial guess and
     # Householder objective dispatch (eliminates 3 redundant normalised_black_call calls).
-    # I-4b: use fused _normalised_black_and_vega for all 3 boundary pairs (saves
-    # region-dispatch overhead on each call; x ≤ 0 guaranteed from jackel_iv_black).
-    # I-4d: use numba parallel kernel to fuse all 3 boundary pairs into one loop.
+    # The Numba kernel evaluates all three boundary pairs in one loop.
     if _NUMBA_AVAILABLE and _boundary_kernel_nb is not None:
         s_c, b_c, v_c_safe, s_l, b_l, v_l_safe, s_h, b_h, v_h_safe = _boundary_kernel_nb(x, b_max)
     else:

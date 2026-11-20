@@ -1,41 +1,97 @@
-# Jäckel IV — Machine-Precision Implied Volatility
+# Jäckel IV — "Let's Be Rational" Implied Volatility
 
-The `fast_vollib.jackel` module is a standalone, full-precision implied-volatility
-solver based on Peter Jäckel's *"Let's Be Rational"* (2016) algorithm.  It solves
-the normalised Black call problem to **machine precision** (max relative error
-~10⁻¹⁴) using a four-branch rational initial guess and three Householder(3)
-iterations — and it does so in a single GPU kernel pass with Triton.
+The `fast_vollib.jackel` module implements Peter Jäckel's *"Let's Be Rational"*
+(2016) algorithm. It uses a rational initial guess with four branches and three
+Householder(3) iterations. The CPU and GPU implementations use normalised Black prices.
+
+Use `fast_implied_volatility(..., solver="jackel")` or `fast_implied_volatility_black`.
+These functions apply the row policy and use `on_error` for rows that give `NaN`.
+
+Jäckel meets the tolerance on the strict rows inside its domain in the canonical grid
+and varied-parameter sample, with two exceptions. Both exceptions occur near the money
+on the PyTorch CPU backend. The tests used both sets during development.
+The base relative tolerance is 10⁻¹². The protocol also includes rounding terms.
+
+Jäckel refuses quotes below the smallest normal double after it normalises the
+out-of-the-money price. It also refuses some quotes near the upper price bound.
+For these refusals, the signal suggests `solver="halley"`.
 
 ---
 
 ## Why a separate solver?
 
-The production `backends/` IV solver uses **Halley's method × 8 iterations** with
-a compiled bisection fallback.  It is fast and robust for typical market data but
-does not formally guarantee machine precision for all inputs.
+The `backends/` module implements Halley, the default solver for functional calls.
+It applies Halley's method within a bracket to the out-of-the-money price.
+Both solvers use the same row policy and exact-quote reference.
 
-The `jackel/` module provides:
-
-| Property | `backends/` Halley×8 | `jackel/` Householder(3)×3 |
+| Property | `backends/` Halley | `jackel/` Householder(3)×3 |
 |---|---|---|
-| Algorithm | Halley + bisection | Jäckel LBR rational guess + HH(3) |
-| Max relative error | ~10⁻⁸ (typical) | ~10⁻¹⁴ (guaranteed) |
-| Convergence | 8 iterations + fallback | 3 Householder(3) steps |
-| CPU (NumPy + Numba) | ~8 ms / 100k | ~8.5 ms / 100k |
-| GPU — torch.compile | ~2.8 ms / 100k | ~2.7 ms / 100k |
-| GPU — JAX jit | ~3.85 ms / 100k | ~2.4 ms / 100k |
-| GPU — Triton (compute) | **0.636 ms** / 100k | **0.056 ms** / 100k |
+| Algorithm | Halley on the log of the out-of-the-money price, sign-checked bracket | Jäckel LBR rational guess + HH(3) |
+| Validation tolerance (relative, plus rounding terms) | 10⁻⁸ | 10⁻¹² |
+| Declared domain | every strict row | normalised price ≥ smallest normal double |
+| Backends | NumPy, Numba, PyTorch (fused Triton on CUDA), JAX | NumPy + Numba, PyTorch, JAX |
+| Gradient support | no | yes (`implied_volatility_autograd`) |
 
-Numbers measured on an NVIDIA H100 NVL, N = 100,000 options,
-canonical near-ATM grid (K = F·exp(U(−0.3, 0.3)), σ = U(0.10, 0.60)).
+See [Benchmarks](benchmarks.md) for timing methods and results.
+The v0.1.4 timings below are for 100,000 options on H100 NVL.
+That benchmark used K = F·exp(U(−0.3, 0.3)) and σ = U(0.10, 0.60).
 
-!!! warning "The Halley route is deprecated"
-    `solver="halley"` — the Halley-with-bisection route reached through
-    `fast_implied_volatility` — remains available, tested, and unchanged, and
-    it raises no runtime warning. It is nevertheless deprecated in favour of
-    the Jäckel solver, which is more accurate at comparable cost and is the
-    only route with gradient support. Use Halley for legacy compatibility with
-    existing results, not for new work.
+Halley meets its tolerance on all strict rows in the canonical grid, varied-parameter
+sample, fixtures and stress set. The stress set was generated after the solver changes.
+
+On a separate development set, Halley returns inaccurate finite values on 6–36 strict
+rows, depending on the backend. These rows have spot-form quotes within a few multiples
+of the smallest subnormal double. Their reference volatility is below 10⁻¹⁶.
+Halley also returns finite values for two inconsistent quotes.
+
+The native PyTorch and JAX Jäckel routes support gradients.
+
+---
+
+## Validated scope and known limitations
+
+The v0.2.5 tests use an exact-quote reference and a fixed tolerance protocol.
+The ranges below include NumPy, PyTorch and JAX results on CPU and GPU.
+
+**Refusals near the upper price bound.** The stress set has 1,446 strict rows.
+Halley solves all these rows on every tested route.
+Jäckel returns `NaN` with a signal on 306–328 rows per route.
+Of these, 119 are outside its domain and 187–209 are near the upper price bound.
+Most of the near-bound quotes are within a few ULPs of the bound.
+The subtraction in the normalised Jäckel calculation loses precision near this bound.
+The verification check then refuses these results. Use `solver="halley"` for these stress-set quotes.
+
+**Coverage against v0.2.4.** The x86-64 NumPy development set has 1,962 strict
+rows in the Jäckel domain. Jäckel returns finite values on 1,669 rows in v0.2.5 and
+1,810 rows in v0.2.4. The result is below the coverage floor in the protocol.
+
+Of the 220 rows which v0.2.5 refuses after v0.2.4 returned a finite value, 177 met
+the tolerance in v0.2.4. Halley solves 173 of those 177 rows.
+For the other 43 rows, the v0.2.4 values exceed the tolerance.
+In total, 50 finite v0.2.4 Jäckel values exceed the tolerance on this set.
+All finite v0.2.5 Jäckel values meet it.
+Halley refuses four rows for which v0.2.4 returned values within their wide consistency sets.
+
+**Finite values outside the tolerance.** On the stress set, 1–5 finite Jäckel
+values per route exceed the full tolerance without a signal. Among these misses, the
+maximum relative error is 1.6 × 10⁻¹¹. The largest error-to-tolerance ratio is 3.8.
+Across all finite strict outputs, the maximum relative error is 0.019.
+That row passes because its quote gives a wide rounding interval.
+
+**PyTorch backend.** The native PyTorch port uses `torch.special.ndtr` for its initial
+guess. This function loses relative accuracy in the deep lower tail.
+The public route checks the result by repricing the quote.
+The tests did not isolate the effect of the initial guess.
+
+**Throughput.** Jäckel uses NumPy on the host to classify rows and verify solutions.
+It uses double-double precision near the price bounds.
+The PyTorch and JAX routes transfer data between the device and host.
+In a shared-host test of 10⁶ options, NumPy time increased from 0.32 s to 0.55 s.
+JAX time increased from 0.34 s to 0.46 s. The PyTorch time stayed the same.
+Halley runs without this host stage. See [Benchmarks](benchmarks.md).
+
+**Direct kernels.** The direct kernels have no domain check, repricing check or error signal.
+The experimental `jackel_iv_triton` kernel meets the tolerance on 4,230 of 5,474 strict grid rows.
 
 ---
 
@@ -97,6 +153,12 @@ jackel_iv_black(
 ) -> np.ndarray  # annualised IV; NaN for degenerate inputs
 ```
 
+!!! warning "Direct kernels"
+    These kernels have no row policy or `on_error` signal.
+    At or near intrinsic value they can return `NaN` without a signal.
+    They can return a value for quotes outside the declared domain.
+    For the row policy, use `fast_implied_volatility(..., solver="jackel")`.
+
 Uses the NumPy + Numba JIT chain (CPU).  Six parallel Numba kernels cover
 preproc, boundary, Hermite guess, Householder loop, and postproc.
 
@@ -117,7 +179,7 @@ sigma_t = jackel_iv_black_torch(price_t, F=100.0, K=K_t, T=1.0, is_call=True)
 The Householder loop is wrapped with `torch.compile(dynamic=True)` so the
 erfcx evaluations and branch dispatches fuse into a single CUDA kernel.
 
-**Performance:** ~2.7 ms GPU compute / 100k options (CUDA events, H100 NVL).
+**Performance (v0.1.4 development measurement):** ~2.7 ms GPU compute / 100k options (CUDA events, H100 NVL).
 
 ---
 
@@ -137,12 +199,11 @@ Uses `jax.lax.fori_loop` inside a `@jax.jit`-compiled function so the full
 Householder loop is XLA-fused into one GPU kernel.  Requires `jax.config.x64 = True`
 (enabled automatically at import time).
 
-**Performance:** ~2.4 ms / 100k options (H100 NVL) — 2× faster than the
-PyTorch backend due to more aggressive XLA loop fusion.
+**Performance (v0.1.4 development measurement):** ~2.4 ms / 100k options (H100 NVL).
 
 ---
 
-### `jackel_iv_triton` (Triton — fastest)
+### `jackel_iv_triton` (Triton — experimental)
 
 ```python
 import torch
@@ -154,19 +215,19 @@ K_t     = torch.tensor([95.0, 100.0, 105.0], dtype=torch.float64, device="cuda")
 sigma_t = jackel_iv_triton(price_t, F=100.0, K=K_t, T=1.0, is_call=True)
 ```
 
-A single `@triton.jit` kernel fuses the **entire** pipeline — preproc,
-boundary, Hermite guess, and three Householder(3) iterations — in one pass
-over HBM.  All intermediate values live in registers; there are no
-intermediate writes.
+!!! warning "Experimental kernel"
+    This kernel meets the tolerance on 4,230 of 5,474 strict rows in the canonical grid.
+    It has no domain check, repricing check or error signal.
+    For the public Jäckel route, use `fast_implied_volatility(..., solver="jackel")`.
+    For the fused CUDA Halley kernel, select `solver="halley"` on the PyTorch backend.
 
-**Performance:** ~0.056 ms GPU compute / 100k options (CUDA events, H100 NVL)
-— **11× faster** than the 0.636 ms Halley×8 Triton target.
+One `@triton.jit` kernel performs preprocessing, the boundary calculation, the
+Hermite initial guess and three Householder(3) iterations in one pass over HBM.
+Triton 3.x does not provide `erfcx`. The kernel uses
+`exp(x/2)·N(h+t) − exp(−x/2)·N(h−t)` for the normalised Black function.
 
-!!! note "Triton vs. erfcx"
-    Triton 3.x does not expose `erfcx`.  The kernel uses the erf-based
-    normalised Black formula `exp(x/2)·N(h+t) − exp(−x/2)·N(h−t)` instead.
-    This is numerically stable for all standard option ranges and achieves
-    max relative error ~10⁻¹³.
+**Performance (v0.1.4 development measurement):** ~0.056 ms GPU compute / 100k
+options (CUDA events, H100 NVL); not re-measured for v0.2.5.
 
 ---
 
@@ -177,10 +238,11 @@ function is called directly.  Choose based on your environment:
 
 | Situation | Recommended call |
 |---|---|
-| CPU only, max precision | `jackel_iv_black` (NumPy + Numba) |
+| Row policy and signals (recommended) | `fast_implied_volatility(..., solver="jackel")` |
+| CPU only, raw kernel | `jackel_iv_black` (NumPy + Numba) |
 | GPU, existing torch pipeline | `jackel_iv_black_torch` |
 | GPU, existing JAX pipeline | `jackel_iv_black_jax` |
-| GPU, maximum throughput | `jackel_iv_triton` |
+| GPU, experimental (fails validation) | `jackel_iv_triton` |
 
 ---
 
@@ -211,13 +273,7 @@ uv sync                       # installs py-lets-be-rational via dev group
 uv run pytest tests/test_jackel/ -v
 ```
 
-The oracle is `py_lets_be_rational` (Peter Jäckel's reference C implementation
-wrapped for Python).  It has **no dependency on fast-vollib**.
-
----
-
-## References
-
-- P. Jäckel, *"Let's Be Rational"*, Wilmott Magazine, January 2015.
-  [`jaeckel.org`](http://www.jaeckel.org/LetsBeRational.pdf)
-- Source: [`jaeckel.org/LetsBeRational.7z`](http://www.jaeckel.org/LetsBeRational.7z)
+The parity tests compare results with the independent Python package `py_lets_be_rational`.
+`tests/test_iv_adjudicated.py` and `tests/test_iv_domain.py` use the exact-quote reference.
+The protocol is in `tests/fixtures/iv_adjudication/`.
+Use `scripts/validation_matrix.py` to write a record for each row.

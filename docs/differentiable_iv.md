@@ -2,7 +2,7 @@
 
 `fast_vollib.jackel` ships a differentiable wrapper around Jäckel's solver
 that you can drop into a PyTorch or JAX training loop.  The forward pass
-runs the full machine-precision solver; the backward pass applies the
+runs the full Jäckel solver; the backward pass applies the
 **implicit function theorem** to the discounted Black-Scholes price
 equation, giving exact gradients without back-propagating through the
 branch-heavy Householder iterations:

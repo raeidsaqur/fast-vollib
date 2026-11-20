@@ -51,20 +51,29 @@ namespace at runtime. This is useful for codebases that import from
 import fast_vollib
 fast_vollib.patch_py_vollib()
 
-# Now these transparently use fast-vollib under the hood:
+# These now call fast-vollib, with py_vollib's own signatures:
 from py_vollib.black_scholes import black_scholes
 from py_vollib.black_scholes.implied_volatility import implied_volatility
 from py_vollib.black_scholes.greeks.numerical import delta
 ```
 
-**Namespaces patched:**
+**Functions patched** (in `py_vollib.black`, `py_vollib.black_scholes` and
+`py_vollib.black_scholes_merton`):
 
-- `py_vollib.black` — `black`, IV, greeks
-- `py_vollib.black_scholes` — `black_scholes`, IV, greeks
-- `py_vollib.black_scholes_merton` — `black_scholes_merton`, IV, greeks
+| Surface | Patched | Notes |
+|---|---|---|
+| `black`, `black_scholes`, `black_scholes_merton` | yes | |
+| `<model>.implied_volatility.implied_volatility` | yes | `black_scholes_merton` keeps py_vollib's order `(price, S, K, t, r, q, flag)` |
+| `<model>.greeks.numerical.{delta, gamma, rho, theta, vega}` | yes | Black-76 rho follows py_vollib's convention, `-t * price / 100` per percentage point |
+| `<model>.greeks.analytical.*` | no | left as upstream |
 
-!!! warning "Requires `py_vollib`"
-    `patch_py_vollib()` raises `ImportError` if `py_vollib` is not installed.
+- `inspect.signature` shows the original py_vollib signature.
+  Positional arguments and keyword arguments follow that signature.
+- A scalar input gives a Python `float`. An array input gives a `numpy.ndarray`.
+- The Black-76 functions use the Black-76 model. The Black-Scholes-Merton
+  functions use `q` on all backends.
+- The patch changes only py_vollib functions. A second call makes no further changes.
+- You can also use `backend=`, `on_error=` and `dtype=` as keyword arguments.
 
 ### `patch_py_vollib_vectorized()`
 
@@ -93,3 +102,7 @@ from py_vollib_vectorized import vectorized_black_scholes
 | Backend | NumPy only | NumPy, PyTorch, JAX |
 | GPU support | No | Yes (PyTorch + JAX) |
 | `q` in Black-76 | Treated as zero | Correctly set to `r` (Black-76 forward pricing) |
+
+| Behaviour | `py_vollib` | `patch_py_vollib()` |
+|---|---|---|
+| IV of a price no volatility can produce (e.g. below intrinsic) | Raises (e.g. `BelowIntrinsicException`) | `NaN` with one warning per call; `on_error="raise"` raises `ValueError`, `on_error="ignore"` is silent |

@@ -1,0 +1,127 @@
+{
+  "schema": "fv-iv-protocol/1",
+  "frozen_on": "2026-11-19",
+  "status": "The float64 tolerance constants, the scoring rule, the declared-domain mechanism and the class definitions are frozen: they may not be changed to make a test pass. A failing row is recorded and escalated for review. Not frozen: 'float32_provisional' (set from measured compute dtypes before the first float32 test is committed), 'preferred_outputs_proposed' (non-binding preferred values within an accepted set, pending the boundary-policy review) and any narrowing of 'declared_domain' (owner approval required).",
+  "reference": {
+    "primary": "scripts/reference_inverse.py: point inverse of the exact binary quote (mpmath 1.3.0; sign-checked bisection on log(sigma) to relative bracket width <= 2**-96; working precision doubled until the float64 midpoint is unchanged)",
+    "secondary": "py_lets_be_rational 1.0.1 and py_vollib 1.0.1, reported alongside and never used to decide pass or fail",
+    "inputs": "exact binary values of the quote and contract terms. Forward form (Black-76): F given. Spot form (Black-Scholes, Black-Scholes-Merton): S, r, q given and F = S*exp((r-q)T) evaluated in high precision. D = exp(-rT)."
+  },
+  "row_classes": {
+    "invalid_input": "non-finite input, F or S <= 0, K <= 0, T < 0, or quote < 0",
+    "expiry": "T == 0",
+    "below_lower_bound": "quote < D*max(F-K, 0) (call) or D*max(K-F, 0) (put), in exact arithmetic",
+    "lower_bound": "quote equals the lower bound exactly",
+    "interior": "lower bound < quote < upper bound; finite point reference",
+    "upper_bound": "quote equals D*F (call) or D*K (put) exactly",
+    "above_upper_bound": "quote above the upper bound",
+    "unresolved": "no stable bracket within the precision budget (excluded from scoring, reported)",
+    "reference_exception": "the reference raised (excluded from scoring, reported with its message)"
+  },
+  "consistency_set": "S = the sigma values whose price lies in the quote's rounding interval (the exact real prices that round to the quote in the input dtype under round-half-even), intersected with the admissible price range. S is empty, bounded [sigma_int_lo, sigma_int_hi], open at 0 (the interval reaches the lower price bound) or open at infinity (it reaches the upper bound).",
+  "scoring": {
+    "rule": "Rows are scored by their consistency set, not by their point class, so a quote within rounding of a bound is never treated as invalid.",
+    "strict": {
+      "applies_to": "interior rows whose consistency set is bounded on both sides",
+      "pass": "inside the declared domain: the result is finite and |candidate - ref| <= tol (NaN, inf, an exception or an unexpected route fallback FAILS). Outside the declared domain: NaN together with the on_error signal; any finite result FAILS."
+    },
+    "open_at_zero": {
+      "applies_to": "rows whose consistency set reaches the lower price bound (interior, lower_bound, and below_lower_bound quotes within rounding of the bound)",
+      "pass": "a finite result in [0, sigma_int_hi + tol(sigma_int_hi)], or NaN together with the on_error signal"
+    },
+    "open_at_infinity": {
+      "applies_to": "rows whose consistency set reaches the upper price bound",
+      "pass": "a finite result >= sigma_int_lo - tol(sigma_int_lo), or NaN together with the on_error signal"
+    },
+    "inconsistent": {
+      "applies_to": "rows with an empty consistency set (below or above the bounds by more than rounding)",
+      "pass": "NaN together with the on_error signal. Any finite result FAILS."
+    },
+    "invalid_input": {
+      "pass": "a contract error for malformed arguments; otherwise per-row NaN with the on_error signal"
+    },
+    "expiry": {
+      "pass": "recorded; the v0.2.4 outcome (0.0) is retained unless the boundary review changes it"
+    },
+    "on_error_signal": "a warning under on_error='warn', an exception under 'raise'; a silent NaN is acceptable only under 'ignore'",
+    "zero_quote": {
+      "applies_to": "quote == 0 with a zero lower bound (out-of-the-money zero bid)",
+      "pass": "0.0, a finite value in the consistency set, or NaN with or without the on_error signal (v0.2.4 documents a silent NaN here); the preferred outcome is listed under preferred_outputs_proposed"
+    }
+  },
+  "tolerance": {
+    "form": "tol = max(abs_floor, rel_tol * ref) + M * (h_quote + h_forward + h_discount)",
+    "h_quote": "max(ref - sigma_int_lo, sigma_int_hi - ref): half-width of the consistency set around the reference",
+    "h_forward": "sigma shift from one correctly rounded evaluation of a derived forward: |dP/dF| * F * 2**-53 / vega. Zero in forward form, where F is given.",
+    "h_discount": "sigma shift from one rounding of the discount factor: P * 2**-53 / vega. Zero when r == 0.",
+    "float64": {
+      "abs_floor": 1e-15,
+      "M": 2,
+      "rel_tol": {
+        "jackel": 1e-12,
+        "halley": 1e-08
+      }
+    },
+    "M_rationale": "Two independent comparators set and confirm M. On the canonical Black-76 grid (r = 0), py_lets_be_rational and the host Jaeckel solver land up to 2 * h_quote from the reference on deep in-the-money rows: one rounding of the quote plus one of the same order in the put-call-parity reduction. On a deep in-the-money, low-time-value Black-Scholes / Black-Scholes-Merton set with r != 0 and q != 0, py_vollib and the Jaeckel full-model wrappers need at most M = 1.13 once h_forward and h_discount are included (without them, up to 31). M was raised from 1 to 2 after the first comparison and fixed before any solver change. Forward form with r != 0 (Black-76, deep in the money, F in {100, 4321.5}, r in {-0.01, 0.05, 0.12}): py_vollib's Black IV and the Jaeckel 'black' wrapper need at most M = 1.04. All calibration used host (CPU) solvers; if a GPU math library needs more, that is escalated, not absorbed by raising M.",
+    "float32_provisional": {
+      "status": "NOT FROZEN. To be fixed from measured compute dtypes before the first float32 test is committed; no float32 claim may be made before then.",
+      "draft": {
+        "abs_floor": 1e-07,
+        "M": 8,
+        "rel_tol": {
+          "jackel": 7.62939453125e-06,
+          "halley": 7.62939453125e-06
+        }
+      },
+      "rule": "reference and h_quote are taken at the float32-rounded quote; routes that promote to float64 use the float64 constants plus 0.5 ulp of a narrower output dtype"
+    },
+    "units": "annualised implied volatility (sigma, not total volatility)"
+  },
+  "preferred_outputs_proposed": {
+    "lower_bound": "0.0 (sigma = 0 is the unique root of the exact quote)",
+    "upper_bound": "NaN with the on_error signal (sigma = inf is not a usable volatility)",
+    "expiry": "0.0, unchanged from v0.2.4",
+    "zero_quote": "NaN with the on_error signal, for the v0.2.5 public row policy. v0.2.4 returns NaN without a signal."
+  },
+  "reporting": {
+    "denominators": "report the eligible count per scoring class and the pass count separately; never fold excluded rows into a success rate",
+    "coverage_floor": "finite coverage on the strict rows inside the declared domain must be >= the v0.2.4 baseline for every route",
+    "route_identity": "every evaluated cell asserts the terminal function that actually ran (backend, device, kernel); a host fallback on a native route is an unexpected fallback"
+  },
+  "revision": 3,
+  "amendments": [
+    {
+      "revision": 2,
+      "date": "2026-11-19",
+      "before_any_solver_change": true,
+      "changes": [
+        "added declared_domain: strict rows outside a declared domain pass only with NaN plus the on_error signal; the domain defaults to all strict rows, so no row is loosened by this revision",
+        "added the zero_quote scoring class (quote == 0 with a zero lower bound): v0.2.4 documents a silent NaN there, but the scoring rule accepts 0.0, a value in the consistency set, or NaN with or without the signal",
+        "recorded the forward-form (Black-76, r != 0) M calibration alongside the spot-form one"
+      ]
+    },
+    {
+      "revision": 3,
+      "date": "2026-11-19",
+      "before_any_solver_change": false,
+      "approved_by": "The protocol permits a solver-specific domain limit when a local normalization change cannot meet the tolerance. Report the refusal rate.",
+      "changes": [
+        "declared_domain.current: per solver. Jaeckel: strict rows with normalised price beta < DBL_MIN are outside the domain (they pass only with NaN plus the on_error signal). Halley: no narrowing.",
+        "reason: no local fix exists. The Jaeckel solver's Zone-1 initial guess and its lower-branch objective g = 1/ln(b) - 1/ln(beta) evaluate b(x, s) in linear space; for beta < DBL_MIN both beta and b are sub-normal, so the objective loses its precision. A fix needs a log-space normalised Black evaluator inside the solver, not a rescaling at the normalisation. The Halley solver solves these rows within tolerance.",
+        "calibration: development data (canonical grid: 3 strict rows, J1-J3; fixtures J1x-J3x, B-minsub). Confirmation: heldout_chains has no strict row with beta < DBL_MIN, so it confirms only the absence of false refusals. Refusal rates are published per route and set."
+      ]
+    }
+  ],
+  "declared_domain": {
+    "default": "all strict rows (no narrowing)",
+    "rule": "a strict row outside the declared domain must be refused (NaN with the on_error signal); inside it the strict tolerance and the coverage floor apply",
+    "narrowing": "requires owner approval; the rule must be derived on the development data (canonical grid and dev fixtures), confirmed on heldout_chains, stated in input terms (for example the normalised price range) and published with its refusal rate per route",
+    "current": {
+      "halley": null,
+      "jackel": {
+        "rule": "beta >= DBL_MIN (2**-1022), with beta = (price - intrinsic) / sqrt(D F * D K), the normalised out-of-the-money price of the exact quote",
+        "outside": "NaN together with the on_error signal; any finite result FAILS"
+      }
+    }
+  }
+}
